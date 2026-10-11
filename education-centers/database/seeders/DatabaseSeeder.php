@@ -388,9 +388,95 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        $this->command->info('✅ Plateforme initialisée : Centres, Utilisateurs, Dossiers Élèves/Profs, Formations, Classes & Affectations Professeurs.');
+        // 15. Salles de formation de démonstration
+        if ($berlinCenter) {
+            \App\Models\Room::updateOrCreate(
+                ['center_id' => $berlinCenter->id, 'code' => 'ROOM-01'],
+                [
+                    'name'        => 'Salle Berlin 01',
+                    'capacity'    => 20,
+                    'floor'       => '1er étage',
+                    'building'    => 'Bâtiment Principal',
+                    'equipment'   => 'Vidéoprojecteur, Tableau blanc, Wi-Fi',
+                    'description' => 'Grande salle de cours pour formations linguistiques.',
+                    'status'      => 'active',
+                ]
+            );
+
+            \App\Models\Room::updateOrCreate(
+                ['center_id' => $berlinCenter->id, 'code' => 'ROOM-02'],
+                [
+                    'name'        => 'Salle Berlin 02',
+                    'capacity'    => 15,
+                    'floor'       => '2ème étage',
+                    'building'    => 'Bâtiment Principal',
+                    'equipment'   => 'Écran interactif, Système audio',
+                    'description' => 'Salle pour cours en petits groupes.',
+                    'status'      => 'active',
+                ]
+            );
+
+            \App\Models\Room::updateOrCreate(
+                ['center_id' => $berlinCenter->id, 'code' => 'ROOM-03'],
+                [
+                    'name'        => 'Salle informatique',
+                    'capacity'    => 12,
+                    'floor'       => 'Rez-de-chaussée',
+                    'building'    => 'Annexe Tech',
+                    'equipment'   => '12 PC connectés, Réseau haut débit, Projecteur',
+                    'description' => 'Laboratoire informatique pour formations IT.',
+                    'status'      => 'active',
+                ]
+            );
+
+            // Salle inactive pour tests de statut
+            \App\Models\Room::updateOrCreate(
+                ['center_id' => $berlinCenter->id, 'code' => 'ROOM-RENOV'],
+                [
+                    'name'        => 'Salle en Rénovation',
+                    'capacity'    => 10,
+                    'floor'       => 'Sous-sol',
+                    'building'    => 'Annexe Tech',
+                    'equipment'   => 'En cours d’aménagement',
+                    'description' => 'Fermée temporairement pour travaux.',
+                    'status'      => 'inactive',
+                ]
+            );
+        }
+
+        if ($munichCenter) {
+            // Même code 'ROOM-01' autorisé à Munich dans un centre distinct !
+            \App\Models\Room::updateOrCreate(
+                ['center_id' => $munichCenter->id, 'code' => 'ROOM-01'],
+                [
+                    'name'        => 'Salle Munich 01',
+                    'capacity'    => 20,
+                    'floor'       => 'Rez-de-chaussée',
+                    'building'    => 'Bâtiment Bayern',
+                    'equipment'   => 'Vidéoprojecteur HD, Climatisation, Wi-Fi',
+                    'description' => 'Salle polyvalente principale.',
+                    'status'      => 'active',
+                ]
+            );
+
+            \App\Models\Room::updateOrCreate(
+                ['center_id' => $munichCenter->id, 'code' => 'ROOM-02'],
+                [
+                    'name'        => 'Salle Munich 02',
+                    'capacity'    => 15,
+                    'floor'       => '1er étage',
+                    'building'    => 'Bâtiment Bayern',
+                    'equipment'   => 'Tableau interactif, 10 postes portables',
+                    'description' => 'Salle pour ateliers et communication.',
+                    'status'      => 'active',
+                ]
+            );
+        }
+
+        $this->command->info('✅ Plateforme initialisée : Centres, Utilisateurs, Dossiers Élèves/Profs, Formations, Classes, Affectations & Salles.');
     }
 }
+
 
 
 

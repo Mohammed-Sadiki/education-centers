@@ -69,8 +69,14 @@ Route::middleware('auth')->group(function () {
             ->name('classes.teachers.store');
         Route::delete('classes/{class}/teachers/{teacher}', [\App\Http\Controllers\ClassTeacherController::class, 'destroy'])
             ->name('classes.teachers.destroy');
+
+        // CRUD Salles (RoomPolicy gère l'isolation multi-centres)
+        Route::resource('rooms', \App\Http\Controllers\RoomController::class);
+        Route::patch('rooms/{room}/toggle-status', [\App\Http\Controllers\RoomController::class, 'toggleStatus'])
+            ->name('rooms.toggle-status');
     });
 });
+
 
 
 

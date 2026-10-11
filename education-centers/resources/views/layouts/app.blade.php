@@ -97,6 +97,12 @@
                                 <i class="bi bi-diagram-3 me-1"></i>Classes
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('rooms.*') ? 'active fw-semibold' : '' }}"
+                               href="{{ route('rooms.index') }}">
+                                <i class="bi bi-door-open me-1"></i>Salles
+                            </a>
+                        </li>
                     @endif
                 @endauth
             </ul>

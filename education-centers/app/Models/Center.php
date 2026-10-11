@@ -87,6 +87,15 @@ class Center extends Model
         return $this->hasMany(ClassRoom::class);
     }
 
+    /**
+     * Un centre dispose de plusieurs salles de formation.
+     */
+    public function rooms(): HasMany
+    {
+        return $this->hasMany(Room::class);
+    }
+
+
 
 
 
