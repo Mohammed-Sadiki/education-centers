@@ -67,6 +67,16 @@ class Teacher extends Model
     }
 
     /**
+     * Classes auxquelles ce professeur est affecté.
+     */
+    public function classes(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(ClassRoom::class, 'class_teacher', 'teacher_id', 'class_id')
+            ->withTimestamps();
+    }
+
+
+    /**
      * Check if the teacher is active.
      */
     public function isActive(): bool

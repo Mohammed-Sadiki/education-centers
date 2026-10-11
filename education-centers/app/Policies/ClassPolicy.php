@@ -89,4 +89,29 @@ class ClassPolicy
 
         return false;
     }
+
+    /**
+     * assignTeacher : affecter un professeur à une classe.
+     */
+    public function assignTeacher(User $authUser, ClassRoom $classRoom): bool
+    {
+        if ($authUser->isCenterAdmin()) {
+            return $authUser->center_id === $classRoom->center_id;
+        }
+
+        return false;
+    }
+
+    /**
+     * unassignTeacher : retirer un professeur d'une classe.
+     */
+    public function unassignTeacher(User $authUser, ClassRoom $classRoom): bool
+    {
+        if ($authUser->isCenterAdmin()) {
+            return $authUser->center_id === $classRoom->center_id;
+        }
+
+        return false;
+    }
 }
+

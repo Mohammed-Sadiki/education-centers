@@ -225,5 +225,177 @@
         </div>
     </div>
 
+    {{-- Section : Professeurs affectés à la classe --}}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="card-title mb-0 fw-bold text-primary">
+                        <i class="bi bi-person-workspace me-2"></i>Professeurs affectés ({{ $class->teachers->count() }})
+                    </h5>
+
+                    @can('assignTeacher', $class)
+                        @if($availableTeachers->isNotEmpty())
+                            <button type="button" class="btn btn-sm btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#assignTeacherModal" id="btn-open-assign-teacher">
+                                <i class="bi bi-person-plus-fill me-1"></i>Affecter un professeur
+                            </button>
+                        @endif
+                    @endcan
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">N° Professeur</th>
+                                    <th>Nom & Prénom</th>
+                                    <th>Spécialisation</th>
+                                    <th>Email</th>
+                                    <th>Téléphone</th>
+                                    <th>Statut</th>
+                                    @can('unassignTeacher', $class)
+                                        <th class="text-end pe-4">Actions</th>
+                                    @endcan
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($class->teachers as $teacher)
+                                    <tr>
+                                        <td class="ps-4">
+                                            <a href="{{ route('teachers.show', $teacher) }}" class="fw-bold text-decoration-none font-monospace">
+                                                {{ $teacher->teacher_number }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold text-dark">{{ $teacher->full_name }}</div>
+                                            @if($teacher->qualification)
+                                                <small class="text-muted">{{ $teacher->qualification }}</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($teacher->specialization)
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                                    {{ $teacher->specialization }}
+                                                </span>
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            {{ $teacher->user?->email ?? '—' }}
+                                        </td>
+                                        <td>
+                                            {{ $teacher->phone ?? '—' }}
+                                        </td>
+                                        <td>
+                                            @if($teacher->isActive())
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                    <i class="bi bi-check-circle-fill me-1"></i>Actif
+                                                </span>
+                                            @else
+                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">
+                                                    <i class="bi bi-pause-circle-fill me-1"></i>Inactif
+                                                </span>
+                                            @endif
+                                        </td>
+                                        @can('unassignTeacher', $class)
+                                            <td class="text-end pe-4">
+                                                <form method="POST" action="{{ route('classes.teachers.destroy', [$class, $teacher]) }}" class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-outline-danger"
+                                                            title="Retirer ce professeur de la classe"
+                                                            onclick="return confirm('Confirmer le retrait du professeur {{ $teacher->full_name }} de cette classe ? (Le profil du professeur ne sera pas supprimé)')"
+                                                            id="btn-unassign-teacher-{{ $teacher->id }}">
+                                                        <i class="bi bi-person-dash me-1"></i>Retirer
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        @endcan
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="{{ auth()->user()->can('unassignTeacher', $class) ? '7' : '6' }}" class="text-center py-4 text-muted">
+                                            <i class="bi bi-person-x fs-2 d-block mb-2 text-secondary"></i>
+                                            Aucun professeur n'est actuellement affecté à cette classe.
+                                            @can('assignTeacher', $class)
+                                                @if($availableTeachers->isNotEmpty())
+                                                    <div class="mt-2">
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#assignTeacherModal">
+                                                            Affecter le premier professeur
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    <div class="small text-muted mt-1">
+                                                        (Aucun professeur actif disponible dans le centre {{ $class->center?->name }})
+                                                    </div>
+                                                @endif
+                                            @endcan
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+{{-- Modal d'affectation d'un professeur --}}
+@can('assignTeacher', $class)
+    @if($availableTeachers->isNotEmpty())
+        <div class="modal fade" id="assignTeacherModal" tabindex="-1" aria-labelledby="assignTeacherModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="POST" action="{{ route('classes.teachers.store', $class) }}" id="form-assign-teacher">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold" id="assignTeacherModalLabel">
+                                <i class="bi bi-person-plus-fill text-primary me-2"></i>Affecter un professeur
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="small text-muted mb-3">
+                                Sélectionnez un professeur actif du centre <strong>{{ $class->center?->name }}</strong> à associer à la classe <strong>{{ $class->code }} ({{ $class->name }})</strong>.
+                            </p>
+
+                            <div class="mb-3">
+                                <label for="teacher_id" class="form-label fw-semibold">
+                                    Professeur à affecter <span class="text-danger">*</span>
+                                </label>
+                                <select id="teacher_id" name="teacher_id" class="form-select @error('teacher_id') is-invalid @enderror" required>
+                                    <option value="">-- Choisir un professeur --</option>
+                                    @foreach($availableTeachers as $availTeacher)
+                                        <option value="{{ $availTeacher->id }}">
+                                            {{ $availTeacher->full_name }} ({{ $availTeacher->teacher_number }})
+                                            @if($availTeacher->specialization)
+                                                — {{ $availTeacher->specialization }}
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('teacher_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-primary" id="btn-submit-assign-teacher">
+                                <i class="bi bi-check-circle-fill me-1"></i>Valider l'affectation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+@endcan
 @endsection
+

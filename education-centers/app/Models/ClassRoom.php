@@ -65,6 +65,26 @@ class ClassRoom extends Model
     }
 
     /**
+     * Relation : Professeurs affectés à cette classe.
+     */
+    public function teachers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Teacher::class, 'class_teacher', 'class_id', 'teacher_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * Vérifier si un professeur est affecté à la classe.
+     */
+    public function hasTeacher(Teacher|int $teacher): bool
+    {
+        $teacherId = $teacher instanceof Teacher ? $teacher->id : $teacher;
+
+        return $this->teachers()->where('teachers.id', $teacherId)->exists();
+    }
+
+
+    /**
      * Vérifier si la classe est active.
      */
     public function isActive(): bool

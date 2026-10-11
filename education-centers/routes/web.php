@@ -63,8 +63,15 @@ Route::middleware('auth')->group(function () {
         Route::resource('classes', \App\Http\Controllers\ClassController::class);
         Route::patch('classes/{class}/toggle-status', [\App\Http\Controllers\ClassController::class, 'toggleStatus'])
             ->name('classes.toggle-status');
+
+        // Affectation des professeurs aux classes
+        Route::post('classes/{class}/teachers', [\App\Http\Controllers\ClassTeacherController::class, 'store'])
+            ->name('classes.teachers.store');
+        Route::delete('classes/{class}/teachers/{teacher}', [\App\Http\Controllers\ClassTeacherController::class, 'destroy'])
+            ->name('classes.teachers.destroy');
     });
 });
+
 
 
 

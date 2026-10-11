@@ -116,10 +116,18 @@ class ClassController extends Controller
     {
         Gate::authorize('view', $class);
 
-        $class->load(['center', 'formation']);
+        $class->load(['center', 'formation', 'teachers.user']);
 
-        return view('classes.show', compact('class'));
+        // Récupérer les professeurs actifs du centre qui ne sont pas encore affectés à cette classe
+        $availableTeachers = \App\Models\Teacher::where('center_id', $class->center_id)
+            ->where('status', 'active')
+            ->whereNotIn('id', $class->teachers->pluck('id'))
+            ->orderBy('last_name')
+            ->get();
+
+        return view('classes.show', compact('class', 'availableTeachers'));
     }
+
 
     /**
      * Formulaire d'édition d'une classe.

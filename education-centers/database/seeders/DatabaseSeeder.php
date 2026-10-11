@@ -364,9 +364,34 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        $this->command->info('✅ Comptes & Dossiers créés : Super Admin, Admins, Profs, Élèves + Formations & Classes Berlin / Munich.');
+        // 14. Affectations de démonstration : Professeurs -> Classes
+        if ($berlinCenter) {
+            $teacherBerlinModel = \App\Models\Teacher::where('center_id', $berlinCenter->id)->first();
+            $berlinClassA1_01 = \App\Models\ClassRoom::where('center_id', $berlinCenter->id)->where('code', 'A1-01')->first();
+            $berlinClassB1_01 = \App\Models\ClassRoom::where('center_id', $berlinCenter->id)->where('code', 'B1-01')->first();
+
+            if ($teacherBerlinModel && $berlinClassA1_01) {
+                $berlinClassA1_01->teachers()->syncWithoutDetaching([$teacherBerlinModel->id]);
+            }
+
+            if ($teacherBerlinModel && $berlinClassB1_01) {
+                $berlinClassB1_01->teachers()->syncWithoutDetaching([$teacherBerlinModel->id]);
+            }
+        }
+
+        if ($munichCenter) {
+            $teacherMunichModel = \App\Models\Teacher::where('center_id', $munichCenter->id)->first();
+            $munichClassA1_01 = \App\Models\ClassRoom::where('center_id', $munichCenter->id)->where('code', 'A1-01')->first();
+
+            if ($teacherMunichModel && $munichClassA1_01) {
+                $munichClassA1_01->teachers()->syncWithoutDetaching([$teacherMunichModel->id]);
+            }
+        }
+
+        $this->command->info('✅ Plateforme initialisée : Centres, Utilisateurs, Dossiers Élèves/Profs, Formations, Classes & Affectations Professeurs.');
     }
 }
+
 
 
 
