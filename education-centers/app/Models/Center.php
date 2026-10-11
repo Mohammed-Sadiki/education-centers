@@ -1,0 +1,117 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Center extends Model
+{
+    use HasFactory;
+
+    /**
+     * Champs autorisés à la masse assignment.
+     */
+    protected $fillable = [
+        'name',
+        'code',
+        'address',
+        'city',
+        'postal_code',
+        'country',
+        'phone',
+        'email',
+        'logo',
+        'status',
+    ];
+
+    /**
+     * Casts automatiques des attributs.
+     */
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    /**
+     * Valeurs par défaut des attributs.
+     */
+    protected $attributes = [
+        'country' => 'Germany',
+        'status'  => 'active',
+    ];
+
+    // ──────────────────────────────────────────────────────────────────────
+    //  Relations
+    // ──────────────────────────────────────────────────────────────────────
+
+    /**
+     * Un centre possède plusieurs utilisateurs.
+     * Les utilisateurs sans center_id (Super Admin) ne sont pas inclus ici.
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
+    /**
+     * Un centre possède plusieurs dossiers étudiants.
+     */
+    public function students(): HasMany
+    {
+        return $this->hasMany(Student::class);
+    }
+
+    /**
+     * Un centre possède plusieurs dossiers professeurs.
+     */
+    public function teachers(): HasMany
+    {
+        return $this->hasMany(Teacher::class);
+    }
+
+
+
+    /*
+     * Les relations suivantes seront ajoutées dans les prochaines étapes :
+     *
+     * public function students(): HasMany  → Étape Students
+     * public function teachers(): HasMany  → Étape Teachers
+     * public function formations(): HasMany → Étape Formations
+     * public function classes(): HasMany   → Étape Classes
+     * public function rooms(): HasMany     → Étape Rooms
+     */
+
+    // ──────────────────────────────────────────────────────────────────────
+    //  Accesseurs / Helpers
+    // ──────────────────────────────────────────────────────────────────────
+
+    /**
+     * Retourne true si le centre est actif.
+     */
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    /**
+     * Retourne l'URL du logo ou null si aucun logo défini.
+     */
+    public function getLogoUrlAttribute(): ?string
+    {
+        if ($this->logo) {
+            return asset('storage/' . $this->logo);
+        }
+        return null;
+    }
+
+    /**
+     * Vérifie si le centre possède des utilisateurs liés (hors Super Admin).
+     * Utile avant suppression.
+     */
+    public function hasLinkedUsers(): bool
+    {
+        return $this->users()->exists();
+    }
+}
