@@ -1,0 +1,105 @@
+@php
+    $user = auth()->user();
+    $unreadCount = \App\Models\AppNotification::where('user_id', $user->id)->whereNull('read_at')->count();
+    $unreadList = \App\Models\AppNotification::where('user_id', $user->id)->whereNull('read_at')->latest()->take(6)->get();
+    $roleLabel = match ($user->role) {
+        'super_admin' => 'Super Admin',
+        'center_admin' => 'Admin Centre',
+        'teacher' => 'Professeur',
+        'student' => 'Élève',
+        default => $user->role,
+    };
+    $centerLabel = $user->isSuperAdmin() ? 'Tous les centres' : ($user->center?->name ?? 'N/A');
+@endphp
+
+<header class="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
+    <div class="flex min-w-0 items-center gap-3">
+        <button type="button" class="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden dark:text-slate-300 dark:hover:bg-slate-800" x-on:click="$store.ui.toggleSidebar()" aria-label="Ouvrir le menu">
+            <x-icon name="menu" class="h-5 w-5" />
+        </button>
+        @hasSection('breadcrumb')
+            <nav class="hidden min-w-0 truncate text-sm text-slate-500 md:block" aria-label="Fil d'Ariane">
+                <ol class="flex items-center gap-2">
+                    <li><a href="{{ route('dashboard') }}" class="hover:text-brand-700">Accueil</a></li>
+                    @yield('breadcrumb')
+                </ol>
+            </nav>
+        @else
+            <p class="hidden truncate text-sm text-slate-500 sm:block">{{ $centerLabel }}</p>
+        @endif
+    </div>
+
+    <div class="flex items-center gap-1 sm:gap-2">
+        <button type="button" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" x-on:click="$store.ui.toggleTheme()" aria-label="Basculer le thème">
+            <x-icon name="moon" class="h-5 w-5" x-show="!$store.ui.dark" />
+            <x-icon name="sun" class="h-5 w-5" x-show="$store.ui.dark" x-cloak />
+        </button>
+
+        <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+            <button type="button" class="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" x-on:click="open = !open" aria-label="Notifications">
+                <x-icon name="bell" class="h-5 w-5" />
+                @if($unreadCount > 0)
+                    <span class="absolute right-1 top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
+                @endif
+            </button>
+            <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                <div class="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 dark:border-slate-800">
+                    <p class="text-sm font-semibold">Notifications</p>
+                    @if($unreadCount > 0)
+                        <form method="POST" action="{{ route('notifications.read-all') }}">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="text-xs font-medium text-brand-700 hover:underline">Tout marquer comme lu</button>
+                        </form>
+                    @endif
+                </div>
+                <ul class="max-h-80 overflow-y-auto">
+                    @forelse($unreadList as $n)
+                        <li class="border-b border-slate-50 px-4 py-3 text-sm last:border-0 dark:border-slate-800">
+                            <p class="font-medium text-slate-800 dark:text-slate-100">{{ $n->title }}</p>
+                            <p class="mt-0.5 line-clamp-2 text-xs text-slate-500">{{ $n->message }}</p>
+                        </li>
+                    @empty
+                        <li class="px-4 py-6 text-center text-sm text-slate-500">Aucune notification non lue</li>
+                    @endforelse
+                </ul>
+                <a href="{{ route('notifications.index') }}" class="block bg-slate-50 px-4 py-2 text-center text-xs font-medium text-brand-700 dark:bg-slate-800">Voir tout</a>
+            </div>
+        </div>
+
+        <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+            <button type="button" class="flex items-center gap-2 rounded-lg p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800" x-on:click="open = !open" aria-haspopup="true" :aria-expanded="open">
+                <x-ui.avatar :name="$user->name" size="sm" />
+                <span class="hidden text-left sm:block">
+                    <span class="block max-w-[140px] truncate text-sm font-medium text-slate-800 dark:text-slate-100">{{ $user->name }}</span>
+                    <span class="block max-w-[140px] truncate text-xs text-slate-500">{{ $roleLabel }} · {{ $centerLabel }}</span>
+                </span>
+                <x-icon name="chevron-down" class="hidden h-4 w-4 text-slate-400 sm:block" />
+            </button>
+            <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                    <p class="truncate font-semibold">{{ $user->name }}</p>
+                    <p class="truncate text-xs text-slate-500">{{ $user->email }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Centre : <strong class="text-slate-700 dark:text-slate-200">{{ $centerLabel }}</strong></p>
+                </div>
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <x-icon name="home" class="h-4 w-4" /> Dashboard
+                </a>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40">
+                        <x-icon name="logout" class="h-4 w-4" /> Déconnexion
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <form action="{{ route('logout') }}" method="POST" class="hidden md:block">
+            @csrf
+            <button type="submit" id="btn-logout-navbar" class="ec-btn-secondary ec-btn-sm" title="Se déconnecter">
+                <x-icon name="logout" class="h-4 w-4" />
+                Déconnexion
+            </button>
+        </form>
+    </div>
+</header>

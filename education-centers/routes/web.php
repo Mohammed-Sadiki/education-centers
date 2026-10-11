@@ -6,13 +6,25 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-// Page d'accueil publique
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+// ──────────────────────────────────────────────────────────────────────────────
+//  SITE PUBLIC
+// ──────────────────────────────────────────────────────────────────────────────
+Route::get('/', [\App\Http\Controllers\PublicController::class, 'home'])->name('home');
+Route::get('/centres', [\App\Http\Controllers\PublicController::class, 'centers'])->name('public.centers');
+Route::get('/centres/{center}', [\App\Http\Controllers\PublicController::class, 'centerShow'])->name('public.centers.show');
+Route::get('/offres-formations', [\App\Http\Controllers\PublicController::class, 'formations'])->name('public.formations');
+Route::get('/offres-formations/{formation}', [\App\Http\Controllers\PublicController::class, 'formationShow'])->name('public.formations.show');
+Route::get('/actualites', [\App\Http\Controllers\PublicController::class, 'announcements'])->name('public.announcements');
+Route::get('/actualites/{slug}', [\App\Http\Controllers\PublicController::class, 'announcementShow'])->name('public.announcements.show');
+Route::get('/contact', [\App\Http\Controllers\PublicController::class, 'contactForm'])->name('public.contact');
+Route::post('/contact', [\App\Http\Controllers\PublicController::class, 'contactStore'])->name('public.contact.store');
+Route::get('/candidature', [\App\Http\Controllers\PublicController::class, 'applyForm'])->name('public.apply');
+Route::post('/candidature', [\App\Http\Controllers\PublicController::class, 'applyStore'])->name('public.apply.store');
+Route::get('/candidature/confirmation', [\App\Http\Controllers\PublicController::class, 'applySuccess'])->name('public.apply.success');
+Route::get('/verifier-document', [\App\Http\Controllers\CertificateController::class, 'verify'])->name('public.verify-certificate');
 
 // ──────────────────────────────────────────────────────────────────────────────
-//  Authentification (Guest uniquement)
+//  AUTHENTIFICATION (Guest uniquement)
 // ──────────────────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -20,67 +32,143 @@ Route::middleware('guest')->group(function () {
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
-//  Espace Authentifié (Tout utilisateur connecté)
+//  ESPACE AUTHENTIFIÉ — Tous les rôles
 // ──────────────────────────────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Notifications (tous les utilisateurs authentifiés)
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::patch('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::delete('/notifications/{notification}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
+
     // ──────────────────────────────────────────────────────────────────────────
-    //  CRUD Centres : strictement réservé au Super Admin
+    //  SUPER ADMIN uniquement
     // ──────────────────────────────────────────────────────────────────────────
     Route::middleware('role:super_admin')->group(function () {
         Route::resource('centers', CenterController::class);
         Route::patch('centers/{center}/toggle-status', [CenterController::class, 'toggleStatus'])
             ->name('centers.toggle-status');
+        // Audit logs (super admin)
+        Route::get('/audit', [\App\Http\Controllers\AuditController::class, 'index'])->name('audit.index');
     });
 
     // ──────────────────────────────────────────────────────────────────────────
-    //  CRUD Utilisateurs : Super Admin + Admin Centre
-    //  (La granularité des permissions est gérée par UserPolicy)
+    //  SUPER ADMIN + CENTER ADMIN
     // ──────────────────────────────────────────────────────────────────────────
     Route::middleware('role:super_admin,center_admin')->group(function () {
+
+        // Utilisateurs
         Route::resource('users', UserController::class);
         Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
             ->name('users.toggle-status');
 
-        // CRUD Dossiers Étudiants (StudentPolicy gère l'isolation multi-centres)
+        // Étudiants
         Route::resource('students', \App\Http\Controllers\StudentController::class);
         Route::patch('students/{student}/toggle-status', [\App\Http\Controllers\StudentController::class, 'toggleStatus'])
             ->name('students.toggle-status');
 
-        // CRUD Dossiers Professeurs (TeacherPolicy gère l'isolation multi-centres)
+        // Professeurs
         Route::resource('teachers', \App\Http\Controllers\TeacherController::class);
         Route::patch('teachers/{teacher}/toggle-status', [\App\Http\Controllers\TeacherController::class, 'toggleStatus'])
             ->name('teachers.toggle-status');
 
-        // CRUD Formations (FormationPolicy gère l'isolation multi-centres)
+        // Formations
         Route::resource('formations', \App\Http\Controllers\FormationController::class);
         Route::patch('formations/{formation}/toggle-status', [\App\Http\Controllers\FormationController::class, 'toggleStatus'])
             ->name('formations.toggle-status');
 
-        // CRUD Classes (ClassPolicy gère l'isolation multi-centres)
+        // Classes
         Route::resource('classes', \App\Http\Controllers\ClassController::class);
         Route::patch('classes/{class}/toggle-status', [\App\Http\Controllers\ClassController::class, 'toggleStatus'])
             ->name('classes.toggle-status');
 
-        // Affectation des professeurs aux classes
+        // Affectation professeurs ↔ classes
         Route::post('classes/{class}/teachers', [\App\Http\Controllers\ClassTeacherController::class, 'store'])
             ->name('classes.teachers.store');
         Route::delete('classes/{class}/teachers/{teacher}', [\App\Http\Controllers\ClassTeacherController::class, 'destroy'])
             ->name('classes.teachers.destroy');
 
-        // CRUD Salles (RoomPolicy gère l'isolation multi-centres)
+        // Salles
         Route::resource('rooms', \App\Http\Controllers\RoomController::class);
         Route::patch('rooms/{room}/toggle-status', [\App\Http\Controllers\RoomController::class, 'toggleStatus'])
             ->name('rooms.toggle-status');
 
-        // CRUD Emplois du temps / Planning (SchedulePolicy gère l'isolation multi-centres)
+        // Emplois du temps
         Route::resource('schedules', \App\Http\Controllers\ScheduleController::class);
         Route::patch('schedules/{schedule}/toggle-status', [\App\Http\Controllers\ScheduleController::class, 'toggleStatus'])
             ->name('schedules.toggle-status');
+
+        // 4I — Inscriptions
+        Route::resource('enrollments', \App\Http\Controllers\EnrollmentController::class);
+        Route::patch('enrollments/{enrollment}/status', [\App\Http\Controllers\EnrollmentController::class, 'changeStatus'])
+            ->name('enrollments.change-status');
+
+        // 4L — Paiements
+        Route::resource('payments', \App\Http\Controllers\PaymentController::class);
+
+        // 4L — Factures
+        Route::resource('invoices', \App\Http\Controllers\InvoiceController::class);
+
+        // 4M — Documents étudiants
+        Route::resource('documents', \App\Http\Controllers\DocumentController::class, ['except' => ['edit','update']]);
+        Route::get('documents/{document}/download', [\App\Http\Controllers\DocumentController::class, 'download'])
+            ->name('documents.download');
+
+        // 4N — Certificats
+        Route::resource('certificates', \App\Http\Controllers\CertificateController::class, ['except' => ['edit','update']]);
+        Route::get('certificates/{certificate}/download', [\App\Http\Controllers\CertificateController::class, 'download'])
+            ->name('certificates.download');
+
+        // 4O — Annonces
+        Route::resource('announcements', \App\Http\Controllers\AnnouncementController::class);
+
+        // Audit (admin centre)
+        Route::get('/audit', [\App\Http\Controllers\AuditController::class, 'index'])->name('audit.index')->withoutMiddleware('role:super_admin');
+    });
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  4J — PRÉSENCES (Admin + Teacher)
+    // ──────────────────────────────────────────────────────────────────────────
+    Route::middleware('role:super_admin,center_admin,teacher')->group(function () {
+        Route::get('/attendances', [\App\Http\Controllers\AttendanceController::class, 'index'])->name('attendances.index');
+        Route::get('/attendances/create', [\App\Http\Controllers\AttendanceController::class, 'create'])->name('attendances.create');
+        Route::post('/attendances/session', [\App\Http\Controllers\AttendanceController::class, 'storeSession'])->name('attendances.store-session');
+        Route::get('/attendances/{attendance}', [\App\Http\Controllers\AttendanceController::class, 'show'])->name('attendances.show');
+        Route::get('/attendances/{attendance}/edit', [\App\Http\Controllers\AttendanceController::class, 'edit'])->name('attendances.edit');
+        Route::patch('/attendances/{attendance}', [\App\Http\Controllers\AttendanceController::class, 'update'])->name('attendances.update');
+        Route::delete('/attendances/{attendance}', [\App\Http\Controllers\AttendanceController::class, 'destroy'])->name('attendances.destroy');
+        Route::get('/api/attendances/students-for-schedule', [\App\Http\Controllers\AttendanceController::class, 'getStudentsForSchedule'])->name('attendances.students-for-schedule');
+    });
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  4K — ÉVALUATIONS / NOTES (Admin + Teacher)
+    // ──────────────────────────────────────────────────────────────────────────
+    Route::middleware('role:super_admin,center_admin,teacher')->group(function () {
+        Route::resource('evaluations', \App\Http\Controllers\EvaluationController::class);
+        Route::post('evaluations/{evaluation}/grades', [\App\Http\Controllers\EvaluationController::class, 'saveGrades'])
+            ->name('evaluations.grades.save');
+    });
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  ACCÈS ÉTUDIANT — Lecture seule
+    // ──────────────────────────────────────────────────────────────────────────
+    Route::middleware('role:student')->group(function () {
+        Route::get('/mes-presences', [\App\Http\Controllers\AttendanceController::class, 'index'])->name('student.attendances');
+        Route::get('/mes-notes', [\App\Http\Controllers\EvaluationController::class, 'index'])->name('student.evaluations');
+        Route::get('/mes-documents', [\App\Http\Controllers\DocumentController::class, 'index'])->name('student.documents');
+        Route::get('/documents/{document}/download', [\App\Http\Controllers\DocumentController::class, 'download'])
+            ->name('student.documents.download')->withoutMiddleware('role:student');
+        Route::get('/mes-certificats', [\App\Http\Controllers\CertificateController::class, 'index'])->name('student.certificates');
+        Route::get('/mes-certificats/{certificate}/download', [\App\Http\Controllers\CertificateController::class, 'download'])
+            ->name('student.certificates.download');
     });
 });
+
+
+
 
 
 

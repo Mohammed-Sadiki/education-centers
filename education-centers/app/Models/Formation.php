@@ -57,6 +57,14 @@ class Formation extends Model
         return $this->hasMany(ClassRoom::class);
     }
 
+    /**
+     * Relation : Inscriptions liées à cette formation.
+     */
+    public function enrollments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
 
     /**
      * Vérifier si la formation est active.

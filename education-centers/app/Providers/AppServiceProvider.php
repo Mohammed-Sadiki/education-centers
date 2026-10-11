@@ -20,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Illuminate\Support\Facades\Gate::policy(\App\Models\ClassRoom::class, \App\Policies\ClassPolicy::class);
+
+        \Illuminate\Support\Facades\Route::bind('notification', function (string $value) {
+            return \App\Models\AppNotification::findOrFail($value);
+        });
     }
 
 }

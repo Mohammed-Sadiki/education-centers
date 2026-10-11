@@ -103,6 +103,21 @@ class Center extends Model
         return $this->hasMany(Schedule::class);
     }
 
+    /**
+     * Un centre gère plusieurs inscriptions.
+     */
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    public function attendances(): HasMany { return $this->hasMany(Attendance::class); }
+    public function evaluations(): HasMany { return $this->hasMany(Evaluation::class); }
+    public function payments(): HasMany { return $this->hasMany(Payment::class); }
+    public function invoices(): HasMany { return $this->hasMany(Invoice::class); }
+    public function documents(): HasMany { return $this->hasMany(Document::class); }
+    public function certificates(): HasMany { return $this->hasMany(Certificate::class); }
+    public function announcements(): HasMany { return $this->hasMany(Announcement::class); }
 
     /*
      * Les relations suivantes seront ajoutées dans les prochaines étapes :

@@ -92,6 +92,36 @@ class ClassRoom extends Model
     }
 
     /**
+     * Relation : Inscriptions affectées à cette classe.
+     */
+    public function enrollments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Enrollment::class, 'class_id');
+    }
+
+    public function attendances(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Attendance::class, 'class_id'); }
+    public function evaluations(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Evaluation::class, 'class_id'); }
+
+    /**
+     * Compte des inscriptions acceptées occupant une place.
+     */
+    public function getAcceptedEnrollmentsCountAttribute(): int
+    {
+        return $this->enrollments()->where('status', Enrollment::STATUS_ACCEPTED)->count();
+    }
+
+    /**
+     * Vérifier si la classe a atteint sa capacité maximale.
+     */
+    public function isFull(): bool
+    {
+        if (!$this->capacity) {
+            return false; // Capacité illimitée
+        }
+
+        return $this->accepted_enrollments_count >= $this->capacity;
+    }
+    /**
      * Vérifier si la classe est active.
      */
     public function isActive(): bool

@@ -66,6 +66,21 @@ class Student extends Model
     }
 
     /**
+     * Inscriptions de l'étudiant aux formations/classes.
+     */
+    public function enrollments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    public function attendances(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Attendance::class); }
+    public function grades(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Grade::class); }
+    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Payment::class); }
+    public function invoices(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Invoice::class); }
+    public function documents(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Document::class); }
+    public function certificates(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Certificate::class); }
+
+    /**
      * Check if the student is active.
      */
     public function isActive(): bool

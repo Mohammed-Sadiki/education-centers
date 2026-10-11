@@ -1,100 +1,56 @@
-@extends('layouts.app')
+@extends('layouts.guest')
 
 @section('title', 'Connexion — ' . config('app.name', 'Education Centers'))
-@section('description', 'Connexion sécurisée à la plateforme des centres d\'éducation')
 
 @section('content')
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header bg-white border-0 text-center pt-4 pb-2">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3" style="width: 60px; height: 60px;">
-                        <i class="bi bi-shield-lock-fill fs-3"></i>
-                    </div>
-                    <h4 class="fw-bold text-dark mb-1">Connexion</h4>
-                    <p class="text-muted small mb-0">Accédez à votre espace sécurisé</p>
-                </div>
-
-                <div class="card-body p-4">
-                    {{-- Affichage des erreurs globales --}}
-                    @if ($errors->any())
-                        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-start gap-2" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
-                            <div>
-                                <ul class="mb-0 ps-3 small">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('login') }}" novalidate>
-                        @csrf
-
-                        {{-- Email --}}
-                        <div class="mb-3">
-                            <label for="email" class="form-label fw-semibold small text-secondary">
-                                <i class="bi bi-envelope me-1"></i>Adresse e-mail
-                            </label>
-                            <input type="email"
-                                   class="form-control @error('email') is-invalid @enderror"
-                                   id="email"
-                                   name="email"
-                                   value="{{ old('email') }}"
-                                   placeholder="nom@education-centers.de"
-                                   required
-                                   autocomplete="email"
-                                   autofocus>
-                            @error('email')
-                                <div class="invalid-feedback small">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        {{-- Mot de passe --}}
-                        <div class="mb-3">
-                            <label for="password" class="form-label fw-semibold small text-secondary">
-                                <i class="bi bi-lock me-1"></i>Mot de passe
-                            </label>
-                            <input type="password"
-                                   class="form-control @error('password') is-invalid @enderror"
-                                   id="password"
-                                   name="password"
-                                   placeholder="••••••••"
-                                   required
-                                   autocomplete="current-password">
-                            @error('password')
-                                <div class="invalid-feedback small">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        {{-- Se souvenir de moi --}}
-                        <div class="mb-4 form-check">
-                            <input type="checkbox" class="form-check-input" id="remember" name="remember" {{ old('remember') ? 'checked' : '' }}>
-                            <label class="form-check-label small text-secondary" for="remember">
-                                Se souvenir de moi
-                            </label>
-                        </div>
-
-                        {{-- Bouton de connexion --}}
-                        <div class="d-grid mb-3">
-                            <button type="submit" class="btn btn-primary btn-lg shadow-sm">
-                                <i class="bi bi-box-arrow-in-right me-1"></i>Se connecter
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="card-footer bg-light border-0 text-center py-3 rounded-bottom-3">
-                    <span class="text-muted small">
-                        <i class="bi bi-info-circle me-1"></i>Authentification réservée au personnel et aux étudiants autorisés.
-                    </span>
-                </div>
+<div class="flex min-h-screen items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md">
+        <div class="mb-8 text-center">
+            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 text-white">
+                <x-icon name="academic" class="h-6 w-6" />
             </div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">Education Centers</p>
+            <h1 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">Connexion</h1>
+            <p class="mt-1 text-sm text-slate-500">Bienvenue — accédez à votre espace sécurisé</p>
         </div>
+
+        <div class="ec-card p-6">
+            @if ($errors->any())
+                <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    <ul class="list-disc ps-4">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('login') }}" novalidate class="space-y-4">
+                @csrf
+                <div>
+                    <label for="email" class="ec-label">Adresse e-mail</label>
+                    <input type="email" id="email" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus
+                           placeholder="nom@education-centers.de"
+                           class="ec-input @error('email') is-invalid @enderror">
+                    @error('email')<p class="ec-error">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="password" class="ec-label">Mot de passe</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password"
+                           placeholder="••••••••"
+                           class="ec-input @error('password') is-invalid @enderror">
+                    @error('password')<p class="ec-error">{{ $message }}</p>@enderror
+                </div>
+                <label class="flex items-center gap-2 text-sm text-slate-600">
+                    <input type="checkbox" id="remember" name="remember" class="rounded border-slate-300" {{ old('remember') ? 'checked' : '' }}>
+                    Se souvenir de moi
+                </label>
+                <button type="submit" class="ec-btn-primary w-full">Se connecter</button>
+            </form>
+        </div>
+        <p class="mt-6 text-center text-sm text-slate-500">
+            <a href="{{ route('home') }}" class="hover:text-brand-700">Retour au site</a>
+        </p>
     </div>
 </div>
 @endsection
