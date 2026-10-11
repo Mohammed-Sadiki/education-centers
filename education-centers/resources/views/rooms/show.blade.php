@@ -193,18 +193,53 @@
                 </div>
             </div>
 
-            {{-- Section visuelle : Utilisation future --}}
+            {{-- Section : Planning de la salle --}}
             <div class="card shadow-sm border-0 mb-4 border-start border-primary border-4">
-                <div class="card-header bg-white py-3 border-bottom">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0 fw-bold text-primary">
-                        <i class="bi bi-calendar-week me-2"></i>Utilisation future
+                        <i class="bi bi-calendar-week me-2"></i>Planning de la salle ({{ $room->schedules->count() }})
                     </h5>
+                    <a href="{{ route('schedules.create', ['center_id' => $room->center_id, 'room_id' => $room->id]) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-calendar-plus me-1"></i>Réserver
+                    </a>
                 </div>
-                <div class="card-body">
-                    <p class="small text-muted mb-0">
-                        <i class="bi bi-info-circle me-1 text-primary"></i>
-                        Les plannings et emplois du temps (Étape 4H) pourront planifier des cours et affecter des classes dans cette salle en fonction de sa capacité d'accueil (<strong>{{ $room->capacity }} places</strong>).
-                    </p>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Date</th>
+                                    <th>Heure</th>
+                                    <th>Classe</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($room->schedules()->orderBy('date')->orderBy('start_time')->take(5)->get() as $rs)
+                                    <tr>
+                                        <td class="ps-3">{{ $rs->formatted_date }}</td>
+                                        <td>{{ $rs->formatted_time }}</td>
+                                        <td>{{ $rs->classRoom->name }}</td>
+                                        <td>
+                                            @if($rs->status === 'scheduled')
+                                                <span class="badge bg-primary-subtle text-primary">Prévue</span>
+                                            @elseif($rs->status === 'completed')
+                                                <span class="badge bg-success-subtle text-success">Terminée</span>
+                                            @else
+                                                <span class="badge bg-danger-subtle text-danger">Annulée</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center py-3 text-muted small">
+                                            Aucune séance programmée dans cette salle.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

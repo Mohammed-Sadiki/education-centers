@@ -95,9 +95,13 @@ class Center extends Model
         return $this->hasMany(Room::class);
     }
 
-
-
-
+    /**
+     * Un centre possède plusieurs séances d'emploi du temps.
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(Schedule::class);
+    }
 
 
     /*

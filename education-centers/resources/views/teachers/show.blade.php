@@ -286,6 +286,75 @@
                 </div>
             @endif
 
+    </div>
+
+    {{-- Section Planning du professeur --}}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-primary">
+                        <i class="bi bi-calendar-week me-2"></i>Planning des séances ({{ $teacher->schedules->count() }})
+                    </h5>
+                    <span class="badge bg-light text-muted border">Consultation planning</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Date & Horaire</th>
+                                    <th>Classe</th>
+                                    <th>Salle</th>
+                                    <th>Type</th>
+                                    <th>Statut</th>
+                                    <th class="text-end pe-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($teacher->schedules()->orderBy('date')->orderBy('start_time')->get() as $sch)
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-bold">{{ $sch->formatted_date }}</div>
+                                            <small class="text-muted"><i class="bi bi-clock me-1 text-primary"></i>{{ $sch->formatted_time }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold text-primary">{{ $sch->classRoom->name }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">{{ $sch->room->name }} ({{ $sch->room->code }})</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary-subtle text-secondary">{{ $sch->type_label }}</span>
+                                        </td>
+                                        <td>
+                                            @if($sch->status === 'scheduled')
+                                                <span class="badge bg-primary-subtle text-primary border">Programmée</span>
+                                            @elseif($sch->status === 'completed')
+                                                <span class="badge bg-success-subtle text-success border">Terminée</span>
+                                            @else
+                                                <span class="badge bg-danger-subtle text-danger border">Annulée</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <a href="{{ route('schedules.show', $sch) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            <i class="bi bi-calendar-x fs-2 d-block mb-2 text-secondary"></i>
+                                            Aucune séance programmée pour ce professeur.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

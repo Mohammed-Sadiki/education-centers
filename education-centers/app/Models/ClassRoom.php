@@ -83,6 +83,13 @@ class ClassRoom extends Model
         return $this->teachers()->where('teachers.id', $teacherId)->exists();
     }
 
+    /**
+     * Relation : Séances d'emploi du temps de la classe.
+     */
+    public function schedules(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Schedule::class, 'class_id');
+    }
 
     /**
      * Vérifier si la classe est active.

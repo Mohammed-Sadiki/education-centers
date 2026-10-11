@@ -340,6 +340,81 @@
                         </table>
                     </div>
                 </div>
+    {{-- Section : Emploi du temps de la classe --}}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="card-title mb-0 fw-bold text-primary">
+                        <i class="bi bi-calendar-week me-2"></i>Emploi du temps & Prochaines séances ({{ $class->schedules->count() }})
+                    </h5>
+
+                    <a href="{{ route('schedules.create', ['center_id' => $class->center_id, 'class_id' => $class->id]) }}" class="btn btn-sm btn-primary shadow-sm">
+                        <i class="bi bi-calendar-plus me-1"></i>Ajouter une séance
+                    </a>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Date & Horaire</th>
+                                    <th>Professeur</th>
+                                    <th>Salle</th>
+                                    <th>Type</th>
+                                    <th>Statut</th>
+                                    <th class="text-end pe-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($class->schedules()->orderBy('date')->orderBy('start_time')->get() as $sch)
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-bold">{{ $sch->formatted_date }}</div>
+                                            <small class="text-muted"><i class="bi bi-clock me-1 text-primary"></i>{{ $sch->formatted_time }}</small>
+                                        </td>
+                                        <td>
+                                            <i class="bi bi-person-badge text-muted me-1"></i>{{ $sch->teacher->full_name }}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border"><i class="bi bi-door-closed me-1"></i>{{ $sch->room->name }} ({{ $sch->room->code }})</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary-subtle text-secondary">{{ $sch->type_label }}</span>
+                                        </td>
+                                        <td>
+                                            @if($sch->status === 'scheduled')
+                                                <span class="badge bg-primary-subtle text-primary border">Programmée</span>
+                                            @elseif($sch->status === 'completed')
+                                                <span class="badge bg-success-subtle text-success border">Terminée</span>
+                                            @else
+                                                <span class="badge bg-danger-subtle text-danger border">Annulée</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <a href="{{ route('schedules.show', $sch) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            <i class="bi bi-calendar-x fs-2 d-block mb-2 text-secondary"></i>
+                                            Aucune séance programmée pour cette classe.
+                                            <div class="mt-2">
+                                                <a href="{{ route('schedules.create', ['center_id' => $class->center_id, 'class_id' => $class->id]) }}" class="btn btn-sm btn-outline-primary">
+                                                    Planifier une première séance
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

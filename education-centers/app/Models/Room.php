@@ -48,6 +48,14 @@ class Room extends Model
     }
 
     /**
+     * Relation : Séances programmées dans cette salle.
+     */
+    public function schedules(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    /**
      * Vérifier si la salle est active.
      */
     public function isActive(): bool

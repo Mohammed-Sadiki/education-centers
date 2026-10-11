@@ -74,6 +74,11 @@ Route::middleware('auth')->group(function () {
         Route::resource('rooms', \App\Http\Controllers\RoomController::class);
         Route::patch('rooms/{room}/toggle-status', [\App\Http\Controllers\RoomController::class, 'toggleStatus'])
             ->name('rooms.toggle-status');
+
+        // CRUD Emplois du temps / Planning (SchedulePolicy gère l'isolation multi-centres)
+        Route::resource('schedules', \App\Http\Controllers\ScheduleController::class);
+        Route::patch('schedules/{schedule}/toggle-status', [\App\Http\Controllers\ScheduleController::class, 'toggleStatus'])
+            ->name('schedules.toggle-status');
     });
 });
 

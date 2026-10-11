@@ -75,6 +75,13 @@ class Teacher extends Model
             ->withTimestamps();
     }
 
+    /**
+     * Relation : Séances d'emploi du temps du professeur.
+     */
+    public function schedules(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Schedule::class);
+    }
 
     /**
      * Check if the teacher is active.

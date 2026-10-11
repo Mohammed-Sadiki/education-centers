@@ -103,6 +103,12 @@
                                 <i class="bi bi-door-open me-1"></i>Salles
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('schedules.*') ? 'active fw-semibold' : '' }}"
+                               href="{{ route('schedules.index') }}">
+                                <i class="bi bi-calendar-week me-1"></i>Emplois du temps
+                            </a>
+                        </li>
                     @endif
                 @endauth
             </ul>

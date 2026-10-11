@@ -473,7 +473,122 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        $this->command->info('✅ Plateforme initialisée : Centres, Utilisateurs, Dossiers Élèves/Profs, Formations, Classes, Affectations & Salles.');
+        // 16. Séances d'emplois du temps (Schedules) pour Berlin et Munich
+        if ($berlinCenter) {
+            $classA1 = \App\Models\ClassRoom::where('center_id', $berlinCenter->id)->where('code', 'A1-01')->first();
+            $classB1 = \App\Models\ClassRoom::where('center_id', $berlinCenter->id)->where('code', 'B1-01')->first();
+            $teacherJohannes = \App\Models\Teacher::where('center_id', $berlinCenter->id)->where('teacher_number', 'BER-T-000001')->first();
+            $room1 = \App\Models\Room::where('center_id', $berlinCenter->id)->where('code', 'ROOM-01')->first();
+            $room2 = \App\Models\Room::where('center_id', $berlinCenter->id)->where('code', 'ROOM-02')->first();
+
+            if ($classA1 && $teacherJohannes && $room1) {
+                // Séance 1 : cours programmé
+                \App\Models\Schedule::firstOrCreate(
+                    [
+                        'center_id'  => $berlinCenter->id,
+                        'class_id'   => $classA1->id,
+                        'teacher_id' => $teacherJohannes->id,
+                        'room_id'    => $room1->id,
+                        'date'       => '2026-10-20',
+                        'start_time' => '09:00:00',
+                    ],
+                    [
+                        'end_time'    => '11:00:00',
+                        'title'       => 'Grammaire & Vocabulaire Fondamental',
+                        'type'        => 'course',
+                        'description' => 'Introduction aux structures de base et conversation guidée.',
+                        'status'      => 'scheduled',
+                    ]
+                );
+
+                // Séance terminée
+                \App\Models\Schedule::firstOrCreate(
+                    [
+                        'center_id'  => $berlinCenter->id,
+                        'class_id'   => $classA1->id,
+                        'teacher_id' => $teacherJohannes->id,
+                        'room_id'    => $room1->id,
+                        'date'       => '2026-10-18',
+                        'start_time' => '09:00:00',
+                    ],
+                    [
+                        'end_time'    => '11:00:00',
+                        'title'       => 'Évaluation diagnostique A1',
+                        'type'        => 'exam',
+                        'description' => 'Test de positionnement initial des apprenants.',
+                        'status'      => 'completed',
+                    ]
+                );
+
+                // Séance annulée
+                \App\Models\Schedule::firstOrCreate(
+                    [
+                        'center_id'  => $berlinCenter->id,
+                        'class_id'   => $classA1->id,
+                        'teacher_id' => $teacherJohannes->id,
+                        'room_id'    => $room1->id,
+                        'date'       => '2026-10-19',
+                        'start_time' => '14:00:00',
+                    ],
+                    [
+                        'end_time'    => '16:00:00',
+                        'title'       => 'Atelier phonétique allemand',
+                        'type'        => 'workshop',
+                        'description' => 'Séance annulée pour cause de maintenance électrique.',
+                        'status'      => 'cancelled',
+                    ]
+                );
+            }
+
+            if ($classB1 && $teacherJohannes && $room2) {
+                // Séance 2 : créneau consécutif (11:00 -> 13:00) pour tester l'absence de conflit adjacent
+                \App\Models\Schedule::firstOrCreate(
+                    [
+                        'center_id'  => $berlinCenter->id,
+                        'class_id'   => $classB1->id,
+                        'teacher_id' => $teacherJohannes->id,
+                        'room_id'    => $room2->id,
+                        'date'       => '2026-10-20',
+                        'start_time' => '11:00:00',
+                    ],
+                    [
+                        'end_time'    => '13:00:00',
+                        'title'       => 'Perfectionnement B1 — Expression Écrite',
+                        'type'        => 'course',
+                        'description' => 'Rédaction de lettres professionnelles et argumentaires.',
+                        'status'      => 'scheduled',
+                    ]
+                );
+            }
+        }
+
+        if ($munichCenter) {
+            $classMunA1 = \App\Models\ClassRoom::where('center_id', $munichCenter->id)->where('code', 'A1-01')->first();
+            $teacherGreta = \App\Models\Teacher::where('center_id', $munichCenter->id)->where('teacher_number', 'MUN-T-000001')->first();
+            $roomMun1 = \App\Models\Room::where('center_id', $munichCenter->id)->where('code', 'ROOM-01')->first();
+
+            if ($classMunA1 && $teacherGreta && $roomMun1) {
+                \App\Models\Schedule::firstOrCreate(
+                    [
+                        'center_id'  => $munichCenter->id,
+                        'class_id'   => $classMunA1->id,
+                        'teacher_id' => $teacherGreta->id,
+                        'room_id'    => $roomMun1->id,
+                        'date'       => '2026-10-20',
+                        'start_time' => '10:00:00',
+                    ],
+                    [
+                        'end_time'    => '12:00:00',
+                        'title'       => 'Séance Munich Débutants',
+                        'type'        => 'course',
+                        'description' => 'Module immersif Munich.',
+                        'status'      => 'scheduled',
+                    ]
+                );
+            }
+        }
+
+        $this->command->info('✅ Plateforme initialisée : Centres, Utilisateurs, Dossiers Élèves/Profs, Formations, Classes, Affectations, Salles & Emplois du temps.');
     }
 }
 
