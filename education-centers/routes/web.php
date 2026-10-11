@@ -53,8 +53,20 @@ Route::middleware('auth')->group(function () {
         Route::resource('teachers', \App\Http\Controllers\TeacherController::class);
         Route::patch('teachers/{teacher}/toggle-status', [\App\Http\Controllers\TeacherController::class, 'toggleStatus'])
             ->name('teachers.toggle-status');
+
+        // CRUD Formations (FormationPolicy gère l'isolation multi-centres)
+        Route::resource('formations', \App\Http\Controllers\FormationController::class);
+        Route::patch('formations/{formation}/toggle-status', [\App\Http\Controllers\FormationController::class, 'toggleStatus'])
+            ->name('formations.toggle-status');
+
+        // CRUD Classes (ClassPolicy gère l'isolation multi-centres)
+        Route::resource('classes', \App\Http\Controllers\ClassController::class);
+        Route::patch('classes/{class}/toggle-status', [\App\Http\Controllers\ClassController::class, 'toggleStatus'])
+            ->name('classes.toggle-status');
     });
 });
+
+
 
 
 

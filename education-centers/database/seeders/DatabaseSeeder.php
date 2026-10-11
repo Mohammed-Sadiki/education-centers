@@ -208,8 +208,166 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        $this->command->info('✅ Comptes de démonstration créés : Prof Berlin, Prof Munich, Élève Berlin, Élève Munich + Dossiers étudiants + Dossiers professeurs.');
+        // 12. Formations de démonstration pour Berlin et Munich
+        if ($berlinCenter) {
+            \App\Models\Formation::updateOrCreate(
+                ['center_id' => $berlinCenter->id, 'code' => 'DE-A1'],
+                [
+                    'name'           => 'Deutsch A1 — Débutant',
+                    'description'    => 'Apprentissage des bases de la langue allemande pour débutants (A1 selon le CECRL).',
+                    'duration_hours' => 120,
+                    'duration_weeks' => 8,
+                    'price'          => 450.00,
+                    'currency'       => 'EUR',
+                    'status'         => 'active',
+                ]
+            );
+
+            \App\Models\Formation::updateOrCreate(
+                ['center_id' => $berlinCenter->id, 'code' => 'DE-B1'],
+                [
+                    'name'           => 'Deutsch B1 — Intermédiaire',
+                    'description'    => 'Perfectionnement et préparation aux examens de citoyenneté et de niveau B1.',
+                    'duration_hours' => 160,
+                    'duration_weeks' => 10,
+                    'price'          => 590.00,
+                    'currency'       => 'EUR',
+                    'status'         => 'active',
+                ]
+            );
+
+            \App\Models\Formation::updateOrCreate(
+                ['center_id' => $berlinCenter->id, 'code' => 'IT-BASIC'],
+                [
+                    'name'           => 'Informatique Basics',
+                    'description'    => 'Initiation à l’informatique, outils bureautiques et compétences numériques de base.',
+                    'duration_hours' => 60,
+                    'duration_weeks' => 4,
+                    'price'          => 320.00,
+                    'currency'       => 'EUR',
+                    'status'         => 'active',
+                ]
+            );
+        }
+
+        if ($munichCenter) {
+            // Même code 'DE-A1' autorisé pour un centre différent !
+            \App\Models\Formation::updateOrCreate(
+                ['center_id' => $munichCenter->id, 'code' => 'DE-A1'],
+                [
+                    'name'           => 'Deutsch A1 — Grundkurs München',
+                    'description'    => 'Cours intensif d’allemand débutant adapté au marché bavarois.',
+                    'duration_hours' => 130,
+                    'duration_weeks' => 8,
+                    'price'          => 490.00,
+                    'currency'       => 'EUR',
+                    'status'         => 'active',
+                ]
+            );
+
+            \App\Models\Formation::updateOrCreate(
+                ['center_id' => $munichCenter->id, 'code' => 'EN-B2'],
+                [
+                    'name'           => 'English B2 — Advanced Communication',
+                    'description'    => 'Perfectionnement de l’anglais professionnel et prise de parole en public.',
+                    'duration_hours' => 100,
+                    'duration_weeks' => 6,
+                    'price'          => 520.00,
+                    'currency'       => 'EUR',
+                    'status'         => 'active',
+                ]
+            );
+        }
+
+        // 13. Classes de démonstration pour Berlin et Munich
+        if ($berlinCenter) {
+            $berlinDeA1 = \App\Models\Formation::where('center_id', $berlinCenter->id)->where('code', 'DE-A1')->first();
+            $berlinDeB1 = \App\Models\Formation::where('center_id', $berlinCenter->id)->where('code', 'DE-B1')->first();
+
+            if ($berlinDeA1) {
+                \App\Models\ClassRoom::updateOrCreate(
+                    ['center_id' => $berlinCenter->id, 'code' => 'A1-01'],
+                    [
+                        'formation_id' => $berlinDeA1->id,
+                        'name'         => 'Groupe A1-01 — Matin',
+                        'description'  => 'Cours intensifs du matin de 09h00 à 12h30.',
+                        'capacity'     => 18,
+                        'start_date'   => '2026-11-02',
+                        'end_date'     => '2026-12-22',
+                        'status'       => 'active',
+                    ]
+                );
+
+                \App\Models\ClassRoom::updateOrCreate(
+                    ['center_id' => $berlinCenter->id, 'code' => 'A1-02'],
+                    [
+                        'formation_id' => $berlinDeA1->id,
+                        'name'         => 'Groupe A1-02 — Soir',
+                        'description'  => 'Cours du soir de 18h00 à 20h30.',
+                        'capacity'     => 15,
+                        'start_date'   => '2026-11-09',
+                        'end_date'     => '2026-12-30',
+                        'status'       => 'active',
+                    ]
+                );
+            }
+
+            if ($berlinDeB1) {
+                \App\Models\ClassRoom::updateOrCreate(
+                    ['center_id' => $berlinCenter->id, 'code' => 'B1-01'],
+                    [
+                        'formation_id' => $berlinDeB1->id,
+                        'name'         => 'Groupe B1-01 — Après-midi',
+                        'description'  => 'Perfectionnement B1 de 14h00 à 17h15.',
+                        'capacity'     => 20,
+                        'start_date'   => '2026-11-16',
+                        'end_date'     => '2027-01-25',
+                        'status'       => 'active',
+                    ]
+                );
+            }
+        }
+
+        if ($munichCenter) {
+            $munichDeA1 = \App\Models\Formation::where('center_id', $munichCenter->id)->where('code', 'DE-A1')->first();
+            $munichEnB2 = \App\Models\Formation::where('center_id', $munichCenter->id)->where('code', 'EN-B2')->first();
+
+            if ($munichDeA1) {
+                // Même code 'A1-01' autorisé à Munich dans un centre distinct !
+                \App\Models\ClassRoom::updateOrCreate(
+                    ['center_id' => $munichCenter->id, 'code' => 'A1-01'],
+                    [
+                        'formation_id' => $munichDeA1->id,
+                        'name'         => 'Groupe München A1-01',
+                        'description'  => 'Cours A1 Munich centre.',
+                        'capacity'     => 16,
+                        'start_date'   => '2026-11-02',
+                        'end_date'     => '2026-12-22',
+                        'status'       => 'active',
+                    ]
+                );
+            }
+
+            if ($munichEnB2) {
+                \App\Models\ClassRoom::updateOrCreate(
+                    ['center_id' => $munichCenter->id, 'code' => 'B2-01'],
+                    [
+                        'formation_id' => $munichEnB2->id,
+                        'name'         => 'Groupe English B2-01',
+                        'description'  => 'English advanced communication Munich.',
+                        'capacity'     => 14,
+                        'start_date'   => '2026-11-23',
+                        'end_date'     => '2027-01-15',
+                        'status'       => 'active',
+                    ]
+                );
+            }
+        }
+
+        $this->command->info('✅ Comptes & Dossiers créés : Super Admin, Admins, Profs, Élèves + Formations & Classes Berlin / Munich.');
     }
 }
+
+
 
 

@@ -71,6 +71,24 @@ class Center extends Model
         return $this->hasMany(Teacher::class);
     }
 
+    /**
+     * Un centre propose plusieurs formations.
+     */
+    public function formations(): HasMany
+    {
+        return $this->hasMany(Formation::class);
+    }
+
+    /**
+     * Un centre possède plusieurs classes.
+     */
+    public function classes(): HasMany
+    {
+        return $this->hasMany(ClassRoom::class);
+    }
+
+
+
 
 
     /*

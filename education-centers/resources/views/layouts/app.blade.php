@@ -85,6 +85,18 @@
                                 <i class="bi bi-person-workspace me-1"></i>Professeurs
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('formations.*') ? 'active fw-semibold' : '' }}"
+                               href="{{ route('formations.index') }}">
+                                <i class="bi bi-journal-bookmark me-1"></i>Formations
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('classes.*') ? 'active fw-semibold' : '' }}"
+                               href="{{ route('classes.index') }}">
+                                <i class="bi bi-diagram-3 me-1"></i>Classes
+                            </a>
+                        </li>
                     @endif
                 @endauth
             </ul>

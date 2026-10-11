@@ -1,0 +1,164 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreFormationRequest;
+use App\Http\Requests\UpdateFormationRequest;
+use App\Models\Center;
+use App\Models\Formation;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
+
+class FormationController extends Controller
+{
+    /**
+     * Liste des formations avec filtres et pagination.
+     * Super Admin -> tous les centres | Admin Centre -> uniquement son centre.
+     */
+    public function index(Request $request): View
+    {
+        Gate::authorize('viewAny', Formation::class);
+
+        $authUser = $request->user();
+        $query = Formation::with('center');
+
+        // Isolation multi-centres stricte
+        if ($authUser->isCenterAdmin()) {
+            $query->where('center_id', $authUser->center_id);
+        }
+
+        // Filtre : recherche par nom
+        if ($search = $request->input('search')) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        // Filtre : code
+        if ($code = $request->input('code')) {
+            $query->where('code', 'like', "%{$code}%");
+        }
+
+        // Filtre : statut
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        // Filtre : centre (Super Admin seulement)
+        if ($authUser->isSuperAdmin() && ($centerId = $request->input('center_id'))) {
+            $query->where('center_id', $centerId);
+        }
+
+        $formations = $query->latest('id')->paginate(15)->withQueryString();
+        $centers = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
+
+        return view('formations.index', compact('formations', 'centers'));
+    }
+
+    /**
+     * Formulaire de création d'une formation.
+     */
+    public function create(Request $request): View
+    {
+        Gate::authorize('create', Formation::class);
+
+        $authUser = $request->user();
+        $centers = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
+
+        return view('formations.create', compact('centers'));
+    }
+
+    /**
+     * Enregistrer une nouvelle formation.
+     */
+    public function store(StoreFormationRequest $request): RedirectResponse
+    {
+        $authUser = $request->user();
+
+        // Détermination stricte du center_id côté serveur (jamais faire confiance au client)
+        $centerId = $authUser->isCenterAdmin() ? $authUser->center_id : (int) $request->input('center_id');
+
+        $data = $request->validated();
+        $data['center_id'] = $centerId;
+
+        $formation = Formation::create($data);
+
+        return redirect()
+            ->route('formations.show', $formation)
+            ->with('success', "La formation \"{$formation->name}\" ({$formation->code}) a été créée avec succès.");
+    }
+
+    /**
+     * Consulter une formation.
+     */
+    public function show(Formation $formation): View
+    {
+        Gate::authorize('view', $formation);
+
+        $formation->load('center');
+
+        return view('formations.show', compact('formation'));
+    }
+
+    /**
+     * Formulaire d'édition d'une formation.
+     */
+    public function edit(Formation $formation): View
+    {
+        Gate::authorize('update', $formation);
+
+        $formation->load('center');
+
+        return view('formations.edit', compact('formation'));
+    }
+
+    /**
+     * Mettre à jour une formation.
+     */
+    public function update(UpdateFormationRequest $request, Formation $formation): RedirectResponse
+    {
+        $formation->update($request->validated());
+
+        return redirect()
+            ->route('formations.show', $formation)
+            ->with('success', "La formation \"{$formation->name}\" a été mise à jour avec succès.");
+    }
+
+    /**
+     * Activer ou désactiver une formation.
+     */
+    public function toggleStatus(Request $request, Formation $formation): RedirectResponse
+    {
+        Gate::authorize('toggleStatus', $formation);
+
+        $newStatus = $formation->isActive() ? 'inactive' : 'active';
+        $formation->update(['status' => $newStatus]);
+
+        $message = $newStatus === 'active'
+            ? "La formation \"{$formation->name}\" a été activée."
+            : "La formation \"{$formation->name}\" a été désactivée.";
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Supprimer une formation si aucune donnée dépendante ne l'empêche.
+     */
+    public function destroy(Formation $formation): RedirectResponse
+    {
+        Gate::authorize('delete', $formation);
+
+        // Vérification de sécurité pour les étapes futures (classes, inscriptions, etc.)
+        // À cette étape, pas encore de relation classes/enrollments
+        if (method_exists($formation, 'classes') && $formation->classes()->exists()) {
+            return back()->with('error', "Impossible de supprimer la formation : des classes y sont associées.");
+        }
+
+        $name = $formation->name;
+        $formation->delete();
+
+        return redirect()
+            ->route('formations.index')
+            ->with('success', "La formation \"{$name}\" a été supprimée avec succès.");
+    }
+}
