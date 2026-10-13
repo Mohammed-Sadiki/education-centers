@@ -10,8 +10,13 @@
 
     $groups = [];
 
+    $dashboardLabel = $user->isSuperAdmin() ? 'Dashboard Santé' : 'Dashboard';
+    $dashboardRoute = $user->isSuperAdmin() ? 'super-admin.sante.dashboard' : 'dashboard';
+    $dashboardIcon  = $user->isSuperAdmin() ? 'heart' : 'home';
+    $dashboardPattern = $user->isSuperAdmin() ? ['super-admin.sante.*', 'dashboard'] : 'dashboard';
+
     $groups[] = ['title' => null, 'items' => array_filter([
-        $link('Dashboard', 'dashboard', 'home', 'dashboard'),
+        $link($dashboardLabel, $dashboardRoute, $dashboardIcon, $dashboardPattern),
     ])];
 
     if ($user->isSuperAdmin() || $user->isCenterAdmin()) {
@@ -73,13 +78,42 @@
     aria-label="Navigation principale"
 >
     <div class="flex h-16 items-center gap-2 border-b border-slate-200 px-4 dark:border-slate-800">
-        <a href="{{ route('dashboard') }}" class="flex min-w-0 items-center gap-2 font-semibold text-slate-900 dark:text-white">
+        <a href="{{ $user->isSuperAdmin() ? route('super-admin.sante.dashboard') : route('dashboard') }}" class="flex min-w-0 items-center gap-2 font-semibold text-slate-900 dark:text-white">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white">
                 <x-icon name="academic" class="h-5 w-5" />
             </span>
             <span class="truncate" x-show="!$store.ui.sidebarCollapsed">Education Centers</span>
         </a>
     </div>
+
+    @if($user->isSuperAdmin())
+        <div class="border-b border-slate-200 bg-emerald-50/80 p-3 dark:border-slate-800 dark:bg-emerald-950/30">
+            <div class="flex items-center justify-between gap-2" x-show="!$store.ui.sidebarCollapsed">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-2xs">
+                        <x-icon name="heart" class="h-4 w-4" />
+                    </span>
+                    <div class="min-w-0">
+                        <span class="block text-[10px] uppercase font-bold tracking-wider text-emerald-800 dark:text-emerald-300">Domaine</span>
+                        <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">Santé</span>
+                    </div>
+                </div>
+                <a href="{{ route('super-admin.domaines') }}"
+                   class="inline-flex items-center gap-1 rounded-lg border border-emerald-300/80 bg-white px-2 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 dark:border-emerald-700/80 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-emerald-900/40 transition-colors shadow-2xs shrink-0"
+                   title="Changer de domaine">
+                    <x-icon name="arrow-uturn-left" class="h-3 w-3" />
+                    <span>Changer</span>
+                </a>
+            </div>
+            <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
+                <a href="{{ route('super-admin.domaines') }}"
+                   class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-2xs"
+                   title="Domaine Santé — Cliquer pour changer de domaine">
+                    <x-icon name="heart" class="h-4.5 w-4.5" />
+                </a>
+            </div>
+        </div>
+    @endif
 
     <nav class="flex-1 space-y-6 overflow-y-auto p-3">
         @foreach($groups as $group)

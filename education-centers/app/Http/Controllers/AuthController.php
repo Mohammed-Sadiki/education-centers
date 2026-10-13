@@ -15,6 +15,9 @@ class AuthController extends Controller
     public function showLoginForm(): View|RedirectResponse
     {
         if (Auth::check()) {
+            if (Auth::user()->isSuperAdmin()) {
+                return redirect()->route('super-admin.domaines');
+            }
             return redirect()->route('dashboard');
         }
 
@@ -39,6 +42,11 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
+
+            if (Auth::user()->isSuperAdmin()) {
+                return redirect()->intended(route('super-admin.domaines'))
+                    ->with('success', 'Connexion réussie. Bienvenue !');
+            }
 
             return redirect()->intended(route('dashboard'))
                 ->with('success', 'Connexion réussie. Bienvenue !');

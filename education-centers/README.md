@@ -1,58 +1,180 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🎓 Education Centers — Plateforme de Gestion Multi-Centres
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Application web moderne développée avec **Laravel 11** et **Tailwind CSS** pour la gestion administrative, pédagogique et financière de centres d'éducation et de formation multi-villes (Berlin, Munich, etc.).
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📋 Prérequis
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Avant de commencer, assurez-vous d'avoir installé sur votre machine :
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **PHP 8.3** ou version supérieure
+  - Extensions PHP requises : `pdo_mysql`, `pdo_sqlite`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `curl`, `fileinfo`
+- **Composer** (v2.x)
+- **Node.js** (v18.x ou supérieur, recommandé v20+) & **NPM**
+- **MySQL** (v8.0+) ou **MariaDB** (ou SQLite)
+- **Git**
 
-## Learning Laravel
+> 💡 **Utilisateurs Windows :** Si PHP est installé dans un répertoire spécifique (ex: `C:\php83`), assurez-vous d'ajouter ce chemin à votre variable d'environnement système `PATH`, ou utilisez le script `serve.bat` fourni à la racine.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🚀 Guide d'Installation Rapide
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Suivez ces étapes pour installer et lancer le projet après avoir cloné le dépôt :
 
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### 1. Cloner le projet et accéder au dossier
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/Mohammed-Sadiki/education-centers.git
+cd education-centers
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+*(Si vous avez cloné le dépôt complet contenant le sous-dossier, placez-vous dans `education-centers`)*
 
-## Contributing
+### 2. Installer les dépendances PHP (Composer)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+composer install
+```
 
-## Code of Conduct
+### 3. Configurer l'environnement (.env)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Copiez le fichier d'exemple pour créer votre fichier `.env` :
 
-## Security Vulnerabilities
+- **Sous Windows (PowerShell / CMD) :**
+  ```powershell
+  copy .env.example .env
+  ```
+- **Sous Linux / macOS :**
+  ```bash
+  cp .env.example .env
+  ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Générez la clé de chiffrement applicative :
 
-## License
+```bash
+php artisan key:generate
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 4. Configurer la Base de Données
+
+Créez une base de données vide nommée `education_centers` dans votre serveur MySQL / MariaDB (ex: via phpMyAdmin ou MySQL Workbench) :
+
+```sql
+CREATE DATABASE education_centers CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Vérifiez ensuite les paramètres de connexion dans votre fichier `.env` :
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=education_centers
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+*(Optionnel) Si vous préférez utiliser SQLite sans serveur de base de données :*
+```env
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
+```
+*(Créez un fichier vide `database/database.sqlite` le cas échéant).*
+
+### 5. Exécuter les migrations et les seeders
+
+Exécutez les migrations pour créer les tables et chargez les données de démonstration :
+
+```bash
+php artisan migrate --seed
+```
+
+### 6. Créer le lien symbolique pour le stockage de fichiers
+
+Nécessaire pour le téléchargement et l'affichage des documents, avatars et pièces jointes :
+
+```bash
+php artisan storage:link
+```
+
+### 7. Installer et compiler les dépendances Front-end (NPM)
+
+```bash
+npm install
+npm run build
+```
+
+Pour travailler en direct sur le CSS et le JavaScript avec rechargement à chaud (Hot Module Replacement) :
+```bash
+npm run dev
+```
+
+### 8. Lancer le serveur local
+
+```bash
+php artisan serve
+```
+
+> **Sous Windows :** Vous pouvez également double-cliquer sur `serve.bat` ou exécuter `.\serve.bat`.
+
+L'application est maintenant accessible sur : **http://localhost:8000** (ou http://127.0.0.1:8000).
+
+---
+
+## 👥 Comptes de Démonstration (Seeders)
+
+Tous les comptes créés par les seeders utilisent le mot de passe suivant :
+👉 **`EducationAdmin2026!`**
+
+| Rôle | Email | Centre | Accès |
+|---|---|---|---|
+| **Super Admin** | `admin@education-centers.de` | Global (tous) | Accès complet, gestion multi-centres |
+| **Admin Centre** | `admin.berlin@education-centers.de` | Berlin | Gestion administrative du centre Berlin |
+| **Admin Centre** | `admin.munich@education-centers.de` | Munich | Gestion administrative du centre Munich |
+| **Professeur** | `prof.berlin@education-centers.de` | Berlin | Emploi du temps, présences, notes |
+| **Professeur** | `prof.munich@education-centers.de` | Munich | Emploi du temps, présences, notes |
+| **Élève** | `eleve.berlin@education-centers.de` | Berlin | Espace apprenant, formations, documents |
+| **Élève** | `eleve.munich@education-centers.de` | Munich | Espace apprenant, formations, documents |
+
+---
+
+## 🧪 Tests Automatisés
+
+Le projet intègre une suite complète de **217 tests unitaires et fonctionnels** exécutés sur une base SQLite en mémoire (aucun risque pour votre base de données locale).
+
+Pour exécuter tous les tests :
+
+```bash
+php artisan test
+```
+
+---
+
+## 🛠️ Dépannage & Problèmes Fréquents
+
+### 1. `php : Le terme «php» n'est pas reconnu...`
+Ce message indique que PHP n'est pas déclaré dans les variables d'environnement de votre système Windows.
+- **Solution rapide :** Dans PowerShell, exécutez temporairement :
+  ```powershell
+  $env:Path = "C:\php83;" + $env:Path
+  ```
+  *(remplacez `C:\php83` par le dossier réel où vous avez extrait PHP)*.
+- **Solution permanente :** Ouvrez le menu Démarrer > *Modifier les variables d'environnement système* > *Variables d'environnement* > Modifier `Path` (dans Variables utilisateur ou système) > Ajouter le chemin vers votre dossier PHP (ex: `C:\php83`).
+
+### 2. `composer : Le terme «composer» n'est pas reconnu...`
+Si Composer n'est pas installé globalement :
+- Téléchargez `composer-setup.exe` depuis [getcomposer.org](https://getcomposer.org/)
+- Ou exécutez directement via PHP : `php composer.phar install`
+
+### 3. Erreur de permissions sur `storage/` et `bootstrap/cache/` (Linux / macOS)
+```bash
+chmod -R 775 storage bootstrap/cache
+```
+
+---
+
+## 📄 Licence
+
+Projet développé sous licence MIT.

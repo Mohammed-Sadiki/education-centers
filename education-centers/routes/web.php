@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CenterController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SuperAdminDomainController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +49,14 @@ Route::middleware('auth')->group(function () {
     //  SUPER ADMIN uniquement
     // ──────────────────────────────────────────────────────────────────────────
     Route::middleware('role:super_admin')->group(function () {
+        // ── Sélection des domaines (nouvelle page d'entrée du Super Admin) ──
+        Route::get('/super-admin/domaines', [SuperAdminDomainController::class, 'index'])
+            ->name('super-admin.domaines');
+
+        // ── Dashboard Santé ──
+        Route::get('/super-admin/domaines/sante', [SuperAdminDomainController::class, 'santeDashboard'])
+            ->name('super-admin.sante.dashboard');
+
         Route::resource('centers', CenterController::class);
         Route::patch('centers/{center}/toggle-status', [CenterController::class, 'toggleStatus'])
             ->name('centers.toggle-status');

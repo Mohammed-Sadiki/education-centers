@@ -64,7 +64,7 @@ class AuthAndRoleTest extends TestCase
         $response->assertSee('Mot de passe');
     }
 
-    public function test_user_can_login_with_valid_credentials_and_is_redirected_to_dashboard(): void
+    public function test_super_admin_is_redirected_to_domaines_on_login(): void
     {
         $user = User::factory()->superAdmin()->create([
             'email'    => 'admin@education-centers.de',
@@ -73,6 +73,22 @@ class AuthAndRoleTest extends TestCase
 
         $response = $this->post(route('login'), [
             'email'    => 'admin@education-centers.de',
+            'password' => 'password123',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+        $response->assertRedirect(route('super-admin.domaines'));
+    }
+
+    public function test_center_admin_is_redirected_to_dashboard_on_login(): void
+    {
+        $user = User::factory()->centerAdmin($this->berlinCenter->id)->create([
+            'email'    => 'centeradmin@education-centers.de',
+            'password' => Hash::make('password123'),
+        ]);
+
+        $response = $this->post(route('login'), [
+            'email'    => 'centeradmin@education-centers.de',
             'password' => 'password123',
         ]);
 
@@ -117,12 +133,61 @@ class AuthAndRoleTest extends TestCase
             'name' => 'Jean Super Admin',
         ]);
 
+        // /dashboard redirige désormais vers /super-admin/domaines
         $response = $this->actingAs($superAdmin)->get(route('dashboard'));
+        $response->assertRedirect(route('super-admin.domaines'));
 
+        // En suivant la redirection, on vérifie que la page de sélection des domaines
+        // s'affiche correctement avec les infos de l'utilisateur dans le topbar.
+        $followed = $this->actingAs($superAdmin)->followingRedirects()->get(route('dashboard'));
+        $followed->assertStatus(200);
+        $followed->assertSee('Jean Super Admin');
+        $followed->assertSee('Super Admin');
+        $followed->assertSee('Tous les centres');
+    }
+
+    public function test_super_admin_can_access_domain_selection_page(): void
+    {
+        $superAdmin = User::factory()->superAdmin()->create();
+
+        $response = $this->actingAs($superAdmin)->get(route('super-admin.domaines'));
         $response->assertStatus(200);
-        $response->assertSee('Jean Super Admin');
-        $response->assertSee('Super Admin');
-        $response->assertSee('Tous les centres');
+        $response->assertSee('Santé');
+        $response->assertSee('Bientôt disponible');
+    }
+
+    public function test_super_admin_can_access_sante_dashboard(): void
+    {
+        $superAdmin = User::factory()->superAdmin()->create();
+
+        $response = $this->actingAs($superAdmin)->get(route('super-admin.sante.dashboard'));
+        $response->assertStatus(200);
+        $response->assertSee('Santé');
+        $response->assertSee('Changer de domaine');
+    }
+
+    public function test_center_admin_cannot_access_super_admin_domain_pages(): void
+    {
+        $berlinAdmin = User::factory()->centerAdmin($this->berlinCenter->id)->create();
+
+        $this->actingAs($berlinAdmin)->get(route('super-admin.domaines'))->assertStatus(403);
+        $this->actingAs($berlinAdmin)->get(route('super-admin.sante.dashboard'))->assertStatus(403);
+    }
+
+    public function test_teacher_cannot_access_super_admin_domain_pages(): void
+    {
+        $teacher = User::factory()->teacher($this->berlinCenter->id)->create();
+
+        $this->actingAs($teacher)->get(route('super-admin.domaines'))->assertStatus(403);
+        $this->actingAs($teacher)->get(route('super-admin.sante.dashboard'))->assertStatus(403);
+    }
+
+    public function test_student_cannot_access_super_admin_domain_pages(): void
+    {
+        $student = User::factory()->student($this->munichCenter->id)->create();
+
+        $this->actingAs($student)->get(route('super-admin.domaines'))->assertStatus(403);
+        $this->actingAs($student)->get(route('super-admin.sante.dashboard'))->assertStatus(403);
     }
 
     public function test_center_admin_can_access_dashboard_and_sees_their_center(): void

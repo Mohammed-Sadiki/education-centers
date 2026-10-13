@@ -271,17 +271,26 @@ nav[role='navigation'] a {
 .card-body { @apply p-5; }
 .card-footer { @apply border-t border-slate-100 px-5 py-3 dark:border-slate-800; }
 .card-title { @apply font-semibold; }
-.btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition; }
-.btn-sm { @apply px-2.5 py-1.5 text-xs; }
+.btn { @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition; }
+.btn-sm { @apply px-2.5 py-1 text-xs; }
 .btn-primary { @apply bg-brand-600 text-white shadow-sm hover:bg-brand-700; }
-.btn-secondary, .btn-outline-secondary { @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200; }
-.btn-danger, .btn-outline-danger { @apply bg-red-600 text-white hover:bg-red-700; }
+.btn-secondary { @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700; }
+.btn-outline-secondary { @apply border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200; }
+.btn-outline-primary { @apply border border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-600 hover:text-white dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300; }
+.btn-outline-warning { @apply border border-amber-300 bg-amber-500 text-white hover:bg-amber-600 shadow-sm; }
+.btn-outline-success { @apply border border-emerald-300 bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm; }
+.btn-outline-danger { @apply border border-red-300 bg-red-600 text-white hover:bg-red-700 shadow-sm; }
+.btn-danger { @apply bg-red-600 text-white hover:bg-red-700; }
 .btn-success { @apply bg-emerald-600 text-white hover:bg-emerald-700; }
-.btn-warning, .btn-outline-warning { @apply bg-amber-500 text-white hover:bg-amber-600; }
-.btn-outline-primary { @apply border border-slate-300 bg-white text-brand-700 hover:bg-slate-50; }
+.btn-warning { @apply bg-amber-500 text-white hover:bg-amber-600; }
 .btn-info { @apply bg-cyan-600 text-white hover:bg-cyan-700; }
-.btn-group { @apply inline-flex gap-1; }
-.badge { @apply inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300; }
+.btn-group { @apply inline-flex items-center gap-1.5; }
+.badge { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium; }
+.bg-success-subtle { @apply bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800; }
+.bg-secondary-subtle { @apply bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700; }
+.bg-danger-subtle { @apply bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800; }
+.bg-warning-subtle { @apply bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800; }
+.bg-info-subtle { @apply bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-950/50 dark:text-cyan-300 dark:border-cyan-800; }
 .alert { @apply mb-4 rounded-lg border px-4 py-3 text-sm; }
 .alert-success { @apply border-emerald-200 bg-emerald-50 text-emerald-800; }
 .alert-danger { @apply border-red-200 bg-red-50 text-red-800; }

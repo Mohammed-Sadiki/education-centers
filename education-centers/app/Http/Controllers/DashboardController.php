@@ -17,12 +17,16 @@ use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 class DashboardController extends Controller {
-    public function index(Request $request): View {
+    public function index(Request $request): View|RedirectResponse {
         $user = $request->user();
+        // Le Super Admin est désormais redirigé vers la sélection des domaines
+        if ($user->isSuperAdmin()) {
+            return redirect()->route('super-admin.domaines');
+        }
         if (view()->exists('dashboard.' . $user->role)) {
-            if ($user->isSuperAdmin()) return $this->superAdminDashboard($request);
             if ($user->isCenterAdmin()) return $this->centerAdminDashboard($user);
             if ($user->isTeacher()) return $this->teacherDashboard($user);
             if ($user->isStudent()) return $this->studentDashboard($user);
