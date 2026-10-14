@@ -57,6 +57,33 @@ Route::middleware('auth')->group(function () {
         Route::get('/super-admin/domaines/sante', [SuperAdminDomainController::class, 'santeDashboard'])
             ->name('super-admin.sante.dashboard');
 
+        // ── Module Stagiaires (Contexte administratif indépendant) ──
+        Route::get('/super-admin/stagiaires/dashboard', [\App\Http\Controllers\StagiaireController::class, 'dashboard'])
+            ->name('stagiaires.dashboard');
+        Route::get('/super-admin/stagiaires/documents', [\App\Http\Controllers\StagiaireController::class, 'documents'])
+            ->name('stagiaires.documents');
+        Route::get('/super-admin/stagiaires/{stagiaire}/cin/{side}', [\App\Http\Controllers\StagiaireController::class, 'downloadCin'])
+            ->name('stagiaires.download-cin');
+        Route::get('/super-admin/stagiaires/{stagiaire}/cin/{side}/get', [\App\Http\Controllers\StagiaireController::class, 'downloadCin'])
+            ->name('stagiaires.cin-download');
+
+        Route::get('/super-admin/stagiaires/{stagiaire}/diplomas/{diploma}/download', [\App\Http\Controllers\StagiaireController::class, 'downloadDiploma'])
+            ->name('stagiaires.download-diploma');
+        Route::get('/super-admin/stagiaires/{stagiaire}/diplomas/{diploma}/file', [\App\Http\Controllers\StagiaireController::class, 'downloadDiploma'])
+            ->name('stagiaires.diploma-download');
+
+        Route::get('/super-admin/stagiaires/{stagiaire}/documents/{document}/download', [\App\Http\Controllers\StagiaireController::class, 'downloadDocument'])
+            ->name('stagiaires.download-document');
+        Route::get('/super-admin/stagiaires/{stagiaire}/documents/{document}/file', [\App\Http\Controllers\StagiaireController::class, 'downloadDocument'])
+            ->name('stagiaires.document-download');
+
+        Route::delete('/super-admin/stagiaires/{stagiaire}/diplomas/{diploma}', [\App\Http\Controllers\StagiaireController::class, 'deleteDiploma'])
+            ->name('stagiaires.delete-diploma');
+        Route::delete('/super-admin/stagiaires/{stagiaire}/documents/{document}', [\App\Http\Controllers\StagiaireController::class, 'deleteDocument'])
+            ->name('stagiaires.delete-document');
+        Route::resource('super-admin/stagiaires', \App\Http\Controllers\StagiaireController::class)
+            ->names('stagiaires');
+
         Route::resource('centers', CenterController::class);
         Route::patch('centers/{center}/toggle-status', [CenterController::class, 'toggleStatus'])
             ->name('centers.toggle-status');

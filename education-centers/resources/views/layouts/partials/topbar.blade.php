@@ -10,6 +10,10 @@
         default => $user->role,
     };
     $centerLabel = $user->isSuperAdmin() ? 'Tous les centres' : ($user->center?->name ?? 'N/A');
+    $isStagiaires = request()->routeIs('stagiaires.*');
+    $homeUrl = $user->isSuperAdmin()
+        ? ($isStagiaires ? route('stagiaires.dashboard') : route('super-admin.sante.dashboard'))
+        : route('dashboard');
 @endphp
 
 <header class="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
@@ -20,7 +24,7 @@
         @hasSection('breadcrumb')
             <nav class="hidden min-w-0 truncate text-sm text-slate-500 md:block" aria-label="Fil d'Ariane">
                 <ol class="flex items-center gap-2">
-                    <li><a href="{{ $user->isSuperAdmin() ? route('super-admin.sante.dashboard') : route('dashboard') }}" class="hover:text-brand-700">Accueil</a></li>
+                    <li><a href="{{ $homeUrl }}" class="hover:text-brand-700">Accueil</a></li>
                     @yield('breadcrumb')
                 </ol>
             </nav>
@@ -28,10 +32,17 @@
             <div class="hidden items-center gap-2 sm:flex">
                 <p class="truncate text-sm text-slate-500">{{ $centerLabel }}</p>
                 @if($user->isSuperAdmin())
-                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                        <x-icon name="heart" class="h-3.5 w-3.5 text-emerald-600" />
-                        Santé
-                    </span>
+                    @if($isStagiaires)
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-800 dark:bg-purple-900/40 dark:text-purple-300">
+                            <span class="text-xs">🧑‍💼</span>
+                            <span>Stagiaires · Espace administratif</span>
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                            <x-icon name="heart" class="h-3.5 w-3.5 text-emerald-600" />
+                            Santé
+                        </span>
+                    @endif
                 @endif
             </div>
         @endif
@@ -42,9 +53,9 @@
             <a href="{{ route('super-admin.domaines') }}"
                id="topbar-changer-domaine"
                class="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-all"
-               title="Retour à la sélection des domaines">
+               title="{{ $isStagiaires ? 'Changer de domaine / contexte' : 'Retour à la sélection des domaines' }}">
                 <x-icon name="arrow-uturn-left" class="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
-                <span>Changer de domaine</span>
+                <span>{{ $isStagiaires ? 'Changer de contexte' : 'Changer de domaine' }}</span>
             </a>
         @endif
 

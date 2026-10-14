@@ -14,12 +14,27 @@
             Sélectionnez votre domaine
         </h1>
         <p class="mt-2 text-base text-slate-600 dark:text-slate-400 max-w-2xl">
-            Bienvenue dans le portail d'administration par domaine. Chaque filière regroupe ses centres, formations, équipes et étudiants spécifiques.
+            Bienvenue dans le portail d'administration. Choisissez une filière de formation ou accédez aux modules de gestion administrative indépendants.
         </p>
     </div>
 
+    {{-- ────────────────────────────────────────────────────────────
+         SECTION 1 : DOMAINES DE FORMATION (6 CARTES)
+    ──────────────────────────────────────────────────────────── --}}
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                <span class="flex h-2.5 w-2.5 rounded-full bg-brand-500"></span>
+                Domaines de formation
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+                Filières de formation pédagogique et gestion des centres par domaine.
+            </p>
+        </div>
+    </div>
+
     {{-- Grille des 6 cartes de domaines --}}
-    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-14">
 
         {{-- ════════════════════════════════════════════════
              CARTE 1 — INFORMATIQUE (Bientôt disponible)
@@ -243,5 +258,79 @@
             </div>
         </div>
 
-    </div>{{-- /grid --}}
+    </div>{{-- /grid des 6 formations --}}
+
+    {{-- ────────────────────────────────────────────────────────────
+         SECTION 2 : GESTION ADMINISTRATIVE (INDÉPENDANTE)
+    ──────────────────────────────────────────────────────────── --}}
+    <div class="pt-10 border-t border-slate-200/80 dark:border-slate-800 mb-8">
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+                <div class="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200/70 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/50 dark:border-indigo-800/70 dark:text-indigo-300 mb-2">
+                    <span class="flex h-2 w-2 rounded-full bg-indigo-500"></span>
+                    Espace transversal indépendant
+                </div>
+                <h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                    Gestion administrative
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Modules administratifs indépendants du cursus pédagogique (non liés aux formations scolaires, classes ou examens).
+                </p>
+            </div>
+        </div>
+
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
+            {{-- ════════════════════════════════════════════════
+                 CARTE STAGIAIRES (Active & Indépendante ✓)
+            ════════════════════════════════════════════════ --}}
+            <a href="{{ route('stagiaires.dashboard') }}"
+               id="card-stagiaires"
+               class="group relative flex flex-col justify-between overflow-hidden rounded-2xl border-2 border-indigo-300 bg-white p-7 shadow-md
+                      hover:border-indigo-500 hover:shadow-xl hover:-translate-y-1
+                      dark:border-indigo-600/70 dark:bg-slate-900 dark:hover:border-indigo-400
+                      transition-all duration-200 cursor-pointer ring-1 ring-indigo-500/20"
+               aria-label="Accéder au module Stagiaires">
+
+                {{-- Dégradé interactif au survol --}}
+                <div class="absolute inset-0 bg-gradient-to-br from-indigo-50/60 via-transparent to-violet-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:from-indigo-950/20 dark:to-transparent pointer-events-none rounded-2xl"></div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-5">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-200 dark:bg-indigo-950/60 dark:text-indigo-400 dark:group-hover:bg-indigo-600 dark:group-hover:text-white text-2xl">
+                            🧑‍💼
+                        </div>
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300 shadow-2xs">
+                            <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
+                            Actif
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-indigo-700 dark:group-hover:text-indigo-400 transition-colors duration-200">
+                            Stagiaires
+                        </h3>
+                        <span class="rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60">
+                            Dossiers de stage
+                        </span>
+                    </div>
+                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Gestion complète des dossiers de stage, conventions, identité CIN, diplômes, documents et prix convenu du stage.
+                    </p>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                    <div class="flex items-center justify-between text-sm font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300">
+                        <span>Accéder à l'espace Stagiaires</span>
+                        <span class="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white group-hover:translate-x-1 transition-all duration-200 dark:bg-indigo-950/60 dark:text-indigo-400 dark:group-hover:bg-indigo-600 dark:group-hover:text-white">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+    </div>
 @endsection
