@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
-use App\Models\Center;
 use App\Models\Certificate;
 use App\Models\ClassRoom;
 use App\Models\Enrollment;
@@ -12,16 +11,26 @@ use App\Models\Payment;
 use App\Models\Schedule;
 use App\Models\Student;
 use App\Models\Teacher;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class SuperAdminDomainController extends Controller
 {
     /**
+     * Domaines de formation disponibles.
+     * Clé = slug de route/session, Valeur = libellé affiché.
+     */
+    public const DOMAINS = [
+        'sante'            => 'Santé',
+        'informatique'     => 'Informatique',
+        'hotellerie'       => 'Hôtellerie',
+        'maconnerie'       => 'Maçonnerie',
+        'design-interieur' => 'Design intérieur',
+        'design-graphique' => 'Design graphique',
+    ];
+
+    /**
      * Affiche la page de sélection des domaines du Super Admin.
-     * Accessible uniquement au rôle super_admin (garanti par le middleware de route).
-     * Réinitialise le domaine actif en session pour s'assurer que le Super Admin
-     * repart d'un état neutre sans menu métier.
+     * Réinitialise le domaine actif en session pour partir d'un état neutre.
      */
     public function index(): View
     {
@@ -31,37 +40,31 @@ class SuperAdminDomainController extends Controller
     }
 
     /**
-     * Affiche le Dashboard du domaine Santé.
-     * Enregistre le domaine Santé comme domaine actif en session.
+     * Dashboard générique d'un domaine de formation.
      *
-     * À ce stade, aucune colonne "domaine" n'existe dans les modèles,
-     * donc les statistiques affichées reflètent l'ensemble des données
-     * disponibles dans la plateforme (tous centres confondus).
+     * Route paramétrée : GET /super-admin/domaines/{domain}
+     * Le slug {domain} est validé contre la liste DOMAINS (404 si inconnu).
      *
-     * Pour filtrer réellement sur le domaine Santé, il faudra :
-     * 1. Ajouter un champ `domain` (ou une relation `Domain`) sur les modèles
-     *    Center, Formation, ClassRoom, Student, Teacher, etc.
-     * 2. Créer une migration pour ajouter cette colonne.
-     * 3. Adapter les seeders/factories.
-     * 4. Mettre à jour ce contrôleur pour filtrer avec ->where('domain', 'sante').
-     *
-     * En attendant, les cartes statistiques affichent les totaux globaux
-     * avec un avertissement clair dans la vue.
+     * Les statistiques reflètent l'ensemble de la plateforme (tous centres)
+     * car aucune colonne `domain` n'existe encore dans le schéma.
+     * Un bandeau d'avertissement est affiché dans la vue.
      */
-    public function santeDashboard(): View
+    public function domainDashboard(string $domain): View
     {
-        session(['active_domain' => 'sante']);
+        abort_unless(array_key_exists($domain, self::DOMAINS), 404);
+
+        session(['active_domain' => $domain]);
 
         $stats = [
-            'students'             => Student::count(),
-            'teachers'             => Teacher::count(),
-            'formations'           => Formation::count(),
-            'classes'              => ClassRoom::count(),
-            'enrollments'          => Enrollment::count(),
-            'pending_enrollments'  => Enrollment::where('status', 'pending')->count(),
-            'attendances_today'    => Attendance::whereDate('date', now()->toDateString())->count(),
-            'payments_total'       => Payment::where('status', 'paid')->sum('amount'),
-            'certificates_issued'  => Certificate::where('status', 'issued')->count(),
+            'students'            => Student::count(),
+            'teachers'            => Teacher::count(),
+            'formations'          => Formation::count(),
+            'classes'             => ClassRoom::count(),
+            'enrollments'         => Enrollment::count(),
+            'pending_enrollments' => Enrollment::where('status', 'pending')->count(),
+            'attendances_today'   => Attendance::whereDate('date', now()->toDateString())->count(),
+            'payments_total'      => Payment::where('status', 'paid')->sum('amount'),
+            'certificates_issued' => Certificate::where('status', 'issued')->count(),
         ];
 
         $recentEnrollments = Enrollment::with(['student', 'formation', 'center'])
@@ -77,10 +80,20 @@ class SuperAdminDomainController extends Controller
             ->take(5)
             ->get();
 
-        return view('super-admin.sante.dashboard', compact(
+        return view('super-admin.domain.dashboard', compact(
+            'domain',
             'stats',
             'recentEnrollments',
             'upcomingSchedules'
         ));
+    }
+
+    /**
+     * Alias conservé pour compatibilité : redirige vers le dashboard Santé générique.
+     * Les anciens liens et tests utilisant super-admin.sante.dashboard continuent de fonctionner.
+     */
+    public function santeDashboard(): View
+    {
+        return $this->domainDashboard('sante');
     }
 }

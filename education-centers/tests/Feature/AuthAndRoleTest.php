@@ -153,7 +153,13 @@ class AuthAndRoleTest extends TestCase
         $response = $this->actingAs($superAdmin)->get(route('super-admin.domaines'));
         $response->assertStatus(200);
         $response->assertSee('Santé');
-        $response->assertSee('Bientôt disponible');
+        // Depuis l'activation des 5 nouveaux domaines, tous sont actifs — plus de "Bientôt disponible"
+        $response->assertDontSee('Bientôt disponible');
+        $response->assertSee('Informatique');
+        $response->assertSee('Hôtellerie');
+        $response->assertSee('Maçonnerie');
+        $response->assertSee('Design intérieur');
+        $response->assertSee('Design graphique');
     }
 
     public function test_super_admin_can_access_sante_dashboard(): void

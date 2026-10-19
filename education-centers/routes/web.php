@@ -49,15 +49,21 @@ Route::middleware('auth')->group(function () {
     //  SUPER ADMIN uniquement
     // ──────────────────────────────────────────────────────────────────────────
     Route::middleware('role:super_admin')->group(function () {
-        // ── Sélection des domaines (nouvelle page d'entrée du Super Admin) ──
+        // ── Sélection des domaines (page d'entrée du Super Admin) ──
         Route::get('/super-admin/domaines', [SuperAdminDomainController::class, 'index'])
             ->name('super-admin.domaines');
 
-        // ── Dashboard Santé ──
+        // ── Dashboard Santé (route nommée conservée pour compatibilité) ──
         Route::get('/super-admin/domaines/sante', [SuperAdminDomainController::class, 'santeDashboard'])
             ->name('super-admin.sante.dashboard');
 
-        // ── Module Stagiaires (Contexte administratif indépendant) ──
+        // ── Dashboards des 5 autres domaines (route paramétrée générique) ──
+        // Slugs acceptés : informatique | hotellerie | maconnerie | design-interieur | design-graphique
+        Route::get('/super-admin/domaines/{domain}', [SuperAdminDomainController::class, 'domainDashboard'])
+            ->name('super-admin.domain.dashboard')
+            ->where('domain', 'informatique|hotellerie|maconnerie|design-interieur|design-graphique');
+
+
         Route::get('/super-admin/stagiaires/dashboard', [\App\Http\Controllers\StagiaireController::class, 'dashboard'])
             ->name('stagiaires.dashboard');
         Route::get('/super-admin/stagiaires/documents', [\App\Http\Controllers\StagiaireController::class, 'documents'])

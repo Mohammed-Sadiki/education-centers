@@ -11,8 +11,33 @@
     };
     $centerLabel = $user->isSuperAdmin() ? 'Tous les centres' : ($user->center?->name ?? 'N/A');
     $isStagiaires = request()->routeIs('stagiaires.*');
+
+    // Détection du domaine actif (session ou route)
+    $activeDomain = session('active_domain');
+    if (!$activeDomain && request()->routeIs('super-admin.domain.dashboard')) {
+        $activeDomain = request()->route('domain');
+    }
+    if (!$activeDomain && request()->routeIs('super-admin.sante.dashboard')) {
+        $activeDomain = 'sante';
+    }
+
+    // Labels et couleurs par domaine pour la topbar
+    $domainTopbarConfig = [
+        'sante'            => ['label' => 'Santé',            'classes' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300', 'icon' => 'heart'],
+        'informatique'     => ['label' => 'Informatique',     'classes' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',             'icon' => 'monitor'],
+        'hotellerie'       => ['label' => 'Hôtellerie',       'classes' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',          'icon' => 'building'],
+        'maconnerie'       => ['label' => 'Maçonnerie',       'classes' => 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300',      'icon' => 'wrench'],
+        'design-interieur' => ['label' => 'Design intérieur', 'classes' => 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300',      'icon' => 'home'],
+        'design-graphique' => ['label' => 'Design graphique', 'classes' => 'bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300',              'icon' => 'brush'],
+    ];
+    $topbarDomain = $domainTopbarConfig[$activeDomain] ?? null;
+
     $homeUrl = $user->isSuperAdmin()
-        ? ($isStagiaires ? route('stagiaires.dashboard') : route('super-admin.sante.dashboard'))
+        ? ($isStagiaires
+            ? route('stagiaires.dashboard')
+            : ($activeDomain && $activeDomain !== 'sante'
+                ? route('super-admin.domain.dashboard', $activeDomain)
+                : route('super-admin.sante.dashboard')))
         : route('dashboard');
 @endphp
 
@@ -38,10 +63,12 @@
                             <span>Stagiaires · Espace administratif</span>
                         </span>
                     @else
-                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                            <x-icon name="heart" class="h-3.5 w-3.5 text-emerald-600" />
-                            Santé
-                        </span>
+                        @if($topbarDomain)
+                            <span class="inline-flex items-center gap-1 rounded-full {{ $topbarDomain['classes'] }} px-2 py-0.5 text-xs font-semibold">
+                                <x-icon name="{{ $topbarDomain['icon'] }}" class="h-3.5 w-3.5" />
+                                {{ $topbarDomain['label'] }}
+                            </span>
+                        @endif
                     @endif
                 @endif
             </div>

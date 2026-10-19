@@ -3,6 +3,93 @@
     $collapsed = false;
     $isStagiaires = request()->routeIs('stagiaires.*');
 
+    // ─── Détection du contexte domaine de formation ───────────────────────────
+    // On utilise la session active_domain pour identifier le contexte courant.
+    // Si aucun domaine n'est en session mais que la route correspond à un domaine,
+    // on le récupère depuis l'URL (robustesse en cas de navigation directe).
+    $activeDomain = session('active_domain');
+    if (!$activeDomain && request()->routeIs('super-admin.domain.dashboard')) {
+        $activeDomain = request()->route('domain');
+    }
+    if (!$activeDomain && request()->routeIs('super-admin.sante.dashboard')) {
+        $activeDomain = 'sante';
+    }
+    $isFormationDomain = $user->isSuperAdmin() && !$isStagiaires && !empty($activeDomain);
+
+    // Configuration visuelle par domaine
+    $domainMeta = [
+        'sante'            => ['label' => 'Santé',            'color' => 'emerald', 'icon' => 'heart'],
+        'informatique'     => ['label' => 'Informatique',     'color' => 'blue',    'icon' => 'monitor'],
+        'hotellerie'       => ['label' => 'Hôtellerie',       'color' => 'amber',   'icon' => 'building'],
+        'maconnerie'       => ['label' => 'Maçonnerie',       'color' => 'orange',  'icon' => 'wrench'],
+        'design-interieur' => ['label' => 'Design intérieur', 'color' => 'violet',  'icon' => 'home'],
+        'design-graphique' => ['label' => 'Design graphique', 'color' => 'pink',    'icon' => 'brush'],
+    ];
+    $currentDomainMeta = $domainMeta[$activeDomain] ?? $domainMeta['sante'];
+    $domainLabel       = $currentDomainMeta['label'];
+    $domainColor       = $currentDomainMeta['color'];
+    $domainIcon        = $currentDomainMeta['icon'];
+
+    // Palettes de couleur par domaine
+    $colorPalette = [
+        'emerald' => [
+            'banner_bg'    => 'bg-emerald-50/80 dark:bg-emerald-950/30',
+            'icon_bg'      => 'bg-emerald-600',
+            'label_text'   => 'text-emerald-800 dark:text-emerald-300',
+            'btn_border'   => 'border-emerald-300/80 dark:border-emerald-700/80',
+            'btn_text'     => 'text-emerald-700 dark:text-emerald-300',
+            'btn_hover'    => 'hover:bg-emerald-100 dark:hover:bg-emerald-900/40',
+            'icon_hover'   => 'hover:bg-emerald-700',
+        ],
+        'blue' => [
+            'banner_bg'    => 'bg-blue-50/80 dark:bg-blue-950/30',
+            'icon_bg'      => 'bg-blue-600',
+            'label_text'   => 'text-blue-800 dark:text-blue-300',
+            'btn_border'   => 'border-blue-300/80 dark:border-blue-700/80',
+            'btn_text'     => 'text-blue-700 dark:text-blue-300',
+            'btn_hover'    => 'hover:bg-blue-100 dark:hover:bg-blue-900/40',
+            'icon_hover'   => 'hover:bg-blue-700',
+        ],
+        'amber' => [
+            'banner_bg'    => 'bg-amber-50/80 dark:bg-amber-950/30',
+            'icon_bg'      => 'bg-amber-600',
+            'label_text'   => 'text-amber-800 dark:text-amber-300',
+            'btn_border'   => 'border-amber-300/80 dark:border-amber-700/80',
+            'btn_text'     => 'text-amber-700 dark:text-amber-300',
+            'btn_hover'    => 'hover:bg-amber-100 dark:hover:bg-amber-900/40',
+            'icon_hover'   => 'hover:bg-amber-700',
+        ],
+        'orange' => [
+            'banner_bg'    => 'bg-orange-50/80 dark:bg-orange-950/30',
+            'icon_bg'      => 'bg-orange-600',
+            'label_text'   => 'text-orange-800 dark:text-orange-300',
+            'btn_border'   => 'border-orange-300/80 dark:border-orange-700/80',
+            'btn_text'     => 'text-orange-700 dark:text-orange-300',
+            'btn_hover'    => 'hover:bg-orange-100 dark:hover:bg-orange-900/40',
+            'icon_hover'   => 'hover:bg-orange-700',
+        ],
+        'violet' => [
+            'banner_bg'    => 'bg-violet-50/80 dark:bg-violet-950/30',
+            'icon_bg'      => 'bg-violet-600',
+            'label_text'   => 'text-violet-800 dark:text-violet-300',
+            'btn_border'   => 'border-violet-300/80 dark:border-violet-700/80',
+            'btn_text'     => 'text-violet-700 dark:text-violet-300',
+            'btn_hover'    => 'hover:bg-violet-100 dark:hover:bg-violet-900/40',
+            'icon_hover'   => 'hover:bg-violet-700',
+        ],
+        'pink' => [
+            'banner_bg'    => 'bg-pink-50/80 dark:bg-pink-950/30',
+            'icon_bg'      => 'bg-pink-600',
+            'label_text'   => 'text-pink-800 dark:text-pink-300',
+            'btn_border'   => 'border-pink-300/80 dark:border-pink-700/80',
+            'btn_text'     => 'text-pink-700 dark:text-pink-300',
+            'btn_hover'    => 'hover:bg-pink-100 dark:hover:bg-pink-900/40',
+            'icon_hover'   => 'hover:bg-pink-700',
+        ],
+    ];
+    $pal = $colorPalette[$domainColor] ?? $colorPalette['emerald'];
+
+    // ─── Construction des liens de navigation ─────────────────────────────────
     $link = function (string $label, string $routeName, string $icon, string|array $pattern, ?string $fallbackUrl = null, array $params = []) {
         $url = \Illuminate\Support\Facades\Route::has($routeName) ? route($routeName, $params) : $fallbackUrl;
         if (!$url) return null;
@@ -44,12 +131,21 @@
                 $link('Documents', 'stagiaires.documents', 'document', 'stagiaires.documents*'),
             ])
         ];
+
     } elseif ($user->isSuperAdmin()) {
         // ────────────────────────────────────────────────────────────
-        // CONTEXTE : DOMAINE SANTÉ (PÉDAGOGIE & GESTION SCOLAIRE)
+        // CONTEXTE : DOMAINE DE FORMATION (Santé, Informatique, etc.)
+        // Le dashboard du domaine actif est l'entrée principale.
         // ────────────────────────────────────────────────────────────
+
+        // Lien Dashboard dynamique selon le domaine actif
+        $dashboardRoute = ($activeDomain === 'sante' || !$activeDomain)
+            ? route('super-admin.sante.dashboard')
+            : route('super-admin.domain.dashboard', $activeDomain ?? 'sante');
+
         $groups[] = ['title' => null, 'items' => array_filter([
-            $link('Dashboard Santé', 'super-admin.sante.dashboard', 'heart', ['super-admin.sante.*', 'dashboard']),
+            ['label' => 'Dashboard ' . $domainLabel, 'url' => $dashboardRoute, 'icon' => $domainIcon,
+             'active' => request()->routeIs(['super-admin.sante.dashboard', 'super-admin.domain.dashboard'])],
         ])];
 
         $adminItems = array_filter([
@@ -81,6 +177,7 @@
             $link('Audit Logs', 'audit.index', 'shield', 'audit.*'),
         ]);
         $groups[] = ['title' => 'Communication', 'items' => $com];
+
     } elseif ($user->isCenterAdmin()) {
         $groups[] = ['title' => null, 'items' => array_filter([
             $link('Dashboard', 'dashboard', 'home', 'dashboard'),
@@ -114,6 +211,7 @@
             $link('Audit Logs', 'audit.index', 'shield', 'audit.*'),
         ]);
         $groups[] = ['title' => 'Communication', 'items' => $com];
+
     } elseif ($user->isTeacher()) {
         $groups[] = ['title' => 'Enseignement', 'items' => array_filter([
             $link('Présences', 'attendances.index', 'clock', 'attendances.*'),
@@ -143,7 +241,7 @@
     aria-label="Navigation principale"
 >
     <div class="flex h-16 items-center gap-2 border-b border-slate-200 px-4 dark:border-slate-800">
-        <a href="{{ $user->isSuperAdmin() ? ($isStagiaires ? route('stagiaires.dashboard') : route('super-admin.sante.dashboard')) : route('dashboard') }}" class="flex min-w-0 items-center gap-2 font-semibold text-slate-900 dark:text-white">
+        <a href="{{ $user->isSuperAdmin() ? ($isStagiaires ? route('stagiaires.dashboard') : ($activeDomain && $activeDomain !== 'sante' ? route('super-admin.domain.dashboard', $activeDomain) : route('super-admin.sante.dashboard'))) : route('dashboard') }}" class="flex min-w-0 items-center gap-2 font-semibold text-slate-900 dark:text-white">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white">
                 <x-icon name="academic" class="h-5 w-5" />
             </span>
@@ -181,30 +279,33 @@
                 </div>
             </div>
         @else
-            {{-- BANNER DU CONTEXTE : DOMAINE SANTÉ --}}
-            <div class="border-b border-slate-200 bg-emerald-50/80 p-3 dark:border-slate-800 dark:bg-emerald-950/30">
+            {{-- BANNER DU CONTEXTE : DOMAINE DE FORMATION (dynamique) --}}
+            <div class="border-b border-slate-200 {{ $pal['banner_bg'] }} p-3 dark:border-slate-800"
+                 data-domain="{{ $activeDomain }}"
+                 id="sidebar-domain-banner">
                 <div class="flex items-center justify-between gap-2" x-show="!$store.ui.sidebarCollapsed">
                     <div class="flex items-center gap-2 min-w-0">
-                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-2xs">
-                            <x-icon name="heart" class="h-4 w-4" />
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg {{ $pal['icon_bg'] }} text-white shadow-2xs">
+                            <x-icon name="{{ $domainIcon }}" class="h-4 w-4" />
                         </span>
                         <div class="min-w-0">
-                            <span class="block text-[10px] uppercase font-bold tracking-wider text-emerald-800 dark:text-emerald-300">Domaine</span>
-                            <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">Santé</span>
+                            <span class="block text-[10px] uppercase font-bold tracking-wider {{ $pal['label_text'] }}">Domaine</span>
+                            <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">{{ $domainLabel }}</span>
                         </div>
                     </div>
                     <a href="{{ route('super-admin.domaines') }}"
-                       class="inline-flex items-center gap-1 rounded-lg border border-emerald-300/80 bg-white px-2 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 dark:border-emerald-700/80 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-emerald-900/40 transition-colors shadow-2xs shrink-0"
-                       title="Changer de domaine">
+                       class="inline-flex items-center gap-1 rounded-lg border {{ $pal['btn_border'] }} bg-white px-2 py-1 text-[11px] font-semibold {{ $pal['btn_text'] }} {{ $pal['btn_hover'] }} dark:bg-slate-900 transition-colors shadow-2xs shrink-0"
+                       title="Changer de domaine"
+                       id="sidebar-changer-domaine">
                         <x-icon name="arrow-uturn-left" class="h-3 w-3" />
                         <span>Changer</span>
                     </a>
                 </div>
                 <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
                     <a href="{{ route('super-admin.domaines') }}"
-                       class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-2xs"
-                       title="Domaine Santé — Cliquer pour changer de domaine">
-                        <x-icon name="heart" class="h-4.5 w-4.5" />
+                       class="flex h-8 w-8 items-center justify-center rounded-lg {{ $pal['icon_bg'] }} text-white {{ $pal['icon_hover'] }} transition-colors shadow-2xs"
+                       title="{{ $domainLabel }} — Cliquer pour changer de domaine">
+                        <x-icon name="{{ $domainIcon }}" class="h-4.5 w-4.5" />
                     </a>
                 </div>
             </div>
