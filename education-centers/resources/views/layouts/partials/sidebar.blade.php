@@ -312,27 +312,78 @@
         @endif
     @endif
 
-    <nav class="flex-1 space-y-6 overflow-y-auto p-3">
-        @foreach($groups as $group)
+    <nav class="flex-1 space-y-4 overflow-y-auto p-3">
+        @foreach($groups as $index => $group)
             @if(!empty($group['items']))
-                <div>
-                    @if($group['title'])
-                        <p class="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400" x-show="!$store.ui.sidebarCollapsed">{{ $group['title'] }}</p>
-                    @endif
-                    <ul class="space-y-0.5">
-                        @foreach($group['items'] as $item)
-                            <li>
-                                <a href="{{ $item['url'] }}"
-                                   class="ec-nav-link {{ $item['active'] ? 'ec-nav-link-active' : '' }}"
-                                   @if($item['active']) aria-current="page" @endif
-                                   title="{{ $item['label'] }}">
-                                    <x-icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
-                                    <span class="truncate" x-show="!$store.ui.sidebarCollapsed">{{ $item['label'] }}</span>
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
+                @php
+                    $hasActiveItem = collect($group['items'])->contains('active', true);
+                    $sectionKey = 'ec-sidebar-sec-' . Str::slug($group['title'] ?? 'group-' . $index);
+                    $isCollapsible = !empty($group['title']);
+                @endphp
+
+                @if($isCollapsible)
+                    <div x-data="{
+                        open: {{ $hasActiveItem ? 'true' : "localStorage.getItem('$sectionKey') !== null ? localStorage.getItem('$sectionKey') === '1' : false" }},
+                        toggle() {
+                            this.open = !this.open;
+                            try { localStorage.setItem('{{ $sectionKey }}', this.open ? '1' : '0'); } catch (e) {}
+                        }
+                    }" class="space-y-1">
+                        {{-- Bouton accordéon (visible lorsque la sidebar n'est pas réduite) --}}
+                        <button type="button"
+                                x-on:click="toggle()"
+                                x-show="!$store.ui.sidebarCollapsed"
+                                class="group flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 hover:bg-slate-100 hover:text-slate-800 focus:outline-none dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200 transition-colors"
+                                :aria-expanded="open">
+                            <span class="flex items-center gap-1.5 font-bold tracking-wider">
+                                {{ $group['title'] }}
+                            </span>
+                            <span class="text-slate-400 transition-transform duration-200 ease-in-out group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"
+                                  :class="{ 'rotate-90': open, 'rotate-0': !open }">
+                                <x-icon name="chevron-right" class="h-3.5 w-3.5" />
+                            </span>
+                        </button>
+
+                        {{-- Séparateur discret si sidebar repliée en mode icônes --}}
+                        <div x-show="$store.ui.sidebarCollapsed" class="my-2 border-t border-slate-200 dark:border-slate-800"></div>
+
+                        {{-- Liste des liens de la section --}}
+                        <div x-show="open || $store.ui.sidebarCollapsed"
+                             x-collapse
+                             class="space-y-0.5">
+                            <ul class="space-y-0.5">
+                                @foreach($group['items'] as $item)
+                                    <li>
+                                        <a href="{{ $item['url'] }}"
+                                           class="ec-nav-link {{ $item['active'] ? 'ec-nav-link-active' : '' }}"
+                                           @if($item['active']) aria-current="page" @endif
+                                           title="{{ $item['label'] }}">
+                                            <x-icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
+                                            <span class="truncate" x-show="!$store.ui.sidebarCollapsed">{{ $item['label'] }}</span>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                @else
+                    {{-- Section sans titre (ex: Dashboard du domaine actif) --}}
+                    <div>
+                        <ul class="space-y-0.5">
+                            @foreach($group['items'] as $item)
+                                <li>
+                                    <a href="{{ $item['url'] }}"
+                                       class="ec-nav-link {{ $item['active'] ? 'ec-nav-link-active' : '' }}"
+                                       @if($item['active']) aria-current="page" @endif
+                                       title="{{ $item['label'] }}">
+                                        <x-icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
+                                        <span class="truncate" x-show="!$store.ui.sidebarCollapsed">{{ $item['label'] }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
             @endif
         @endforeach
     </nav>
