@@ -11,9 +11,8 @@
         <x-ui.stat label="Formations" :value="$stats['formations']" icon="book" />
         <x-ui.stat label="Classes" :value="$stats['classes']" icon="classes" tone="info" />
         <x-ui.stat label="Inscriptions acceptées" :value="$stats['enrollments_accepted']" icon="clipboard" tone="success" />
-        <x-ui.stat label="Inscriptions en attente" :value="$stats['enrollments_pending']" icon="clock" tone="warning" />
-        <x-ui.stat label="Revenus" :value="number_format($stats['payments_total'], 2, ',', ' ').' €'" icon="banknotes" tone="success" />
-        <x-ui.stat label="Factures en attente" :value="number_format($stats['invoices_pending'], 2, ',', ' ').' €'" icon="document" tone="danger" />
+        <x-ui.stat label="Revenus" :value="format_price($stats['payments_total'])" icon="banknotes" tone="success" />
+        <x-ui.stat label="Factures en attente" :value="format_price($stats['invoices_pending'])" icon="document" tone="danger" />
     </div>
 
     <div class="grid gap-6 xl:grid-cols-2">

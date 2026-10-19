@@ -341,8 +341,8 @@
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-1.5">Monnaie de facturation</p>
                         <select name="currency" id="currency"
                                 class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                            <option value="MAD" {{ old('currency', $stagiaire->currency ?? 'MAD') === 'MAD' ? 'selected' : '' }}>MAD (DH)</option>
                             <option value="EUR" {{ old('currency', $stagiaire->currency) === 'EUR' ? 'selected' : '' }}>EUR (€)</option>
-                            <option value="MAD" {{ old('currency', $stagiaire->currency) === 'MAD' ? 'selected' : '' }}>MAD (DH)</option>
                             <option value="USD" {{ old('currency', $stagiaire->currency) === 'USD' ? 'selected' : '' }}>USD ($)</option>
                         </select>
                     </div>

@@ -16,7 +16,7 @@ class StoreStagiaireRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         if (!$this->filled('currency')) {
-            $this->merge(['currency' => 'EUR']);
+            $this->merge(['currency' => default_currency()]);
         }
         if ($this->filled('birth_date') && !$this->filled('date_of_birth')) {
             $this->merge(['date_of_birth' => $this->input('birth_date')]);

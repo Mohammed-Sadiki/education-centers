@@ -203,7 +203,7 @@
                             </td>
                             <td>
                                 <span class="inline-flex items-center rounded-lg bg-purple-50 px-2 py-0.5 text-xs font-bold text-purple-900 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/60">
-                                    {{ number_format((float)$stagiaire->stage_price, 2, ',', ' ') }} {{ $stagiaire->currency ?? 'EUR' }}
+                                    {{ $stagiaire->formatted_stage_price }}
                                 </span>
                             </td>
                             <td>

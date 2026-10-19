@@ -91,7 +91,7 @@ class Formation extends Model
             return '—';
         }
 
-        return number_format((float) $this->price, 2, ',', ' ') . ' ' . $this->currency;
+        return format_price($this->price, $this->currency ?? default_currency());
     }
 
     /**

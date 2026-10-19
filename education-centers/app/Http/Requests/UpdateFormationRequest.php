@@ -49,7 +49,7 @@ class UpdateFormationRequest extends FormRequest
             'duration_hours' => ['nullable', 'integer', 'min:0'],
             'duration_weeks' => ['nullable', 'integer', 'min:0'],
             'price' => ['nullable', 'numeric', 'min:0'],
-            'currency' => ['nullable', 'string', 'size:3', Rule::in(['EUR', 'USD', 'GBP', 'CHF'])],
+            'currency' => ['nullable', 'string', 'size:3', Rule::in(['MAD', 'EUR', 'USD', 'GBP', 'CHF'])],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
     }

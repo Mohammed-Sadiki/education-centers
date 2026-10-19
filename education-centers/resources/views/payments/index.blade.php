@@ -8,7 +8,7 @@
     @endcan
 </x-ui.page-header>
 <div class="mb-6 grid gap-4 sm:grid-cols-2">
-    <x-ui.stat label="Total payé (filtre actuel)" :value="number_format((float) $totalPaid, 2, ',', ' ').' €'" icon="banknotes" tone="success" />
+    <x-ui.stat label="Total payé (filtre actuel)" :value="format_price((float) $totalPaid)" icon="banknotes" tone="success" />
     <x-ui.stat label="Paiements" :value="$payments->total()" icon="document" />
 </div>
 <x-ui.card class="mb-4">

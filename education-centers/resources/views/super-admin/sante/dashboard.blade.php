@@ -98,7 +98,7 @@
         <x-ui.stat label="En attente"   :value="$stats['pending_enrollments']" icon="clock"       tone="warning" />
         <x-ui.stat label="Présences aujourd'hui" :value="$stats['attendances_today']" icon="chart" tone="neutral" />
         <x-ui.stat label="Revenus (payés)"
-                   :value="number_format($stats['payments_total'], 2, ',', ' ') . ' €'"
+                   :value="format_price($stats['payments_total'])"
                    icon="banknotes"
                    tone="success" />
     </div>

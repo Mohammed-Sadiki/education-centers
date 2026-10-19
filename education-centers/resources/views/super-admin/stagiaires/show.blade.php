@@ -88,7 +88,7 @@
                     <span class="text-3xl md:text-4xl font-black tracking-tight text-white">
                         {{ number_format((float)$stagiaire->stage_price, 2, ',', ' ') }}
                     </span>
-                    <span class="text-lg font-bold text-purple-200">{{ $stagiaire->currency ?? 'EUR' }}</span>
+                    <span class="text-lg font-bold text-purple-200">{{ currency_symbol($stagiaire->currency ?? default_currency()) }}</span>
                 </div>
                 <span class="mt-1 text-[11px] text-purple-200">Montant convenu pour la totalité du stage</span>
             </div>

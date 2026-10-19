@@ -131,6 +131,7 @@
                             <div class="col-md-3">
                                 <label for="currency" class="form-label fw-semibold">Devise</label>
                                 <select id="currency" name="currency" class="form-select @error('currency') is-invalid @enderror">
+                                    <option value="MAD" {{ old('currency', $formation->currency ?? 'MAD') === 'MAD' ? 'selected' : '' }}>MAD (DH)</option>
                                     <option value="EUR" {{ old('currency', $formation->currency) === 'EUR' ? 'selected' : '' }}>EUR (€)</option>
                                     <option value="USD" {{ old('currency', $formation->currency) === 'USD' ? 'selected' : '' }}>USD ($)</option>
                                     <option value="GBP" {{ old('currency', $formation->currency) === 'GBP' ? 'selected' : '' }}>GBP (£)</option>

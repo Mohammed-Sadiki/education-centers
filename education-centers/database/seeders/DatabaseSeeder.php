@@ -218,7 +218,7 @@ class DatabaseSeeder extends Seeder
                     'duration_hours' => 120,
                     'duration_weeks' => 8,
                     'price'          => 450.00,
-                    'currency'       => 'EUR',
+                    'currency'       => 'MAD',
                     'status'         => 'active',
                 ]
             );
@@ -231,7 +231,7 @@ class DatabaseSeeder extends Seeder
                     'duration_hours' => 160,
                     'duration_weeks' => 10,
                     'price'          => 590.00,
-                    'currency'       => 'EUR',
+                    'currency'       => 'MAD',
                     'status'         => 'active',
                 ]
             );
@@ -244,7 +244,7 @@ class DatabaseSeeder extends Seeder
                     'duration_hours' => 60,
                     'duration_weeks' => 4,
                     'price'          => 320.00,
-                    'currency'       => 'EUR',
+                    'currency'       => 'MAD',
                     'status'         => 'active',
                 ]
             );
@@ -260,7 +260,7 @@ class DatabaseSeeder extends Seeder
                     'duration_hours' => 130,
                     'duration_weeks' => 8,
                     'price'          => 490.00,
-                    'currency'       => 'EUR',
+                    'currency'       => 'MAD',
                     'status'         => 'active',
                 ]
             );
@@ -273,7 +273,7 @@ class DatabaseSeeder extends Seeder
                     'duration_hours' => 100,
                     'duration_weeks' => 6,
                     'price'          => 520.00,
-                    'currency'       => 'EUR',
+                    'currency'       => 'MAD',
                     'status'         => 'active',
                 ]
             );

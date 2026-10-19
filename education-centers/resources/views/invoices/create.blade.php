@@ -37,7 +37,7 @@
         </div>
         <div>
             <label class="ec-label">Devise</label>
-            <input name="currency" class="ec-input" value="EUR" required>
+            <input name="currency" class="ec-input" value="{{ old('currency', default_currency()) }}" required>
         </div>
         <div>
             <label class="ec-label">Date</label>

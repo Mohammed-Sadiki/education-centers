@@ -13,7 +13,7 @@
         <x-ui.stat label="Classes" :value="$stats['classes']" icon="classes" tone="info" />
         <x-ui.stat label="Inscriptions" :value="$stats['enrollments']" icon="clipboard" />
         <x-ui.stat label="En attente" :value="$stats['pending_enrollments']" icon="clock" tone="warning" />
-        <x-ui.stat label="Revenus" :value="number_format($stats['payments_total'], 2, ',', ' ').' €'" icon="banknotes" tone="success" />
+        <x-ui.stat label="Revenus" :value="format_price($stats['payments_total'])" icon="banknotes" tone="success" />
     </div>
 
     <div class="grid gap-6 xl:grid-cols-2">

@@ -69,7 +69,7 @@ class Stagiaire extends Model
 
     public function getFormattedStagePriceAttribute(): string
     {
-        return number_format((float) ($this->stage_price ?? 0), 2, ',', ' ') . ' ' . ($this->currency ?? 'EUR');
+        return format_price($this->stage_price ?? 0, $this->currency ?? default_currency());
     }
 
     public function isComplete(): bool

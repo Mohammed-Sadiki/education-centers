@@ -232,18 +232,18 @@
                         <div class="relative flex-1">
                             <input type="number" step="0.01" min="0" max="999999.99" id="stage_price" name="stage_price"
                                    value="{{ old('stage_price', '0.00') }}"
-                                   class="ec-input w-full text-lg font-bold pr-10 @error('stage_price') ec-input-error @enderror"
+                                   class="ec-input w-full text-lg font-bold pr-12 @error('stage_price') ec-input-error @enderror"
                                    placeholder="0.00">
-                            <span class="absolute right-3 top-2.5 font-bold text-slate-500">€</span>
+                            <span class="absolute right-3 top-2.5 font-bold text-slate-500">DH</span>
                         </div>
-                        <input type="hidden" name="currency" value="EUR">
+                        <input type="hidden" name="currency" value="MAD">
                         <span class="rounded-lg bg-indigo-50 px-3 py-2 text-sm font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
-                            EUR
+                            MAD
                         </span>
                     </div>
                     @error('stage_price') <p class="ec-error mt-1">{{ $message }}</p> @enderror
                     <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                        Montant convenu que le stagiaire doit payer pour effectuer le stage (valeur positive ou nulle, devise par défaut EUR).
+                        Montant convenu que le stagiaire doit payer pour effectuer le stage (valeur positive ou nulle, devise par défaut MAD / DH).
                     </p>
                 </div>
 
