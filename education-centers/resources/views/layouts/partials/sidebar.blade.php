@@ -240,13 +240,26 @@
     }"
     aria-label="Navigation principale"
 >
-    <div class="flex h-16 items-center gap-2 border-b border-slate-200 px-4 dark:border-slate-800">
-        <a href="{{ $user->isSuperAdmin() ? ($isStagiaires ? route('stagiaires.dashboard') : ($activeDomain && $activeDomain !== 'sante' ? route('super-admin.domain.dashboard', $activeDomain) : route('super-admin.sante.dashboard'))) : route('dashboard') }}" class="flex min-w-0 items-center gap-2 font-semibold text-slate-900 dark:text-white">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white">
+    <div class="flex h-16 items-center border-b border-slate-200 px-3.5 dark:border-slate-800"
+         :class="$store.ui.sidebarCollapsed ? 'justify-center' : 'justify-between'">
+        <a href="{{ $user->isSuperAdmin() ? ($isStagiaires ? route('stagiaires.dashboard') : ($activeDomain && $activeDomain !== 'sante' ? route('super-admin.domain.dashboard', $activeDomain) : route('super-admin.sante.dashboard'))) : route('dashboard') }}"
+           class="flex min-w-0 items-center gap-2.5 font-semibold text-slate-900 dark:text-white"
+           x-show="!$store.ui.sidebarCollapsed">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white shadow-2xs">
                 <x-icon name="academic" class="h-5 w-5" />
             </span>
-            <span class="truncate" x-show="!$store.ui.sidebarCollapsed">Education Centers</span>
+            <span class="truncate font-semibold tracking-tight">Education Centers</span>
         </a>
+
+        {{-- Bouton de réduction / agrandissement pour Desktop (icône seule) --}}
+        <button type="button"
+                x-on:click="$store.ui.toggleCollapsed()"
+                :aria-label="$store.ui.sidebarCollapsed ? 'Agrandir la sidebar' : 'Réduire la sidebar'"
+                :title="$store.ui.sidebarCollapsed ? 'Agrandir la sidebar' : 'Réduire la sidebar'"
+                :aria-expanded="!$store.ui.sidebarCollapsed"
+                class="hidden lg:inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700/80 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white transition-colors">
+            <x-icon name="chevron-left" class="h-4 w-4 transition-transform duration-200" x-bind:class="$store.ui.sidebarCollapsed ? 'rotate-180' : ''" />
+        </button>
     </div>
 
     @if($user->isSuperAdmin())
@@ -387,11 +400,4 @@
             @endif
         @endforeach
     </nav>
-
-    <div class="hidden border-t border-slate-200 p-3 lg:block dark:border-slate-800">
-        <button type="button" class="ec-nav-link w-full" x-on:click="$store.ui.toggleCollapsed()" :aria-expanded="!$store.ui.sidebarCollapsed">
-            <x-icon name="chevron-left" class="h-5 w-5" x-bind:class="$store.ui.sidebarCollapsed ? 'rotate-180' : ''" />
-            <span x-show="!$store.ui.sidebarCollapsed">Réduire</span>
-        </button>
-    </div>
 </aside>
