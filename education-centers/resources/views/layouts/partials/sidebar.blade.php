@@ -2,6 +2,7 @@
     $user = auth()->user();
     $collapsed = false;
     $isStagiaires = request()->routeIs('stagiaires.*');
+    $isFinance = request()->routeIs('super-admin.finance.*');
 
     // ─── Détection du contexte domaine de formation ───────────────────────────
     // On utilise la session active_domain pour identifier le contexte courant.
@@ -14,7 +15,7 @@
     if (!$activeDomain && request()->routeIs('super-admin.sante.dashboard')) {
         $activeDomain = 'sante';
     }
-    $isFormationDomain = $user->isSuperAdmin() && !$isStagiaires && !empty($activeDomain);
+    $isFormationDomain = $user->isSuperAdmin() && !$isStagiaires && !$isFinance && !empty($activeDomain);
 
     // Configuration visuelle par domaine
     $domainMeta = [
@@ -104,7 +105,35 @@
 
     $groups = [];
 
-    if ($user->isSuperAdmin() && $isStagiaires) {
+    if ($user->isSuperAdmin() && $isFinance) {
+        // ────────────────────────────────────────────────────────────
+        // CONTEXTE DÉDIÉ : GESTION FINANCIÈRE GLOBALE
+        // ────────────────────────────────────────────────────────────
+        $groups[] = [
+            'title' => null,
+            'items' => array_filter([
+                $link('Tableau de bord', 'super-admin.finance.dashboard', 'chart', 'super-admin.finance.dashboard'),
+            ])
+        ];
+
+        $groups[] = [
+            'title' => 'Gestion financière',
+            'items' => array_filter([
+                $link('Paiements étudiants', 'super-admin.finance.students', 'academic', 'super-admin.finance.students'),
+                $link('Salaires professeurs', 'super-admin.finance.teachers', 'user', 'super-admin.finance.teachers'),
+                $link('Historique des paiements', 'super-admin.finance.history', 'banknotes', 'super-admin.finance.history'),
+            ])
+        ];
+
+        $groups[] = [
+            'title' => 'Paramètres & Rapports',
+            'items' => array_filter([
+                $link('Configuration des prix', 'super-admin.finance.configuration', 'wrench', 'super-admin.finance.configuration'),
+                $link('Rapports financiers', 'super-admin.finance.reports', 'document', 'super-admin.finance.reports'),
+            ])
+        ];
+
+    } elseif ($user->isSuperAdmin() && $isStagiaires) {
         // ────────────────────────────────────────────────────────────
         // CONTEXTE DÉDIÉ : GESTION ADMINISTRATIVE DES STAGIAIRES
         // ────────────────────────────────────────────────────────────
@@ -242,7 +271,7 @@
 >
     <div class="flex h-16 items-center border-b border-slate-200 px-3.5 dark:border-slate-800"
          :class="$store.ui.sidebarCollapsed ? 'justify-center' : 'justify-between'">
-        <a href="{{ $user->isSuperAdmin() ? ($isStagiaires ? route('stagiaires.dashboard') : ($activeDomain && $activeDomain !== 'sante' ? route('super-admin.domain.dashboard', $activeDomain) : route('super-admin.sante.dashboard'))) : route('dashboard') }}"
+        <a href="{{ $user->isSuperAdmin() ? ($isFinance ? route('super-admin.finance.dashboard') : ($isStagiaires ? route('stagiaires.dashboard') : ($activeDomain && $activeDomain !== 'sante' ? route('super-admin.domain.dashboard', $activeDomain) : route('super-admin.sante.dashboard')))) : route('dashboard') }}"
            class="flex min-w-0 items-center gap-2.5 font-semibold text-slate-900 dark:text-white"
            x-show="!$store.ui.sidebarCollapsed">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white shadow-2xs">
@@ -263,7 +292,36 @@
     </div>
 
     @if($user->isSuperAdmin())
-        @if($isStagiaires)
+        @if($isFinance)
+            {{-- BANNER DU CONTEXTE : GESTION FINANCIÈRE GLOBALE --}}
+            <div class="border-b border-slate-200 bg-emerald-50/80 p-3 dark:border-slate-800 dark:bg-emerald-950/30">
+                <div class="flex items-center justify-between gap-2" x-show="!$store.ui.sidebarCollapsed">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-2xs text-sm">
+                            💰
+                        </span>
+                        <div class="min-w-0">
+                            <span class="block text-[10px] uppercase font-bold tracking-wider text-emerald-800 dark:text-emerald-300">Contexte global</span>
+                            <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">Gestion financière</span>
+                        </div>
+                    </div>
+                    <a href="{{ route('super-admin.domaines') }}"
+                       id="sidebar-changer-finance"
+                       class="inline-flex items-center gap-1 rounded-lg border border-emerald-300/80 bg-white px-2 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 dark:border-emerald-700/80 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-emerald-900/40 transition-colors shadow-2xs shrink-0"
+                       title="Changer de contexte">
+                        <x-icon name="arrow-uturn-left" class="h-3 w-3" />
+                        <span>Changer</span>
+                    </a>
+                </div>
+                <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
+                    <a href="{{ route('super-admin.domaines') }}"
+                       class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-2xs"
+                       title="Gestion financière — Cliquer pour changer de contexte">
+                        <x-icon name="banknotes" class="h-4.5 w-4.5" />
+                    </a>
+                </div>
+            </div>
+        @elseif($isStagiaires)
             {{-- BANNER DU CONTEXTE : GESTION ADMINISTRATIVE (STAGIAIRES) --}}
             <div class="border-b border-slate-200 bg-purple-50/80 p-3 dark:border-slate-800 dark:bg-purple-950/30">
                 <div class="flex items-center justify-between gap-2" x-show="!$store.ui.sidebarCollapsed">

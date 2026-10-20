@@ -11,6 +11,7 @@
     };
     $centerLabel = $user->isSuperAdmin() ? 'Tous les centres' : ($user->center?->name ?? 'N/A');
     $isStagiaires = request()->routeIs('stagiaires.*');
+    $isFinance = request()->routeIs('super-admin.finance.*');
 
     // Détection du domaine actif (session ou route)
     $activeDomain = session('active_domain');
@@ -33,11 +34,13 @@
     $topbarDomain = $domainTopbarConfig[$activeDomain] ?? null;
 
     $homeUrl = $user->isSuperAdmin()
-        ? ($isStagiaires
-            ? route('stagiaires.dashboard')
-            : ($activeDomain && $activeDomain !== 'sante'
-                ? route('super-admin.domain.dashboard', $activeDomain)
-                : route('super-admin.sante.dashboard')))
+        ? ($isFinance
+            ? route('super-admin.finance.dashboard')
+            : ($isStagiaires
+                ? route('stagiaires.dashboard')
+                : ($activeDomain && $activeDomain !== 'sante'
+                    ? route('super-admin.domain.dashboard', $activeDomain)
+                    : route('super-admin.sante.dashboard'))))
         : route('dashboard');
 @endphp
 
@@ -57,7 +60,12 @@
             <div class="hidden items-center gap-2 sm:flex">
                 <p class="truncate text-sm text-slate-500">{{ $centerLabel }}</p>
                 @if($user->isSuperAdmin())
-                    @if($isStagiaires)
+                    @if($isFinance)
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                            <span class="text-xs">💰</span>
+                            <span>Gestion financière · Vue globale</span>
+                        </span>
+                    @elseif($isStagiaires)
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-800 dark:bg-purple-900/40 dark:text-purple-300">
                             <span class="text-xs">🧑‍💼</span>
                             <span>Stagiaires · Espace administratif</span>
@@ -80,9 +88,9 @@
             <a href="{{ route('super-admin.domaines') }}"
                id="topbar-changer-domaine"
                class="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-all"
-               title="{{ $isStagiaires ? 'Changer de domaine / contexte' : 'Retour à la sélection des domaines' }}">
+               title="{{ ($isFinance || $isStagiaires) ? 'Changer de domaine / contexte' : 'Retour à la sélection des domaines' }}">
                 <x-icon name="arrow-uturn-left" class="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
-                <span>{{ $isStagiaires ? 'Changer de contexte' : 'Changer de domaine' }}</span>
+                <span>{{ ($isFinance || $isStagiaires) ? 'Changer de contexte' : 'Changer de domaine' }}</span>
             </a>
         @endif
 

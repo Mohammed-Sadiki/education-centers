@@ -23,6 +23,7 @@ class Enrollment extends Model
         'student_id',
         'formation_id',
         'class_id',
+        'school_year',
         'registration_number',
         'application_date',
         'status',

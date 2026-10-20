@@ -7,6 +7,7 @@ class Payment extends Model {
     use HasFactory;
     protected $fillable = [
         'center_id','student_id','enrollment_id','formation_id','invoice_id',
+        'school_year','domain',
         'amount','currency','payment_date','method','reference','status','notes','recorded_by',
     ];
     protected function casts(): array {

@@ -17,12 +17,14 @@ class Formation extends Model
      */
     protected $fillable = [
         'center_id',
+        'domain',
         'name',
         'code',
         'description',
         'duration_hours',
         'duration_weeks',
         'price',
+        'annual_price',
         'currency',
         'status',
     ];
@@ -38,6 +40,7 @@ class Formation extends Model
             'duration_hours' => 'integer',
             'duration_weeks' => 'integer',
             'price'          => 'decimal:2',
+            'annual_price'   => 'decimal:2',
         ];
     }
 

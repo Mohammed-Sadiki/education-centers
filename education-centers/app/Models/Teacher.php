@@ -18,6 +18,7 @@ class Teacher extends Model
     protected $fillable = [
         'user_id',
         'center_id',
+        'domain',
         'teacher_number',
         'first_name',
         'last_name',
@@ -32,6 +33,7 @@ class Teacher extends Model
         'phone',
         'specialization',
         'qualification',
+        'monthly_salary',
         'hire_date',
         'notes',
         'status',
@@ -45,8 +47,9 @@ class Teacher extends Model
     protected function casts(): array
     {
         return [
-            'date_of_birth' => 'date',
-            'hire_date'     => 'date',
+            'date_of_birth'  => 'date',
+            'hire_date'      => 'date',
+            'monthly_salary' => 'decimal:2',
         ];
     }
 

@@ -90,6 +90,19 @@ Route::middleware('auth')->group(function () {
         Route::resource('super-admin/stagiaires', \App\Http\Controllers\StagiaireController::class)
             ->names('stagiaires');
 
+        // ── Gestion financière globale (Contexte indépendant Super Admin) ──
+        Route::prefix('super-admin/finance')->name('super-admin.finance.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\FinanceDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/etudiants', [\App\Http\Controllers\FinanceDashboardController::class, 'students'])->name('students');
+            Route::get('/professeurs', [\App\Http\Controllers\FinanceDashboardController::class, 'teachers'])->name('teachers');
+            Route::get('/historique', [\App\Http\Controllers\FinanceDashboardController::class, 'history'])->name('history');
+            Route::get('/configuration', [\App\Http\Controllers\FinanceDashboardController::class, 'configuration'])->name('configuration');
+            Route::put('/configuration', [\App\Http\Controllers\FinanceDashboardController::class, 'updateConfiguration'])->name('configuration.update');
+            Route::post('/paiements-etudiants', [\App\Http\Controllers\FinanceDashboardController::class, 'storeStudentPayment'])->name('students.payment.store');
+            Route::post('/salaires-professeurs', [\App\Http\Controllers\FinanceDashboardController::class, 'storeTeacherSalaryPayment'])->name('teachers.salary.store');
+            Route::get('/rapports', [\App\Http\Controllers\FinanceDashboardController::class, 'reports'])->name('reports');
+        });
+
         Route::resource('centers', CenterController::class);
         Route::patch('centers/{center}/toggle-status', [CenterController::class, 'toggleStatus'])
             ->name('centers.toggle-status');

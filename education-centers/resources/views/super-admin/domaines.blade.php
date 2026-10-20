@@ -398,6 +398,56 @@
                 </div>
             </a>
 
+            {{-- ════════════════════════════════════════════════
+                 CARTE GESTION FINANCIÈRE (Active & Indépendante ✓)
+            ════════════════════════════════════════════════ --}}
+            <a href="{{ route('super-admin.finance.dashboard') }}"
+               id="card-gestion-financiere"
+               class="group relative flex flex-col justify-between overflow-hidden rounded-2xl border-2 border-emerald-300 bg-white p-7 shadow-md
+                      hover:border-emerald-500 hover:shadow-xl hover:-translate-y-1
+                      dark:border-emerald-600/70 dark:bg-slate-900 dark:hover:border-emerald-400
+                      transition-all duration-200 cursor-pointer ring-1 ring-emerald-500/20"
+               aria-label="Accéder au module Gestion financière">
+
+                {{-- Dégradé interactif au survol --}}
+                <div class="absolute inset-0 bg-gradient-to-br from-emerald-50/60 via-transparent to-teal-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:from-emerald-950/20 dark:to-transparent pointer-events-none rounded-2xl"></div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-5">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:group-hover:bg-emerald-600 dark:group-hover:text-white text-2xl">
+                            💰
+                        </div>
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 shadow-2xs">
+                            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                            Actif
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors duration-200">
+                            Gestion financière
+                        </h3>
+                        <span class="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+                            Vue globale
+                        </span>
+                    </div>
+                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Vision financière globale de la plateforme : encaissements étudiants, suivi des impayés, salaires des professeurs et filtres par domaine.
+                    </p>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                    <div class="flex items-center justify-between text-sm font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">
+                        <span>Accéder à l'espace Financier</span>
+                        <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white group-hover:translate-x-1 transition-all duration-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:group-hover:bg-emerald-600 dark:group-hover:text-white">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+            </a>
+
         </div>
     </div>
 @endsection
