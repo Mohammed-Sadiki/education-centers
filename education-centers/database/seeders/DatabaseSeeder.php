@@ -589,6 +589,465 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->command->info('✅ Plateforme initialisée : Centres, Utilisateurs, Dossiers Élèves/Profs, Formations, Classes, Affectations, Salles & Emplois du temps.');
+
+        // ─────────────────────────────────────────────────────────────────
+        // 17. INSCRIPTIONS (Enrollments) — liées aux étudiants et formations
+        // ─────────────────────────────────────────────────────────────────
+        $superAdmin = \App\Models\User::where('role', \App\Models\User::ROLE_SUPER_ADMIN)->first();
+
+        if ($berlinCenter) {
+            $berlinStudentModel = \App\Models\Student::where('center_id', $berlinCenter->id)->first();
+            $berlinDeA1         = \App\Models\Formation::where('center_id', $berlinCenter->id)->where('code', 'DE-A1')->first();
+            $berlinDeB1         = \App\Models\Formation::where('center_id', $berlinCenter->id)->where('code', 'DE-B1')->first();
+            $berlinClassA1      = \App\Models\ClassRoom::where('center_id', $berlinCenter->id)->where('code', 'A1-01')->first();
+            $berlinClassB1      = \App\Models\ClassRoom::where('center_id', $berlinCenter->id)->where('code', 'B1-01')->first();
+
+            if ($berlinStudentModel && $berlinDeA1) {
+                \App\Models\Enrollment::updateOrCreate(
+                    ['center_id' => $berlinCenter->id, 'student_id' => $berlinStudentModel->id, 'formation_id' => $berlinDeA1->id, 'school_year' => '2026/2027'],
+                    [
+                        'class_id'            => $berlinClassA1?->id,
+                        'registration_number' => 'BERLIN-INS-000001',
+                        'application_date'    => '2026-10-01',
+                        'status'              => 'accepted',
+                        'notes'               => 'Inscription validée après entretien de positionnement.',
+                        'decision_date'       => '2026-10-05',
+                        'decision_notes'      => 'Niveau confirmé A1. Intégration dans le groupe matin.',
+                        'accepted_at'         => '2026-10-05 10:00:00',
+                    ]
+                );
+            }
+
+            if ($berlinStudentModel && $berlinDeB1) {
+                \App\Models\Enrollment::updateOrCreate(
+                    ['center_id' => $berlinCenter->id, 'student_id' => $berlinStudentModel->id, 'formation_id' => $berlinDeB1->id, 'school_year' => '2026/2027'],
+                    [
+                        'class_id'            => $berlinClassB1?->id,
+                        'registration_number' => 'BERLIN-INS-000002',
+                        'application_date'    => '2026-10-10',
+                        'status'              => 'pending',
+                        'notes'               => 'Demande d\'inscription en attente de traitement.',
+                    ]
+                );
+            }
+        }
+
+        if ($munichCenter) {
+            $munichStudentModel = \App\Models\Student::where('center_id', $munichCenter->id)->first();
+            $munichDeA1         = \App\Models\Formation::where('center_id', $munichCenter->id)->where('code', 'DE-A1')->first();
+            $munichEnB2         = \App\Models\Formation::where('center_id', $munichCenter->id)->where('code', 'EN-B2')->first();
+            $munichClassA1      = \App\Models\ClassRoom::where('center_id', $munichCenter->id)->where('code', 'A1-01')->first();
+
+            if ($munichStudentModel && $munichDeA1) {
+                \App\Models\Enrollment::updateOrCreate(
+                    ['center_id' => $munichCenter->id, 'student_id' => $munichStudentModel->id, 'formation_id' => $munichDeA1->id, 'school_year' => '2026/2027'],
+                    [
+                        'class_id'            => $munichClassA1?->id,
+                        'registration_number' => 'MUNICH-INS-000001',
+                        'application_date'    => '2026-10-02',
+                        'status'              => 'accepted',
+                        'notes'               => 'Dossier complet. Inscription confirmée.',
+                        'decision_date'       => '2026-10-07',
+                        'decision_notes'      => 'Accepté dans le groupe A1-01 Munich.',
+                        'accepted_at'         => '2026-10-07 09:30:00',
+                    ]
+                );
+            }
+
+            if ($munichStudentModel && $munichEnB2) {
+                \App\Models\Enrollment::updateOrCreate(
+                    ['center_id' => $munichCenter->id, 'student_id' => $munichStudentModel->id, 'formation_id' => $munichEnB2->id, 'school_year' => '2026/2027'],
+                    [
+                        'registration_number' => 'MUNICH-INS-000002',
+                        'application_date'    => '2026-10-12',
+                        'status'              => 'under_review',
+                        'notes'               => 'Dossier en cours d\'examen par l\'administration.',
+                    ]
+                );
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // 18. PAIEMENTS ÉTUDIANTS — en MAD, variés (payé, partiel, en attente)
+        // ─────────────────────────────────────────────────────────────────
+        if ($berlinCenter) {
+            $berlinStudentModel = \App\Models\Student::where('center_id', $berlinCenter->id)->first();
+            $berlinDeA1         = \App\Models\Formation::where('center_id', $berlinCenter->id)->where('code', 'DE-A1')->first();
+            $berlinDeB1         = \App\Models\Formation::where('center_id', $berlinCenter->id)->where('code', 'DE-B1')->first();
+            $enrollA1           = \App\Models\Enrollment::where('center_id', $berlinCenter->id)
+                                    ->where('student_id', $berlinStudentModel?->id)
+                                    ->where('formation_id', $berlinDeA1?->id)
+                                    ->first();
+
+            if ($berlinStudentModel && $berlinDeA1) {
+                // Paiement 1 : acompte initial (payé)
+                \App\Models\Payment::updateOrCreate(
+                    ['reference' => 'PAY-BERLIN-000001'],
+                    [
+                        'center_id'    => $berlinCenter->id,
+                        'student_id'   => $berlinStudentModel->id,
+                        'formation_id' => $berlinDeA1->id,
+                        'enrollment_id'=> $enrollA1?->id,
+                        'school_year'  => '2026/2027',
+                        'domain'       => $berlinDeA1->domain,
+                        'amount'       => 2250.00,
+                        'currency'     => 'MAD',
+                        'payment_date' => '2026-10-06',
+                        'method'       => 'bank_transfer',
+                        'status'       => 'paid',
+                        'notes'        => '1ère tranche — acompte inscription A1.',
+                        'recorded_by'  => $superAdmin?->id,
+                    ]
+                );
+
+                // Paiement 2 : 2ème tranche (payé)
+                \App\Models\Payment::updateOrCreate(
+                    ['reference' => 'PAY-BERLIN-000002'],
+                    [
+                        'center_id'    => $berlinCenter->id,
+                        'student_id'   => $berlinStudentModel->id,
+                        'formation_id' => $berlinDeA1->id,
+                        'enrollment_id'=> $enrollA1?->id,
+                        'school_year'  => '2026/2027',
+                        'domain'       => $berlinDeA1->domain,
+                        'amount'       => 2250.00,
+                        'currency'     => 'MAD',
+                        'payment_date' => '2026-11-01',
+                        'method'       => 'cash',
+                        'status'       => 'paid',
+                        'notes'        => '2ème tranche — solde formation A1.',
+                        'recorded_by'  => $superAdmin?->id,
+                    ]
+                );
+            }
+
+            // Paiement 3 : formation B1 — partiellement payé (en attente du solde)
+            if ($berlinStudentModel && $berlinDeB1) {
+                \App\Models\Payment::updateOrCreate(
+                    ['reference' => 'PAY-BERLIN-000003'],
+                    [
+                        'center_id'    => $berlinCenter->id,
+                        'student_id'   => $berlinStudentModel->id,
+                        'formation_id' => $berlinDeB1->id,
+                        'school_year'  => '2026/2027',
+                        'domain'       => $berlinDeB1->domain,
+                        'amount'       => 1500.00,
+                        'currency'     => 'MAD',
+                        'payment_date' => '2026-10-15',
+                        'method'       => 'card',
+                        'status'       => 'paid',
+                        'notes'        => 'Acompte partiel B1 — solde à venir.',
+                        'recorded_by'  => $superAdmin?->id,
+                    ]
+                );
+            }
+        }
+
+        if ($munichCenter) {
+            $munichStudentModel = \App\Models\Student::where('center_id', $munichCenter->id)->first();
+            $munichDeA1         = \App\Models\Formation::where('center_id', $munichCenter->id)->where('code', 'DE-A1')->first();
+            $munichEnB2         = \App\Models\Formation::where('center_id', $munichCenter->id)->where('code', 'EN-B2')->first();
+            $enrollMunA1        = \App\Models\Enrollment::where('center_id', $munichCenter->id)
+                                    ->where('student_id', $munichStudentModel?->id)
+                                    ->where('formation_id', $munichDeA1?->id)
+                                    ->first();
+
+            if ($munichStudentModel && $munichDeA1) {
+                // Paiement complet en une fois — virement
+                \App\Models\Payment::updateOrCreate(
+                    ['reference' => 'PAY-MUNICH-000001'],
+                    [
+                        'center_id'    => $munichCenter->id,
+                        'student_id'   => $munichStudentModel->id,
+                        'formation_id' => $munichDeA1->id,
+                        'enrollment_id'=> $enrollMunA1?->id,
+                        'school_year'  => '2026/2027',
+                        'domain'       => $munichDeA1->domain,
+                        'amount'       => 4900.00,
+                        'currency'     => 'MAD',
+                        'payment_date' => '2026-10-08',
+                        'method'       => 'bank_transfer',
+                        'status'       => 'paid',
+                        'notes'        => 'Paiement intégral formation A1 München.',
+                        'recorded_by'  => $superAdmin?->id,
+                    ]
+                );
+            }
+
+            if ($munichStudentModel && $munichEnB2) {
+                // Paiement en attente
+                \App\Models\Payment::updateOrCreate(
+                    ['reference' => 'PAY-MUNICH-000002'],
+                    [
+                        'center_id'    => $munichCenter->id,
+                        'student_id'   => $munichStudentModel->id,
+                        'formation_id' => $munichEnB2->id,
+                        'school_year'  => '2026/2027',
+                        'domain'       => $munichEnB2->domain,
+                        'amount'       => 2600.00,
+                        'currency'     => 'MAD',
+                        'payment_date' => '2026-10-14',
+                        'method'       => 'cash',
+                        'status'       => 'pending',
+                        'notes'        => 'Acompte English B2 — en attente de validation.',
+                        'recorded_by'  => $superAdmin?->id,
+                    ]
+                );
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // 19. SALAIRES PROFESSEURS — multi-mois, statuts variés (payé, partiel, impayé)
+        // ─────────────────────────────────────────────────────────────────
+        if ($berlinCenter) {
+            $teacherJohannes = \App\Models\Teacher::where('center_id', $berlinCenter->id)
+                                ->where('teacher_number', 'BER-T-000001')->first();
+
+            if ($teacherJohannes) {
+                $johannesSalary = 7500.00;
+
+                // Mettre à jour le salaire mensuel configurable du professeur
+                $teacherJohannes->update(['monthly_salary' => $johannesSalary, 'domain' => 'informatique']);
+
+                $salaryMonths = [
+                    ['month' => 9, 'year' => 2026, 'paid' => $johannesSalary, 'status' => 'paid',    'date' => '2026-09-30', 'method' => 'Virement bancaire', 'note' => 'Salaire Septembre 2026.'],
+                    ['month' => 10,'year' => 2026, 'paid' => $johannesSalary, 'status' => 'paid',    'date' => '2026-10-31', 'method' => 'Virement bancaire', 'note' => 'Salaire Octobre 2026.'],
+                    ['month' => 11,'year' => 2026, 'paid' => 3750.00,          'status' => 'partial', 'date' => '2026-11-15', 'method' => 'Espèces',           'note' => 'Acompte Novembre — solde en cours.'],
+                    ['month' => 12,'year' => 2026, 'paid' => 0,                'status' => 'unpaid',  'date' => null,          'method' => null,                'note' => 'Décembre — non encore versé.'],
+                ];
+
+                foreach ($salaryMonths as $s) {
+                    \App\Models\TeacherSalary::updateOrCreate(
+                        [
+                            'center_id'  => $berlinCenter->id,
+                            'teacher_id' => $teacherJohannes->id,
+                            'month'      => $s['month'],
+                            'year'       => $s['year'],
+                        ],
+                        [
+                            'domain'          => $teacherJohannes->domain,
+                            'school_year'     => '2026/2027',
+                            'expected_amount' => $johannesSalary,
+                            'paid_amount'     => $s['paid'],
+                            'currency'        => 'MAD',
+                            'status'          => $s['status'],
+                            'payment_date'    => $s['date'],
+                            'payment_method'  => $s['method'],
+                            'notes'           => $s['note'],
+                            'recorded_by'     => $superAdmin?->id,
+                        ]
+                    );
+                }
+            }
+        }
+
+        if ($munichCenter) {
+            $teacherGreta = \App\Models\Teacher::where('center_id', $munichCenter->id)
+                            ->where('teacher_number', 'MUN-T-000001')->first();
+
+            if ($teacherGreta) {
+                $gretaSalary = 8500.00;
+
+                // Mettre à jour le salaire mensuel configurable
+                $teacherGreta->update(['monthly_salary' => $gretaSalary, 'domain' => 'sante']);
+
+                $salaryMonths = [
+                    ['month' => 9,  'year' => 2026, 'paid' => $gretaSalary, 'status' => 'paid',    'date' => '2026-09-28', 'method' => 'Virement bancaire', 'note' => 'Salaire Septembre 2026.'],
+                    ['month' => 10, 'year' => 2026, 'paid' => $gretaSalary, 'status' => 'paid',    'date' => '2026-10-29', 'method' => 'Virement bancaire', 'note' => 'Salaire Octobre 2026.'],
+                    ['month' => 11, 'year' => 2026, 'paid' => 4250.00,       'status' => 'partial', 'date' => '2026-11-10', 'method' => 'Virement bancaire', 'note' => 'Moitié Novembre versée — reste à payer.'],
+                ];
+
+                foreach ($salaryMonths as $s) {
+                    \App\Models\TeacherSalary::updateOrCreate(
+                        [
+                            'center_id'  => $munichCenter->id,
+                            'teacher_id' => $teacherGreta->id,
+                            'month'      => $s['month'],
+                            'year'       => $s['year'],
+                        ],
+                        [
+                            'domain'          => $teacherGreta->domain,
+                            'school_year'     => '2026/2027',
+                            'expected_amount' => $gretaSalary,
+                            'paid_amount'     => $s['paid'],
+                            'currency'        => 'MAD',
+                            'status'          => $s['status'],
+                            'payment_date'    => $s['date'],
+                            'payment_method'  => $s['method'],
+                            'notes'           => $s['note'],
+                            'recorded_by'     => $superAdmin?->id,
+                        ]
+                    );
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // 20. STAGIAIRES — données de démonstration réalistes
+        // ─────────────────────────────────────────────────────────────────
+        $stagiairesData = [
+            // Berlin — Stagiaires
+            [
+                'center_code'    => 'BERLIN',
+                'first_name'     => 'Fatima',
+                'last_name'      => 'El Amrani',
+                'date_of_birth'  => '1998-03-21',
+                'place_of_birth' => 'Casablanca',
+                'gender'         => 'female',
+                'nationality'    => 'Marocaine',
+                'address'        => 'Goethestraße 12, Berlin',
+                'phone'          => '+49 30 22334455',
+                'email'          => 'fatima.elamrani@email.de',
+                'cin_number'     => 'BK123456',
+                'cin_issued_date'=> '2018-06-10',
+                'cin_issued_place'=> 'Casablanca',
+                'cin_recto_path' => 'stagiaires/cin/demo_recto.jpg',
+                'stage_start_date'=> '2026-10-01',
+                'stage_end_date' => '2027-03-31',
+                'stage_type'     => 'Stage de qualification',
+                'stage_price'    => 9500.00,
+                'currency'       => 'MAD',
+                'status'         => 'en_cours',
+                'notes'          => 'Stagiaire motivée. Résultats en progrès constants.',
+            ],
+            [
+                'center_code'    => 'BERLIN',
+                'first_name'     => 'Youssef',
+                'last_name'      => 'Benali',
+                'date_of_birth'  => '2000-07-14',
+                'place_of_birth' => 'Marrakech',
+                'gender'         => 'male',
+                'nationality'    => 'Marocaine',
+                'address'        => 'Berliner Allee 5, Berlin',
+                'phone'          => '+49 30 55667788',
+                'email'          => 'youssef.benali@email.de',
+                'cin_number'     => 'WA654321',
+                'cin_issued_date'=> '2020-02-15',
+                'cin_issued_place'=> 'Marrakech',
+                'cin_recto_path' => 'stagiaires/cin/demo_recto.jpg',
+                'stage_start_date'=> '2026-11-01',
+                'stage_end_date' => '2027-04-30',
+                'stage_type'     => 'Stage de perfectionnement',
+                'stage_price'    => 10500.00,
+                'currency'       => 'MAD',
+                'status'         => 'nouveau',
+                'notes'          => 'Dossier déposé. Stage commençant en novembre.',
+            ],
+            [
+                'center_code'    => 'BERLIN',
+                'first_name'     => 'Nadia',
+                'last_name'      => 'Khalil',
+                'date_of_birth'  => '1996-11-30',
+                'place_of_birth' => 'Fès',
+                'gender'         => 'female',
+                'nationality'    => 'Marocaine',
+                'address'        => 'Friedrichstraße 88, Berlin',
+                'phone'          => '+49 30 99887766',
+                'email'          => 'nadia.khalil@email.de',
+                'cin_number'     => 'FE789012',
+                'cin_issued_date'=> '2016-08-20',
+                'cin_issued_place'=> 'Fès',
+                'cin_recto_path' => 'stagiaires/cin/demo_recto.jpg',
+                'stage_start_date'=> '2026-06-01',
+                'stage_end_date' => '2026-09-30',
+                'stage_type'     => 'Stage de qualification',
+                'stage_price'    => 8000.00,
+                'currency'       => 'MAD',
+                'status'         => 'termine',
+                'notes'          => 'Stage terminé avec succès. Certificat délivré.',
+            ],
+            // Munich — Stagiaires
+            [
+                'center_code'    => 'MUNICH',
+                'first_name'     => 'Omar',
+                'last_name'      => 'Tazi',
+                'date_of_birth'  => '1999-05-08',
+                'place_of_birth' => 'Rabat',
+                'gender'         => 'male',
+                'nationality'    => 'Marocaine',
+                'address'        => 'Leopoldstraße 44, München',
+                'phone'          => '+49 89 11223344',
+                'email'          => 'omar.tazi@email.de',
+                'cin_number'     => 'AA112233',
+                'cin_issued_date'=> '2019-04-01',
+                'cin_issued_place'=> 'Rabat',
+                'cin_recto_path' => 'stagiaires/cin/demo_recto.jpg',
+                'stage_start_date'=> '2026-10-15',
+                'stage_end_date' => '2027-04-15',
+                'stage_type'     => 'Stage d\'initiation',
+                'stage_price'    => 7500.00,
+                'currency'       => 'MAD',
+                'status'         => 'en_cours',
+                'notes'          => 'Stage bien entamé. Présence régulière.',
+            ],
+            [
+                'center_code'    => 'MUNICH',
+                'first_name'     => 'Salma',
+                'last_name'      => 'Benkirane',
+                'date_of_birth'  => '2001-09-19',
+                'place_of_birth' => 'Agadir',
+                'gender'         => 'female',
+                'nationality'    => 'Marocaine',
+                'address'        => 'Maximilianstraße 100, München',
+                'phone'          => '+49 89 44556677',
+                'email'          => 'salma.benkirane@email.de',
+                'cin_number'     => 'JA334455',
+                'cin_issued_date'=> '2021-01-10',
+                'cin_issued_place'=> 'Agadir',
+                'cin_recto_path' => 'stagiaires/cin/demo_recto.jpg',
+                'stage_start_date'=> '2026-09-01',
+                'stage_end_date' => '2027-02-28',
+                'stage_type'     => 'Stage de qualification',
+                'stage_price'    => 11000.00,
+                'currency'       => 'MAD',
+                'status'         => 'en_cours',
+                'notes'          => 'Excellente progression. Assiduité remarquable.',
+            ],
+        ];
+
+        foreach ($stagiairesData as $sd) {
+            $centerCode = $sd['center_code'];
+            unset($sd['center_code']);
+
+            $center = \App\Models\Center::where('code', $centerCode)->first();
+            if (! $center) continue;
+
+            \App\Models\Stagiaire::updateOrCreate(
+                [
+                    'center_id'  => $center->id,
+                    'cin_number' => $sd['cin_number'],
+                ],
+                array_merge($sd, ['center_id' => $center->id])
+            );
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // 21. Mise à jour des prix annuels de formations et domaines
+        //     (pour que le dashboard financier affiche des montants réels)
+        // ─────────────────────────────────────────────────────────────────
+        $formationPrices = [
+            // Berlin
+            ['center_code' => 'BERLIN', 'code' => 'DE-A1',    'annual_price' => 9000.00,  'domain' => 'informatique'],
+            ['center_code' => 'BERLIN', 'code' => 'DE-B1',    'annual_price' => 11800.00, 'domain' => 'informatique'],
+            ['center_code' => 'BERLIN', 'code' => 'IT-BASIC', 'annual_price' => 6400.00,  'domain' => 'informatique'],
+            // Munich
+            ['center_code' => 'MUNICH', 'code' => 'DE-A1',    'annual_price' => 9800.00,  'domain' => 'sante'],
+            ['center_code' => 'MUNICH', 'code' => 'EN-B2',    'annual_price' => 10400.00, 'domain' => 'sante'],
+        ];
+
+        foreach ($formationPrices as $fp) {
+            $center = \App\Models\Center::where('code', $fp['center_code'])->first();
+            if (! $center) continue;
+
+            \App\Models\Formation::where('center_id', $center->id)
+                ->where('code', $fp['code'])
+                ->update([
+                    'annual_price' => $fp['annual_price'],
+                    'domain'       => $fp['domain'],
+                ]);
+        }
+
+        $this->command->info('✅ Données démo complètes : Inscriptions, Paiements étudiants, Salaires professeurs, Stagiaires & Prix formations.');
     }
 }
 
