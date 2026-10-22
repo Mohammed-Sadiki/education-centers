@@ -271,18 +271,18 @@
                         <div class="flex items-center gap-3.5 min-w-0">
                             {{-- Badge du mois --}}
                             <div class="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-[#ECFDF5] text-[#0DAD98] dark:bg-[#0DAD98]/15 dark:text-[#0DAD98]">
-                                <span class="text-[10px] font-extrabold uppercase leading-none">{{ Str::substr($group['label'], 0, 4) }}</span>
-                                <span class="text-xs font-black leading-none mt-1">{{ Str::after($group['label'], ' ') }}</span>
+                                <span class="text-[10px] font-extrabold uppercase leading-none">{{ Str::substr($group->period_label, 0, 4) }}</span>
+                                <span class="text-xs font-black leading-none mt-1">{{ Str::after($group->period_label, ' ') }}</span>
                             </div>
 
                             <div class="min-w-0">
                                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">
-                                    {{ $group['label'] }}
+                                    {{ $group->period_label }}
                                 </h3>
                                 <div class="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
-                                    <span>{{ $group['payments_count'] }} versement(s)</span>
+                                    <span>{{ $group->payments_count }} versement(s)</span>
                                     <span>·</span>
-                                    <span>{{ $group['students_count'] }} étudiant(s)</span>
+                                    <span>{{ $group->students_count }} étudiant(s)</span>
                                 </div>
                             </div>
                         </div>
@@ -291,7 +291,7 @@
                             <div class="text-right">
                                 <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Encaissé ce mois</span>
                                 <span class="text-base sm:text-lg font-extrabold text-[#0DAD98] whitespace-nowrap">
-                                    {{ format_price($group['total_collected'], 'MAD') }}
+                                    {{ format_price($group->total_collected, 'MAD') }}
                                 </span>
                             </div>
                             <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 transition-transform duration-200"
@@ -317,7 +317,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                                    @foreach($group['payments'] as $pay)
+                                    @foreach($group->payments as $pay)
                                         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                                             <td class="py-3 px-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">
                                                 {{ $pay->payment_date ? $pay->payment_date->format('d/m/Y') : '—' }}
