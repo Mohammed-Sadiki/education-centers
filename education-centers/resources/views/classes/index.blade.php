@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Classes — ' . config('app.name'))
-@section('description', 'Gestion des classes et groupes pédagogiques')
+@section('title', __('Classes') . ' — ' . config('app.name'))
+@section('description', __('Gestion des classes et groupes pédagogiques'))
 
 @section('breadcrumb')
-    <li class="breadcrumb-item active" aria-current="page">Classes</li>
+    <li class="breadcrumb-item active" aria-current="page">{{ __('Classes') }}</li>
 @endsection
 
 @section('content')
@@ -14,19 +14,19 @@
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
             <h1 class="h3 fw-bold mb-0">
-                <i class="bi bi-diagram-3-fill text-primary me-2"></i>Gestion des Classes
+                <i class="bi bi-diagram-3-fill text-primary me-2"></i>{{ __('Gestion des Classes') }}
             </h1>
             <p class="text-muted small mb-0 mt-1">
                 @if(auth()->user()->isSuperAdmin())
-                    Tous les centres — {{ $classes->total() }} classe(s) trouvée(s)
+                    {{ __('Tous les centres —') }} {{ $classes->total() }} {{ __('classe(s) trouvée(s)') }}
                 @else
-                    Centre : <strong>{{ auth()->user()->center?->name }}</strong> — {{ $classes->total() }} classe(s) trouvée(s)
+                    {{ __('Centre :') }} <strong>{{ auth()->user()->center?->name }}</strong> — {{ $classes->total() }} {{ __('classe(s) trouvée(s)') }}
                 @endif
             </p>
         </div>
         @can('create', \App\Models\ClassRoom::class)
             <a href="{{ route('classes.create') }}" class="btn btn-primary shadow-sm" id="btn-create-class">
-                <i class="bi bi-plus-circle-fill me-1"></i>Nouvelle classe
+                <i class="bi bi-plus-circle-fill me-1"></i>{{ __('Nouvelle classe') }}
             </a>
         @endcan
     </div>
@@ -39,29 +39,29 @@
                     {{-- Recherche par nom --}}
                     <div class="col-md-3">
                         <label for="search" class="form-label small fw-semibold text-secondary mb-1">
-                            <i class="bi bi-search me-1"></i>Nom de classe
+                            <i class="bi bi-search me-1"></i>{{ __('Nom de classe') }}
                         </label>
                         <input type="text" id="search" name="search" class="form-control"
-                               placeholder="Ex: Groupe Matin..." value="{{ request('search') }}">
+                               placeholder="{{ __('Ex: Groupe Matin...') }}" value="{{ request('search') }}">
                     </div>
 
                     {{-- Code classe --}}
                     <div class="col-md-2">
                         <label for="code" class="form-label small fw-semibold text-secondary mb-1">
-                            <i class="bi bi-hash me-1"></i>Code
+                            <i class="bi bi-hash me-1"></i>{{ __('Code') }}
                         </label>
                         <input type="text" id="code" name="code" class="form-control"
-                               placeholder="Ex: A1-01" value="{{ request('code') }}">
+                               placeholder="{{ __('Ex: A1-01') }}" value="{{ request('code') }}">
                     </div>
 
                     {{-- Filtre formation --}}
                     <div class="col-md-2">
-                        <label for="formation_id" class="form-label small fw-semibold text-secondary mb-1">Formation</label>
+                        <label for="formation_id" class="form-label small fw-semibold text-secondary mb-1">{{ __('Formation') }}</label>
                         <select id="formation_id" name="formation_id" class="form-select">
-                            <option value="">Toutes les formations</option>
+                            <option value="">{{ __('Toutes les formations') }}</option>
                             @foreach($formations as $formation)
                                 <option value="{{ $formation->id }}" {{ request('formation_id') == $formation->id ? 'selected' : '' }}>
-                                    {{ $formation->code }} — {{ $formation->name }}
+                                    {{ $formation->code }} — {{ $formation->translated('name') }}
                                 </option>
                             @endforeach
                         </select>
@@ -69,11 +69,11 @@
 
                     {{-- Filtre statut --}}
                     <div class="col-md-2">
-                        <label for="status" class="form-label small fw-semibold text-secondary mb-1">Statut</label>
+                        <label for="status" class="form-label small fw-semibold text-secondary mb-1">{{ __('Statut') }}</label>
                         <select id="status" name="status" class="form-select">
-                            <option value="">Tous les statuts</option>
-                            <option value="active"   {{ request('status') === 'active'   ? 'selected' : '' }}>Actif</option>
-                            <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactif</option>
+                            <option value="">{{ __('Tous les statuts') }}</option>
+                            <option value="active"   {{ request('status') === 'active'   ? 'selected' : '' }}>{{ __('Actif') }}</option>
+                            <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>{{ __('Inactif') }}</option>
                         </select>
                     </div>
 
@@ -81,13 +81,13 @@
                     @if(auth()->user()->isSuperAdmin())
                         <div class="col-md-2">
                             <label for="center_id" class="form-label small fw-semibold text-secondary mb-1">
-                                <i class="bi bi-building me-1"></i>Centre
+                                <i class="bi bi-building me-1"></i>{{ __('Centre') }}
                             </label>
                             <select id="center_id" name="center_id" class="form-select">
-                                <option value="">Tous les centres</option>
+                                <option value="">{{ __('Tous les centres') }}</option>
                                 @foreach($centers as $center)
                                     <option value="{{ $center->id }}" {{ request('center_id') == $center->id ? 'selected' : '' }}>
-                                        {{ $center->name }} ({{ $center->code }})
+                                        {{ $center->translated('name') }} ({{ $center->code }})
                                     </option>
                                 @endforeach
                             </select>
@@ -96,11 +96,11 @@
 
                     {{-- Actions filtre --}}
                     <div class="col-md-1 d-flex gap-2">
-                        <button type="submit" class="btn btn-outline-primary w-100" title="Filtrer">
+                        <button type="submit" class="btn btn-outline-primary w-100" title="{{ __('Filtrer') }}">
                             <i class="bi bi-funnel"></i>
                         </button>
                         @if(request()->hasAny(['search', 'code', 'formation_id', 'status', 'center_id']))
-                            <a href="{{ route('classes.index') }}" class="btn btn-outline-secondary" title="Réinitialiser">
+                            <a href="{{ route('classes.index') }}" class="btn btn-outline-secondary" title="{{ __('Réinitialiser') }}">
                                 <i class="bi bi-x-lg"></i>
                             </a>
                         @endif
@@ -116,16 +116,16 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4">Code</th>
-                        <th>Intitulé de la classe</th>
-                        <th>Formation</th>
+                        <th class="ps-4">{{ __('Code') }}</th>
+                        <th>{{ __('Intitulé de la classe') }}</th>
+                        <th>{{ __('Formation') }}</th>
                         @if(auth()->user()->isSuperAdmin())
-                            <th>Centre</th>
+                            <th>{{ __('Centre') }}</th>
                         @endif
-                        <th>Capacité</th>
-                        <th>Période</th>
-                        <th>Statut</th>
-                        <th class="text-end pe-4">Actions</th>
+                        <th>{{ __('Capacité') }}</th>
+                        <th>{{ __('Période') }}</th>
+                        <th>{{ __('Statut') }}</th>
+                        <th class="text-end pe-4">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -165,7 +165,7 @@
                                 </td>
                             @endif
                             <td>
-                                {{ $class->capacity ? $class->capacity . ' élèves' : 'Illimitée' }}
+                                {{ $class->capacity ? $class->capacity . ' ' . __('élèves') : __(__('Illimitée')) }}
                             </td>
                             <td>
                                 <small class="text-muted">{{ $class->formatted_period }}</small>
@@ -173,11 +173,11 @@
                             <td>
                                 @if($class->isActive())
                                     <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
-                                        <i class="bi bi-check-circle-fill me-1"></i>Actif
+                                        <i class="bi bi-check-circle-fill me-1"></i>{{ __('Actif') }}
                                     </span>
                                 @else
                                     <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">
-                                        <i class="bi bi-pause-circle-fill me-1"></i>Inactif
+                                        <i class="bi bi-pause-circle-fill me-1"></i>{{ __('Inactif') }}
                                     </span>
                                 @endif
                             </td>
@@ -187,7 +187,7 @@
                                     @can('view', $class)
                                         <a href="{{ route('classes.show', $class) }}"
                                            class="btn btn-outline-secondary"
-                                           title="Consulter"
+                                           title="{{ __('Consulter') }}"
                                            id="btn-show-class-{{ $class->id }}">
                                             <i class="bi bi-eye"></i>
                                         </a>
@@ -197,7 +197,7 @@
                                     @can('update', $class)
                                         <a href="{{ route('classes.edit', $class) }}"
                                            class="btn btn-outline-primary"
-                                           title="Modifier"
+                                           title="{{ __('Modifier') }}"
                                            id="btn-edit-class-{{ $class->id }}">
                                             <i class="bi bi-pencil"></i>
                                         </a>
@@ -210,8 +210,8 @@
                                             @method('PATCH')
                                             <button type="submit"
                                                     class="btn btn-outline-{{ $class->isActive() ? 'warning' : 'success' }}"
-                                                    title="{{ $class->isActive() ? 'Désactiver' : 'Activer' }}"
-                                                    onclick="return confirm('Confirmer le changement de statut ?')"
+                                                    title="{{ $class->isActive() ? __('Désactiver') : __('Activer') }}"
+                                                    onclick="return confirm('{{ __('Confirmer le changement de statut ?') }}')"
                                                     id="btn-toggle-class-{{ $class->id }}">
                                                 <i class="bi bi-toggle-{{ $class->isActive() ? 'on' : 'off' }}"></i>
                                             </button>
@@ -225,8 +225,8 @@
                                             @method('DELETE')
                                             <button type="submit"
                                                     class="btn btn-outline-danger"
-                                                    title="Supprimer la classe"
-                                                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette classe ?')"
+                                                    title="{{ __('Supprimer la classe') }}"
+                                                    onclick="return confirm('{{ __('Êtes-vous sûr de vouloir supprimer cette classe ?') }}')"
                                                     id="btn-delete-class-{{ $class->id }}">
                                                 <i class="bi bi-trash"></i>
                                             </button>
@@ -239,11 +239,11 @@
                         <tr>
                             <td colspan="{{ auth()->user()->isSuperAdmin() ? '8' : '7' }}" class="text-center py-5 text-muted">
                                 <i class="bi bi-diagram-3 fs-1 d-block mb-2 text-secondary"></i>
-                                Aucune classe trouvée.
+                                {{ __('Aucune classe trouvée.') }}
                                 @can('create', \App\Models\ClassRoom::class)
                                     <div class="mt-2">
                                         <a href="{{ route('classes.create') }}" class="btn btn-sm btn-primary">
-                                            Créer une classe
+                                            {{ __('Créer une classe') }}
                                         </a>
                                     </div>
                                 @endcan

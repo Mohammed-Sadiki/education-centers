@@ -3,13 +3,12 @@
 namespace App\Services;
 
 use App\Http\Controllers\SuperAdminDomainController;
-use App\Models\Center;
 use App\Models\Enrollment;
 use App\Models\Formation;
 use App\Models\Payment;
-use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\TeacherSalary;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class FinanceService
@@ -19,10 +18,10 @@ class FinanceService
      * Utilisés uniquement si aucune valeur personnalisée n'est enregistrée.
      */
     public const DEFAULT_ANNUAL_PRICES = [
-        'sante'            => 15000.00,
-        'informatique'     => 14000.00,
-        'hotellerie'       => 12000.00,
-        'maconnerie'       => 10000.00,
+        'sante' => 15000.00,
+        'informatique' => 14000.00,
+        'hotellerie' => 12000.00,
+        'maconnerie' => 10000.00,
         'design-interieur' => 13000.00,
         'design-graphique' => 12000.00,
     ];
@@ -42,22 +41,27 @@ class FinanceService
     ];
 
     /**
-     * Libellés des mois en français.
+     * Libellés des mois traduits dans la langue active.
+     *
+     * @return array<int, string>
      */
-    public const MONTHS_NAMES = [
-        1  => 'Janvier',
-        2  => 'Février',
-        3  => 'Mars',
-        4  => 'Avril',
-        5  => 'Mai',
-        6  => 'Juin',
-        7  => 'Juillet',
-        8  => 'Août',
-        9  => 'Septembre',
-        10 => 'Octobre',
-        11 => 'Novembre',
-        12 => 'Décembre',
-    ];
+    public static function monthNames(): array
+    {
+        return [
+            1 => __('Janvier'),
+            2 => __('Février'),
+            3 => __('Mars'),
+            4 => __('Avril'),
+            5 => __('Mai'),
+            6 => __('Juin'),
+            7 => __('Juillet'),
+            8 => __('Août'),
+            9 => __('Septembre'),
+            10 => __('Octobre'),
+            11 => __('Novembre'),
+            12 => __('Décembre'),
+        ];
+    }
 
     /**
      * Retourne la liste des domaines valides.
@@ -81,6 +85,7 @@ class FinanceService
         }
 
         $domain = $formation->domain;
+
         return self::DEFAULT_ANNUAL_PRICES[$domain] ?? 12000.00;
     }
 
@@ -110,7 +115,7 @@ class FinanceService
         if ($schoolYear !== 'all') {
             $enrollmentsQuery->where(function ($q) use ($schoolYear) {
                 $q->where('school_year', $schoolYear)
-                  ->orWhereNull('school_year');
+                    ->orWhereNull('school_year');
             });
         }
 
@@ -131,7 +136,7 @@ class FinanceService
         if ($schoolYear !== 'all') {
             $paymentsQuery->where(function ($q) use ($schoolYear) {
                 $q->where('school_year', $schoolYear)
-                  ->orWhereNull('school_year');
+                    ->orWhereNull('school_year');
             });
         }
         if ($centerId) {
@@ -140,7 +145,7 @@ class FinanceService
         if ($domain && $domain !== 'all') {
             $paymentsQuery->where(function ($q) use ($domain) {
                 $q->where('domain', $domain)
-                  ->orWhereHas('formation', fn($f) => $f->where('domain', $domain));
+                    ->orWhereHas('formation', fn ($f) => $f->where('domain', $domain));
             });
         }
 
@@ -149,14 +154,14 @@ class FinanceService
         $rows = collect();
 
         foreach ($enrollments as $enrollment) {
-            $student   = $enrollment->student;
+            $student = $enrollment->student;
             $formation = $enrollment->formation;
             if (! $student || ! $formation) {
                 continue;
             }
 
             $formationDomain = $formation->domain ?? 'informatique';
-            $expectedAmount  = self::getFormationAnnualPrice($formation);
+            $expectedAmount = self::getFormationAnnualPrice($formation);
 
             // Additionner tous les paiements enregistrés pour cet étudiant (et cette formation si rattachée)
             $studentPayments = $paymentsGrouped->get($student->id, collect());
@@ -167,7 +172,7 @@ class FinanceService
             // Statuts : Payé, Partiel, Non payé
             if ($paidAmount >= $expectedAmount && $expectedAmount > 0) {
                 $status = 'paid';
-                $statusLabel = 'Payé';
+                $statusLabel = __('Payé');
                 $statusBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
             } elseif ($paidAmount > 0) {
                 $status = 'partial';
@@ -175,26 +180,26 @@ class FinanceService
                 $statusBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
             } else {
                 $status = 'unpaid';
-                $statusLabel = 'Non payé';
+                $statusLabel = __('Non payé');
                 $statusBadge = 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
             }
 
             $rows->push((object) [
-                'enrollment'         => $enrollment,
-                'student'            => $student,
-                'formation'          => $formation,
-                'center'             => $enrollment->center,
-                'domain'             => $formationDomain,
-                'domain_label'       => self::getDomains()[$formationDomain] ?? ucfirst($formationDomain),
-                'annual_price'       => $expectedAmount,
-                'paid_amount'        => $paidAmount,
-                'remaining_amount'   => $remainingAmount,
+                'enrollment' => $enrollment,
+                'student' => $student,
+                'formation' => $formation,
+                'center' => $enrollment->center,
+                'domain' => $formationDomain,
+                'domain_label' => self::getDomains()[$formationDomain] ?? ucfirst($formationDomain),
+                'annual_price' => $expectedAmount,
+                'paid_amount' => $paidAmount,
+                'remaining_amount' => $remainingAmount,
                 'payment_percentage' => $expectedAmount > 0 ? min(100.0, round(($paidAmount / $expectedAmount) * 100, 1)) : 0.0,
-                'status'             => $status,
-                'status_label'       => $statusLabel,
-                'status_badge'       => $statusBadge,
-                'payments'           => $studentPayments,
-                'last_payment'       => $studentPayments->sortByDesc('payment_date')->first(),
+                'status' => $status,
+                'status_label' => $statusLabel,
+                'status_badge' => $statusBadge,
+                'payments' => $studentPayments,
+                'last_payment' => $studentPayments->sortByDesc('payment_date')->first(),
             ]);
         }
 
@@ -223,7 +228,7 @@ class FinanceService
         // Récupérer les fiches de salaires créées pour ce mois et cette année
         $salaryRecords = TeacherSalary::where('month', $month)
             ->where('year', $year)
-            ->when($centerId, fn($q) => $q->where('center_id', $centerId))
+            ->when($centerId, fn ($q) => $q->where('center_id', $centerId))
             ->get()
             ->keyBy('teacher_id');
 
@@ -231,10 +236,10 @@ class FinanceService
 
         foreach ($teachers as $teacher) {
             $monthlySalary = self::getTeacherMonthlySalary($teacher);
-            $record        = $salaryRecords->get($teacher->id);
+            $record = $salaryRecords->get($teacher->id);
 
             $paidAmount = $record ? (float) $record->paid_amount : 0.00;
-            $expected   = $record ? (float) $record->expected_amount : $monthlySalary;
+            $expected = $record ? (float) $record->expected_amount : $monthlySalary;
             if ($expected <= 0) {
                 $expected = $monthlySalary;
             }
@@ -242,16 +247,16 @@ class FinanceService
             $remaining = max(0.00, $expected - $paidAmount);
 
             if ($paidAmount >= $expected && $expected > 0) {
-                $status      = 'paid';
-                $statusLabel = 'Payé';
+                $status = 'paid';
+                $statusLabel = __('Payé');
                 $statusBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
             } elseif ($paidAmount > 0) {
-                $status      = 'partial';
+                $status = 'partial';
                 $statusLabel = 'Partiel';
                 $statusBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
             } else {
-                $status      = 'unpaid';
-                $statusLabel = 'Non payé';
+                $status = 'unpaid';
+                $statusLabel = __('Non payé');
                 $statusBadge = 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
             }
 
@@ -259,18 +264,18 @@ class FinanceService
             $paidPercentage = $expected > 0 ? min(100.0, round(($paidAmount / $expected) * 100, 1)) : 0.0;
 
             $rows->push((object) [
-                'teacher'          => $teacher,
-                'center'           => $teacher->center,
-                'domain'           => $tDomain,
-                'domain_label'     => self::getDomains()[$tDomain] ?? ucfirst($tDomain),
-                'monthly_salary'   => $expected,
-                'paid_amount'      => $paidAmount,
+                'teacher' => $teacher,
+                'center' => $teacher->center,
+                'domain' => $tDomain,
+                'domain_label' => self::getDomains()[$tDomain] ?? ucfirst($tDomain),
+                'monthly_salary' => $expected,
+                'paid_amount' => $paidAmount,
                 'remaining_amount' => $remaining,
-                'paid_percentage'  => $paidPercentage,
-                'status'           => $status,
-                'status_label'     => $statusLabel,
-                'status_badge'     => $statusBadge,
-                'record'           => $record,
+                'paid_percentage' => $paidPercentage,
+                'status' => $status,
+                'status_label' => $statusLabel,
+                'status_badge' => $statusBadge,
+                'record' => $record,
             ]);
         }
 
@@ -291,7 +296,7 @@ class FinanceService
         if ($schoolYear !== 'all') {
             $paymentsQuery->where(function ($q) use ($schoolYear) {
                 $q->where('school_year', $schoolYear)
-                  ->orWhereNull('school_year');
+                    ->orWhereNull('school_year');
             });
         }
 
@@ -302,17 +307,13 @@ class FinanceService
         if ($domain && $domain !== 'all') {
             $paymentsQuery->where(function ($q) use ($domain) {
                 $q->where('domain', $domain)
-                  ->orWhereHas('formation', fn($f) => $f->where('domain', $domain));
+                    ->orWhereHas('formation', fn ($f) => $f->where('domain', $domain));
             });
         }
 
         $payments = $paymentsQuery->get();
 
-        $monthNames = [
-            1 => 'Janvier', 2 => 'Février', 3 => 'Mars', 4 => 'Avril',
-            5 => 'Mai', 6 => 'Juin', 7 => 'Juillet', 8 => 'Août',
-            9 => 'Septembre', 10 => 'Octobre', 11 => 'Novembre', 12 => 'Décembre',
-        ];
+        $monthNames = self::monthNames();
 
         return $payments->groupBy(function ($payment) {
             return $payment->payment_date ? $payment->payment_date->format('Y-m') : 'sans-date';
@@ -326,18 +327,18 @@ class FinanceService
             if ($key !== 'sans-date' && preg_match('/^(\d{4})-(\d{2})$/', $key, $matches)) {
                 $yearNum = (int) $matches[1];
                 $monthNum = (int) $matches[2];
-                $monthLabel = ($monthNames[$monthNum] ?? $matches[2]) . ' ' . $yearNum;
+                $monthLabel = ($monthNames[$monthNum] ?? $matches[2]).' '.$yearNum;
             }
 
             return (object) [
-                'period_key'        => $key,
-                'period_label'      => $monthLabel,
-                'month_num'         => $monthNum,
-                'year_num'          => $yearNum,
-                'payments_count'    => $group->count(),
-                'students_count'    => $distinctStudents,
-                'total_collected'   => $totalCollected,
-                'payments'          => $group,
+                'period_key' => $key,
+                'period_label' => $monthLabel,
+                'month_num' => $monthNum,
+                'year_num' => $yearNum,
+                'payments_count' => $group->count(),
+                'students_count' => $distinctStudents,
+                'total_collected' => $totalCollected,
+                'payments' => $group,
             ];
         });
     }
@@ -347,18 +348,22 @@ class FinanceService
      */
     public function getMonthlyEvolution(?string $domain = null, string $schoolYear = '2026/2027', ?int $centerId = null): array
     {
-        $months = [
-            ['month' => 9,  'year' => 2026, 'label' => 'Sep 26'],
-            ['month' => 10, 'year' => 2026, 'label' => 'Oct 26'],
-            ['month' => 11, 'year' => 2026, 'label' => 'Nov 26'],
-            ['month' => 12, 'year' => 2026, 'label' => 'Déc 26'],
-            ['month' => 1,  'year' => 2027, 'label' => 'Jan 27'],
-            ['month' => 2,  'year' => 2027, 'label' => 'Fév 27'],
-            ['month' => 3,  'year' => 2027, 'label' => 'Mar 27'],
-            ['month' => 4,  'year' => 2027, 'label' => 'Avr 27'],
-            ['month' => 5,  'year' => 2027, 'label' => 'Mai 27'],
-            ['month' => 6,  'year' => 2027, 'label' => 'Juin 27'],
-        ];
+        $months = collect([
+            ['month' => 9,  'year' => 2026],
+            ['month' => 10, 'year' => 2026],
+            ['month' => 11, 'year' => 2026],
+            ['month' => 12, 'year' => 2026],
+            ['month' => 1,  'year' => 2027],
+            ['month' => 2,  'year' => 2027],
+            ['month' => 3,  'year' => 2027],
+            ['month' => 4,  'year' => 2027],
+            ['month' => 5,  'year' => 2027],
+            ['month' => 6,  'year' => 2027],
+        ])->map(static function (array $period): array {
+            $period['label'] = format_date(Carbon::create($period['year'], $period['month'], 1), 'M y');
+
+            return $period;
+        })->all();
 
         $paymentsQuery = Payment::where('status', 'paid');
         if ($schoolYear !== 'all') {
@@ -371,7 +376,7 @@ class FinanceService
         }
         if ($domain && $domain !== 'all') {
             $paymentsQuery->where(function ($q) use ($domain) {
-                $q->where('domain', $domain)->orWhereHas('formation', fn($f) => $f->where('domain', $domain));
+                $q->where('domain', $domain)->orWhereHas('formation', fn ($f) => $f->where('domain', $domain));
             });
         }
         $payments = $paymentsQuery->get();
@@ -410,18 +415,18 @@ class FinanceService
             }
 
             $items[] = [
-                'label'      => $m['label'],
-                'full_month' => $m['label'] . ' ' . $m['year'],
-                'month'      => $m['month'],
-                'year'       => $m['year'],
-                'collected'  => $collected,
-                'salaries'   => $salaryPaid,
-                'net'        => $collected - $salaryPaid,
+                'label' => $m['label'],
+                'full_month' => $m['label'].' '.$m['year'],
+                'month' => $m['month'],
+                'year' => $m['year'],
+                'collected' => $collected,
+                'salaries' => $salaryPaid,
+                'net' => $collected - $salaryPaid,
             ];
         }
 
         return [
-            'items'      => $items,
+            'items' => $items,
             'max_amount' => $maxAmount,
         ];
     }
@@ -442,13 +447,13 @@ class FinanceService
             $rate = $expected > 0 ? round(($collected / $expected) * 100, 1) : 0.0;
 
             $breakdown->put($slug, (object) [
-                'slug'       => $slug,
-                'label'      => $label,
-                'students'   => $rows->count(),
-                'expected'   => $expected,
-                'collected'  => $collected,
-                'remaining'  => $remaining,
-                'rate'       => $rate,
+                'slug' => $slug,
+                'label' => $label,
+                'students' => $rows->count(),
+                'expected' => $expected,
+                'collected' => $collected,
+                'remaining' => $remaining,
+                'rate' => $rate,
             ]);
         }
 
@@ -463,11 +468,11 @@ class FinanceService
         $studentRows = $this->getStudentFinancialRows($domain, $schoolYear, $centerId);
         $teacherRows = $this->getTeacherSalaryRows($domain, $month, $year, $schoolYear, $centerId);
 
-        $totalEncaise   = (float) $studentRows->sum('paid_amount');
-        $totalAttendu   = (float) $studentRows->sum('annual_price');
+        $totalEncaise = (float) $studentRows->sum('paid_amount');
+        $totalAttendu = (float) $studentRows->sum('annual_price');
         $totalRestantEtudiants = (float) $studentRows->sum('remaining_amount');
 
-        $salairesPayes   = (float) $teacherRows->sum('paid_amount');
+        $salairesPayes = (float) $teacherRows->sum('paid_amount');
         $salairesRestant = (float) $teacherRows->sum('remaining_amount');
         $salairesAttendus = (float) $teacherRows->sum('monthly_salary');
 
@@ -476,28 +481,28 @@ class FinanceService
 
         // Taux de recouvrement des paiements étudiants
         $tauxRecouvrement = $totalAttendu > 0 ? round(($totalEncaise / $totalAttendu) * 100, 1) : 0.0;
-        $tauxSalaires     = $salairesAttendus > 0 ? round(($salairesPayes / $salairesAttendus) * 100, 1) : 0.0;
+        $tauxSalaires = $salairesAttendus > 0 ? round(($salairesPayes / $salairesAttendus) * 100, 1) : 0.0;
 
         return [
-            'total_encaisse'          => $totalEncaise,
+            'total_encaisse' => $totalEncaise,
             'total_restant_etudiants' => $totalRestantEtudiants,
-            'total_attendu'           => $totalAttendu,
-            'salaires_payes'          => $salairesPayes,
-            'salaires_restant'        => $salairesRestant,
-            'salaires_attendus'       => $salairesAttendus,
-            'solde_net'               => $soldeNet,
-            'total_etudiants'         => $studentRows->count(),
-            'total_professeurs'       => $teacherRows->count(),
-            'taux_recouvrement'       => $tauxRecouvrement,
-            'taux_salaires'           => $tauxSalaires,
-            'etudiants_payes'         => $studentRows->where('status', 'paid')->count(),
-            'etudiants_partiels'      => $studentRows->where('status', 'partial')->count(),
-            'etudiants_impayes'       => $studentRows->where('status', 'unpaid')->count(),
-            'professeurs_payes'       => $teacherRows->where('status', 'paid')->count(),
-            'professeurs_partiels'    => $teacherRows->where('status', 'partial')->count(),
-            'professeurs_impayes'     => $teacherRows->where('status', 'unpaid')->count(),
-            'monthly_evolution'       => $this->getMonthlyEvolution($domain, $schoolYear, $centerId),
-            'domain_breakdown'        => $this->getDomainBreakdown($schoolYear, $centerId),
+            'total_attendu' => $totalAttendu,
+            'salaires_payes' => $salairesPayes,
+            'salaires_restant' => $salairesRestant,
+            'salaires_attendus' => $salairesAttendus,
+            'solde_net' => $soldeNet,
+            'total_etudiants' => $studentRows->count(),
+            'total_professeurs' => $teacherRows->count(),
+            'taux_recouvrement' => $tauxRecouvrement,
+            'taux_salaires' => $tauxSalaires,
+            'etudiants_payes' => $studentRows->where('status', 'paid')->count(),
+            'etudiants_partiels' => $studentRows->where('status', 'partial')->count(),
+            'etudiants_impayes' => $studentRows->where('status', 'unpaid')->count(),
+            'professeurs_payes' => $teacherRows->where('status', 'paid')->count(),
+            'professeurs_partiels' => $teacherRows->where('status', 'partial')->count(),
+            'professeurs_impayes' => $teacherRows->where('status', 'unpaid')->count(),
+            'monthly_evolution' => $this->getMonthlyEvolution($domain, $schoolYear, $centerId),
+            'domain_breakdown' => $this->getDomainBreakdown($schoolYear, $centerId),
         ];
     }
 }

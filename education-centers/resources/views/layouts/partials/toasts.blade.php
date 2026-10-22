@@ -21,7 +21,7 @@
             role="status"
         >
             <p class="flex-1 text-sm text-slate-800 dark:text-slate-100" x-text="$store.ui.toast.message"></p>
-            <button type="button" class="text-slate-400 hover:text-slate-700" x-on:click="$store.ui.hideToast()" aria-label="Fermer la notification">
+            <button type="button" class="text-slate-400 hover:text-slate-700" x-on:click="$store.ui.hideToast()" aria-label="{{ __('Fermer la notification') }}">
                 <x-icon name="x" class="h-4 w-4" />
             </button>
         </div>

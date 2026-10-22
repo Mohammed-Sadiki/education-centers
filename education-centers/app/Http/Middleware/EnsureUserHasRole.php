@@ -14,8 +14,7 @@ class EnsureUserHasRole
      * Permet l'usage : middleware('role:super_admin')
      * ou middleware('role:super_admin,center_admin')
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     * @param  string  ...$roles
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
@@ -30,7 +29,7 @@ class EnsureUserHasRole
         }
 
         if (! in_array($user->role, $roles, true)) {
-            abort(403, 'Accès non autorisé pour votre rôle.');
+            abort(403, __('Accès non autorisé pour votre rôle.'));
         }
 
         return $next($request);

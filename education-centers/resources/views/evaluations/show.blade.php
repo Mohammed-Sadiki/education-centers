@@ -4,26 +4,26 @@
 @section('content')
 <x-ui.page-header title="{{ $evaluation->title }}" :description="$evaluation->classRoom?->name.' · '.$evaluation->type_label">
     @can('update', $evaluation)
-        <a href="{{ route('evaluations.edit', $evaluation) }}" class="ec-btn-secondary">Modifier</a>
+        <a href="{{ route('evaluations.edit', $evaluation) }}" class="ec-btn-secondary">{{ __('Modifier') }}</a>
     @endcan
-    <a href="{{ route('evaluations.index') }}" class="ec-btn-ghost">Retour</a>
+    <a href="{{ route('evaluations.index') }}" class="ec-btn-ghost">{{ __('Retour') }}</a>
 </x-ui.page-header>
 
 <div class="mb-6 grid gap-4 sm:grid-cols-3">
-    <x-ui.stat label="Note max" :value="$evaluation->max_grade" icon="chart" />
-    <x-ui.stat label="Coefficient" :value="$evaluation->coefficient" icon="chart" tone="info" />
-    <x-ui.stat label="Moyenne" :value="$average !== null ? number_format($average, 2, ',', ' ') : '—'" icon="chart" tone="success" />
+    <x-ui.stat :label="__('Note max')" :value="$evaluation->max_grade" icon="chart" />
+    <x-ui.stat :label="__('Coefficient')" :value="$evaluation->coefficient" icon="chart" tone="info" />
+    <x-ui.stat :label="__('Moyenne')" :value="$average !== null ? format_number($average, 2) : '—'" icon="chart" tone="success" />
 </div>
 
 @can('update', $evaluation)
 <form method="POST" action="{{ route('evaluations.grades.save', $evaluation) }}" class="ec-card overflow-hidden p-0">
     @csrf
     <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
-        <h2 class="font-semibold">Saisie des notes</h2>
+        <h2 class="font-semibold">{{ __('Saisie des notes') }}</h2>
     </div>
     <div class="ec-table-wrap border-0">
         <table class="ec-table">
-            <thead><tr><th>Étudiant</th><th>Note / {{ $evaluation->max_grade }}</th><th>Absent</th><th>Commentaire</th></tr></thead>
+            <thead><tr><th>{{ __('Étudiant') }}</th><th>{{ __('Note /') }} {{ $evaluation->max_grade }}</th><th>{{ __('Absent') }}</th><th>{{ __('Commentaire') }}</th></tr></thead>
             <tbody>
                 @forelse($enrolledStudents as $i => $student)
                     @php $g = $grades[$student->id] ?? null; @endphp
@@ -45,19 +45,19 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4"><x-ui.empty title="Aucun étudiant inscrit dans cette classe" /></td></tr>
+                    <tr><td colspan="4"><x-ui.empty :title="__('Aucun étudiant inscrit dans cette classe')" /></td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
     @if($enrolledStudents->isNotEmpty())
-        <div class="p-4"><button class="ec-btn-primary">Enregistrer les notes</button></div>
+        <div class="p-4"><button class="ec-btn-primary">{{ __('Enregistrer les notes') }}</button></div>
     @endif
 </form>
 @else
 <div class="ec-table-wrap">
     <table class="ec-table">
-        <thead><tr><th>Étudiant</th><th>Note</th></tr></thead>
+        <thead><tr><th>{{ __('Étudiant') }}</th><th>{{ __('Note') }}</th></tr></thead>
         <tbody>
             @foreach($enrolledStudents as $student)
                 @php $g = $grades[$student->id] ?? null; @endphp

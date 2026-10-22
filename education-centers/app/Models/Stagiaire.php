@@ -39,11 +39,11 @@ class Stagiaire extends Model
     protected function casts(): array
     {
         return [
-            'date_of_birth'    => 'date',
-            'cin_issued_date'  => 'date',
+            'date_of_birth' => 'date',
+            'cin_issued_date' => 'date',
             'stage_start_date' => 'date',
-            'stage_end_date'   => 'date',
-            'stage_price'      => 'decimal:2',
+            'stage_end_date' => 'date',
+            'stage_price' => 'decimal:2',
         ];
     }
 
@@ -74,21 +74,21 @@ class Stagiaire extends Model
 
     public function isComplete(): bool
     {
-        return !empty($this->cin_number)
-            && !empty($this->cin_recto_path)
-            && !empty($this->stage_start_date)
-            && !empty($this->stage_end_date)
+        return ! empty($this->cin_number)
+            && ! empty($this->cin_recto_path)
+            && ! empty($this->stage_start_date)
+            && ! empty($this->stage_end_date)
             && $this->stage_price !== null;
     }
 
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
-            'nouveau'   => 'Nouveau',
-            'en_cours'  => 'Stage en cours',
-            'termine'   => 'Terminé',
-            'suspendu'  => 'Suspendu',
-            default     => ucfirst($this->status),
+            'nouveau' => __('Nouveau'),
+            'en_cours' => __('Stage en cours'),
+            'termine' => __('Terminé'),
+            'suspendu' => __('Suspendu'),
+            default => ucfirst($this->status),
         };
     }
 
@@ -96,11 +96,11 @@ class Stagiaire extends Model
     {
         return match ($this->status) {
             'en_cours' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-            'nouveau'  => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
-            'termine'  => 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300',
+            'nouveau' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
+            'termine' => 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300',
             'suspendu' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
-            'annule'   => 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
-            default    => 'bg-slate-100 text-slate-700',
+            'annule' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
+            default => 'bg-slate-100 text-slate-700',
         };
     }
 

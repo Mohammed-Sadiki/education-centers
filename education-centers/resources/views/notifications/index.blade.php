@@ -1,12 +1,12 @@
 @extends('layouts.app')
-@section('title', 'Notifications')
+@section('title', __('Notifications'))
 
 @section('content')
-<x-ui.page-header title="Notifications" description="Messages destinés à votre compte.">
+<x-ui.page-header :title="__('Notifications')" :description="__('Messages destinés à votre compte.')">
     <form method="POST" action="{{ route('notifications.read-all') }}">
         @csrf
         @method('PATCH')
-        <button class="ec-btn-secondary">Tout marquer comme lu</button>
+        <button class="ec-btn-secondary">{{ __('Tout marquer comme lu') }}</button>
     </form>
 </x-ui.page-header>
 <div class="space-y-3">
@@ -15,23 +15,23 @@
             <div>
                 <p class="font-medium">{{ $n->title }}</p>
                 <p class="mt-1 text-sm text-slate-600">{{ $n->message }}</p>
-                <p class="mt-2 text-xs text-slate-400">{{ $n->created_at?->format('d/m/Y H:i') }} · {{ $n->isRead() ? 'Lue' : 'Non lue' }}</p>
+                <p class="mt-2 text-xs text-slate-400">{{ format_date($n->created_at, 'd/m/Y H:i') }} · {{ $n->isRead() ? __('Lue') : __('Non lue') }}</p>
             </div>
             <div class="flex gap-2">
                 @unless($n->isRead())
                     <form method="POST" action="{{ route('notifications.read', $n) }}">
                         @csrf @method('PATCH')
-                        <button class="ec-btn-ghost ec-btn-sm">Marquer comme lu</button>
+                        <button class="ec-btn-ghost ec-btn-sm">{{ __('Marquer comme lu') }}</button>
                     </form>
                 @endunless
                 <form method="POST" action="{{ route('notifications.destroy', $n) }}">
                     @csrf @method('DELETE')
-                    <button class="ec-btn-danger ec-btn-sm">Supprimer</button>
+                    <button class="ec-btn-danger ec-btn-sm">{{ __('Supprimer') }}</button>
                 </form>
             </div>
         </article>
     @empty
-        <x-ui.empty title="Aucune notification" />
+        <x-ui.empty :title="__('Aucune notification')" />
     @endforelse
 </div>
 @if($notifications->hasPages())<div class="mt-4">{{ $notifications->links() }}</div>@endif

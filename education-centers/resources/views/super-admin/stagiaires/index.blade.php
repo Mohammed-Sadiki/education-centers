@@ -1,20 +1,20 @@
 @extends('layouts.app')
 
-@section('title', 'Liste des Stagiaires — Espace Administratif')
-@section('description', 'Gestion administrative des stagiaires et suivi des dossiers de stage.')
+@section('title', __('Liste des Stagiaires') . ' — ' . config('app.name'))
+@section('description', __('Gestion administrative des stagiaires et suivi des dossiers de stage.'))
 
 @section('breadcrumb')
     <li class="flex items-center gap-2">
         <x-icon name="chevron-left" class="h-3 w-3 text-slate-400 rotate-180" />
-        <a href="{{ route('super-admin.domaines') }}" class="hover:text-brand-700 dark:hover:text-brand-400 transition-colors">Portail domaines</a>
+        <a href="{{ route('super-admin.domaines') }}" class="hover:text-brand-700 dark:hover:text-brand-400 transition-colors">{{ __('Portail domaines') }}</a>
     </li>
     <li class="flex items-center gap-2">
         <x-icon name="chevron-left" class="h-3 w-3 text-slate-400 rotate-180" />
-        <a href="{{ route('stagiaires.dashboard') }}" class="hover:text-brand-700 dark:hover:text-brand-400 transition-colors">Stagiaires</a>
+        <a href="{{ route('stagiaires.dashboard') }}" class="hover:text-brand-700 dark:hover:text-brand-400 transition-colors">{{ __('Stagiaires') }}</a>
     </li>
     <li class="flex items-center gap-2">
         <x-icon name="chevron-left" class="h-3 w-3 text-slate-400 rotate-180" />
-        <span class="font-semibold text-slate-800 dark:text-slate-200">Tous les stagiaires</span>
+        <span class="font-semibold text-slate-800 dark:text-slate-200">{{ __('Tous les stagiaires') }}</span>
     </li>
 @endsection
 
@@ -24,28 +24,28 @@
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                <span>🧑‍💼 Dossiers Stagiaires</span>
+                <span>{{ __('🧑‍💼 Dossiers Stagiaires') }}</span>
             </h1>
             <p class="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                Gestion des stagiaires, pièces d'identité, conventions, diplômes et prix convenu du stage.
+                {{ __('Gestion des stagiaires, pièces d\'identité, conventions, diplômes et prix convenu du stage.') }}
             </p>
         </div>
         <div class="flex items-center gap-2.5">
             <a href="{{ route('stagiaires.dashboard') }}"
                class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition">
                 <x-icon name="chart" class="h-4 w-4" />
-                <span>Tableau de bord</span>
+                <span>{{ __('Tableau de bord') }}</span>
             </a>
             <a href="{{ route('stagiaires.documents') }}"
                class="inline-flex items-center gap-1.5 rounded-xl border border-teal-300 bg-teal-50 px-3.5 py-2 text-xs font-semibold text-teal-800 shadow-2xs hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/40 dark:text-teal-300 transition">
                 <x-icon name="document" class="h-4 w-4" />
-                <span>Documents</span>
+                <span>{{ __('Documents') }}</span>
             </a>
             <a href="{{ route('stagiaires.create') }}"
                id="btn-nouveau-stagiaire"
                class="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-purple-700 transition">
                 <x-icon name="plus" class="h-4 w-4" />
-                <span>Nouveau stagiaire</span>
+                <span>{{ __('Nouveau stagiaire') }}</span>
             </a>
         </div>
     </div>
@@ -56,7 +56,7 @@
     <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
         <a href="{{ route('stagiaires.index', request()->except(['filter', 'page'])) }}"
            class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all {{ !request()->filled('filter') ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800' }}">
-            <span>Tous les dossiers</span>
+            <span>{{ __('Tous les dossiers') }}</span>
             <span class="rounded-full px-1.5 py-0.5 text-[10px] {{ !request()->filled('filter') ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200' }}">
                 {{ $totalCount ?? $stagiaires->total() }}
             </span>
@@ -65,7 +65,7 @@
         <a href="{{ route('stagiaires.index', array_merge(request()->except('page'), ['filter' => 'complets'])) }}"
            class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all {{ request('filter') === 'complets' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800' }}">
             <x-icon name="check" class="h-3.5 w-3.5" />
-            <span>Dossiers complets</span>
+            <span>{{ __('Dossiers complets') }}</span>
             <span class="rounded-full px-1.5 py-0.5 text-[10px] {{ request('filter') === 'complets' ? 'bg-white/25 text-white' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' }}">
                 {{ $completsCount ?? 0 }}
             </span>
@@ -74,7 +74,7 @@
         <a href="{{ route('stagiaires.index', array_merge(request()->except('page'), ['filter' => 'incomplets'])) }}"
            class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all {{ request('filter') === 'incomplets' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800' }}">
             <x-icon name="warning" class="h-3.5 w-3.5" />
-            <span>Dossiers incomplets</span>
+            <span>{{ __('Dossiers incomplets') }}</span>
             <span class="rounded-full px-1.5 py-0.5 text-[10px] {{ request('filter') === 'incomplets' ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' }}">
                 {{ $incompletsCount ?? 0 }}
             </span>
@@ -89,38 +89,38 @@
             @endif
 
             <div>
-                <label for="search" class="sr-only">Recherche</label>
+                <label for="search" class="sr-only">{{ __('Recherche') }}</label>
                 <div class="relative">
                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <x-icon name="search" class="h-3.5 w-3.5" />
                     </div>
                     <input type="text" id="search" name="search" value="{{ request('search') }}"
-                           placeholder="Nom, CIN, email, tél..."
+                           placeholder="{{ __('Nom, CIN, email, tél...') }}"
                            class="block w-full rounded-xl border border-slate-300 bg-slate-50/50 pl-9 pr-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
                 </div>
             </div>
 
             <div>
-                <label for="status" class="sr-only">Statut</label>
+                <label for="status" class="sr-only">{{ __('Statut') }}</label>
                 <select id="status" name="status"
                         class="block w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
-                    <option value="">-- Tous les statuts --</option>
-                    <option value="nouveau"  {{ request('status') === 'nouveau'  ? 'selected' : '' }}>Nouveau</option>
-                    <option value="en_cours" {{ request('status') === 'en_cours' ? 'selected' : '' }}>Stage en cours</option>
-                    <option value="termine"  {{ request('status') === 'termine'  ? 'selected' : '' }}>Terminé</option>
-                    <option value="annule"   {{ request('status') === 'annule'   ? 'selected' : '' }}>Annulé</option>
+                    <option value="">{{ __('-- Tous les statuts --') }}</option>
+                    <option value="nouveau"  {{ request('status') === 'nouveau'  ? 'selected' : '' }}>{{ __('Nouveau') }}</option>
+                    <option value="en_cours" {{ request('status') === 'en_cours' ? 'selected' : '' }}>{{ __('Stage en cours') }}</option>
+                    <option value="termine"  {{ request('status') === 'termine'  ? 'selected' : '' }}>{{ __('Terminé') }}</option>
+                    <option value="annule"   {{ request('status') === 'annule'   ? 'selected' : '' }}>{{ __('Annulé') }}</option>
                 </select>
             </div>
 
             @if(auth()->user()->isSuperAdmin())
                 <div>
-                    <label for="center_id" class="sr-only">Centre</label>
+                    <label for="center_id" class="sr-only">{{ __('Centre') }}</label>
                     <select id="center_id" name="center_id"
                             class="block w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
-                        <option value="">-- Tous les centres --</option>
+                        <option value="">{{ __('-- Tous les centres --') }}</option>
                         @foreach($centers as $c)
                             <option value="{{ $c->id }}" {{ request('center_id') == $c->id ? 'selected' : '' }}>
-                                {{ $c->name }}
+                                {{ $c->translated('name') }}
                             </option>
                         @endforeach
                     </select>
@@ -131,12 +131,12 @@
                 <button type="submit"
                         class="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-purple-700 transition">
                     <x-icon name="filter" class="h-3.5 w-3.5" />
-                    <span>Filtrer</span>
+                    <span>{{ __('Filtrer') }}</span>
                 </button>
                 @if(request()->hasAny(['search', 'status', 'center_id', 'filter']))
                     <a href="{{ route('stagiaires.index') }}"
                        class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 transition"
-                       title="Réinitialiser tous les filtres">
+                       title="{{ __('Réinitialiser tous les filtres') }}">
                         ✕
                     </a>
                 @endif
@@ -150,14 +150,14 @@
             <table class="ec-table">
                 <thead>
                     <tr>
-                        <th>Stagiaire</th>
-                        <th>N° CIN</th>
-                        <th>Centre</th>
-                        <th>Type de stage</th>
-                        <th>Période du stage</th>
-                        <th>Prix convenu</th>
-                        <th>Statut</th>
-                        <th class="text-right">Actions</th>
+                        <th>{{ __('Stagiaire') }}</th>
+                        <th>{{ __('N° CIN') }}</th>
+                        <th>{{ __('Centre') }}</th>
+                        <th>{{ __('Type de stage') }}</th>
+                        <th>{{ __('Période du stage') }}</th>
+                        <th>{{ __('Prix convenu') }}</th>
+                        <th>{{ __('Statut') }}</th>
+                        <th class="text-right">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -170,7 +170,7 @@
                                     </a>
                                 </div>
                                 <div class="text-[11px] text-slate-500">
-                                    {{ $stagiaire->email ?? $stagiaire->phone ?? 'Aucun contact' }}
+                                    {{ $stagiaire->email ?? $stagiaire->phone ?? __('Aucun contact') }}
                                 </div>
                             </td>
                             <td>
@@ -179,26 +179,26 @@
                                         {{ $stagiaire->cin_number }}
                                     </span>
                                 @else
-                                    <span class="text-xs text-amber-600 dark:text-amber-400 italic">Non renseigné</span>
+                                    <span class="text-xs text-amber-600 dark:text-amber-400 italic">{{ __('Non renseigné') }}</span>
                                 @endif
                             </td>
                             <td>
                                 <span class="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                    {{ $stagiaire->center?->name ?? 'Tous centres' }}
+                                    {{ $stagiaire->center?->name ?? __('Tous centres') }}
                                 </span>
                             </td>
                             <td>
                                 <span class="text-xs text-slate-700 dark:text-slate-300">
-                                    {{ $stagiaire->stage_type ?? 'Non spécifié' }}
+                                    {{ $stagiaire->stage_type ?? __('Non spécifié') }}
                                 </span>
                             </td>
                             <td>
                                 @if($stagiaire->stage_start_date && $stagiaire->stage_end_date)
                                     <div class="text-xs font-medium text-slate-800 dark:text-slate-200">
-                                        {{ $stagiaire->stage_start_date->format('d/m/Y') }} → {{ $stagiaire->stage_end_date->format('d/m/Y') }}
+                                        {{ format_date($stagiaire->stage_start_date, 'd/m/Y') }} → {{ format_date($stagiaire->stage_end_date, 'd/m/Y') }}
                                     </div>
                                 @else
-                                    <span class="text-xs text-slate-400 italic">Non définie</span>
+                                    <span class="text-xs text-slate-400 italic">{{ __('Non définie') }}</span>
                                 @endif
                             </td>
                             <td>
@@ -215,22 +215,22 @@
                                 <div class="flex items-center justify-end gap-1.5">
                                     <a href="{{ route('stagiaires.show', $stagiaire) }}"
                                        class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-purple-600 dark:hover:bg-slate-800 dark:hover:text-purple-400 transition"
-                                       title="Consulter le dossier">
+                                       title="{{ __('Consulter le dossier') }}">
                                         <x-icon name="eye" class="h-4 w-4" />
                                     </a>
                                     <a href="{{ route('stagiaires.edit', $stagiaire) }}"
                                        class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-purple-600 dark:hover:bg-slate-800 dark:hover:text-purple-400 transition"
-                                       title="Modifier le stagiaire">
+                                       title="{{ __('Modifier le stagiaire') }}">
                                         <x-icon name="pencil" class="h-4 w-4" />
                                     </a>
                                     <form action="{{ route('stagiaires.destroy', $stagiaire) }}" method="POST"
-                                          onsubmit="return confirm('Confirmez-vous la suppression de ce stagiaire ?');"
+                                          onsubmit="return confirm('{{ __('Confirmez-vous la suppression de ce stagiaire ?') }}');"
                                           class="inline-block">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
                                                 class="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/50 dark:hover:text-rose-400 transition"
-                                                title="Supprimer le stagiaire">
+                                                title="{{ __('Supprimer le stagiaire') }}">
                                             <x-icon name="trash" class="h-4 w-4" />
                                         </button>
                                     </form>
@@ -241,12 +241,12 @@
                         <tr>
                             <td colspan="8" class="py-12 text-center text-sm text-slate-500">
                                 <span class="text-2xl block mb-2">🔍</span>
-                                Aucun stagiaire correspondant aux critères sélectionnés.
+                                {{ __('Aucun stagiaire correspondant aux critères sélectionnés.') }}
                                 <div class="mt-3">
                                     <a href="{{ route('stagiaires.create') }}"
                                        class="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-purple-700 transition">
                                         <x-icon name="plus" class="h-3.5 w-3.5" />
-                                        <span>Ajouter un stagiaire</span>
+                                        <span>{{ __('Ajouter un stagiaire') }}</span>
                                     </a>
                                 </div>
                             </td>

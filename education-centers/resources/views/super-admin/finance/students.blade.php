@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Paiements étudiants — Gestion financière')
+@section('title', __('Paiements étudiants') . ' — ' . config('app.name'))
 
 @section('content')
 <div class="space-y-6" x-data="{
@@ -41,13 +41,13 @@
         <div>
             <div class="inline-flex items-center gap-1.5 rounded-full bg-[#ECFDF5] px-2.5 py-0.5 text-xs font-semibold text-[#0DAD98] border border-[#0DAD98]/20 dark:bg-[#0DAD98]/15 dark:text-[#0DAD98] mb-1.5 shadow-2xs">
                 <span>🎓</span>
-                <span>Gestion financière · Scolarités & Versements</span>
+                <span>{{ __('Gestion financière · Scolarités & Versements') }}</span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                Paiements étudiants
+                {{ __('Paiements étudiants') }}
             </h1>
             <p class="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                Suivi des versements, échéances réelles et recouvrement par centre et filière.
+                {{ __('Suivi des versements, échéances réelles et recouvrement par centre et filière.') }}
             </p>
         </div>
 
@@ -56,7 +56,7 @@
                     x-on:click="openQuickPayment('', '', '')"
                     class="finance-btn-primary">
                 <x-icon name="plus" class="h-4 w-4" />
-                <span>Encaisser un versement</span>
+                <span>{{ __('Encaisser un versement') }}</span>
             </button>
         </div>
     </div>
@@ -69,7 +69,7 @@
         <div class="finance-card p-4.5">
             <div class="flex items-start justify-between">
                 <div>
-                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Total attendu</span>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ __('Total attendu') }}</span>
                     <div class="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
                         {{ format_price($stats['total_expected'] ?? 0, 'MAD') }}
                     </div>
@@ -79,7 +79,7 @@
                 </div>
             </div>
             <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
-                <span>Étudiants inscrits</span>
+                <span>{{ __('Étudiants inscrits') }}</span>
                 <span class="font-bold text-slate-800 dark:text-slate-200">{{ $stats['total_students'] ?? 0 }}</span>
             </div>
         </div>
@@ -88,7 +88,7 @@
         <div class="finance-card p-4.5">
             <div class="flex items-start justify-between">
                 <div>
-                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Total encaissé</span>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ __('Total encaissé') }}</span>
                     <div class="mt-2 text-2xl font-extrabold text-[#0DAD98] whitespace-nowrap">
                         {{ format_price($stats['total_paid'] ?? 0, 'MAD') }}
                     </div>
@@ -98,7 +98,7 @@
                 </div>
             </div>
             <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
-                <span>Taux de recouvrement</span>
+                <span>{{ __('Taux de recouvrement') }}</span>
                 <span class="font-bold text-[#0DAD98]">{{ $stats['recovery_rate'] ?? 0 }}%</span>
             </div>
         </div>
@@ -107,7 +107,7 @@
         <div class="finance-card p-4.5">
             <div class="flex items-start justify-between">
                 <div>
-                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Reste à encaisser</span>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ __('Reste à encaisser') }}</span>
                     <div class="mt-2 text-2xl font-extrabold text-amber-600 dark:text-amber-400 whitespace-nowrap">
                         {{ format_price($stats['total_remaining'] ?? 0, 'MAD') }}
                     </div>
@@ -117,7 +117,7 @@
                 </div>
             </div>
             <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
-                <span>Partiellement payés</span>
+                <span>{{ __('Partiellement payés') }}</span>
                 <span class="font-bold text-amber-600">{{ $stats['count_partial'] ?? 0 }}</span>
             </div>
         </div>
@@ -126,9 +126,9 @@
         <div class="finance-card p-4.5">
             <div class="flex items-start justify-between">
                 <div>
-                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Non payés</span>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ __('Non payés') }}</span>
                     <div class="mt-2 text-2xl font-extrabold text-rose-600 dark:text-rose-400 whitespace-nowrap">
-                        {{ $stats['count_unpaid'] ?? 0 }} <span class="text-xs font-normal text-slate-400">étudiants</span>
+                        {{ $stats['count_unpaid'] ?? 0 }} <span class="text-xs font-normal text-slate-400">{{ __('étudiants') }}</span>
                     </div>
                 </div>
                 <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40">
@@ -136,7 +136,7 @@
                 </div>
             </div>
             <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
-                <span>Soldés intégralement</span>
+                <span>{{ __('Soldés intégralement') }}</span>
                 <span class="font-bold text-emerald-600">{{ $stats['count_paid'] ?? 0 }}</span>
             </div>
         </div>
@@ -149,20 +149,20 @@
         <div class="inline-flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
             <a href="{{ request()->fullUrlWithQuery(['view' => 'monthly']) }}"
                class="rounded-lg px-4 py-2 text-xs font-semibold transition-all {{ ($viewMode ?? 'monthly') === 'monthly' ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white' }}">
-                <span>Versements par mois</span>
+                <span>{{ __('Versements par mois') }}</span>
             </a>
             <a href="{{ request()->fullUrlWithQuery(['view' => 'students']) }}"
                class="rounded-lg px-4 py-2 text-xs font-semibold transition-all {{ ($viewMode ?? '') === 'students' ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white' }}">
-                <span>Vue par étudiant</span>
+                <span>{{ __('Vue par étudiant') }}</span>
             </a>
             <a href="{{ request()->fullUrlWithQuery(['view' => 'unpaid']) }}"
                class="rounded-lg px-4 py-2 text-xs font-semibold transition-all {{ ($viewMode ?? '') === 'unpaid' ? 'bg-white text-rose-600 shadow-xs dark:bg-slate-900 dark:text-rose-400' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white' }}">
-                <span>Recouvrement & Impayés</span>
+                <span>{{ __('Recouvrement & Impayés') }}</span>
             </a>
         </div>
 
         <span class="text-xs text-slate-500">
-            Affichage : <strong class="text-slate-800 dark:text-slate-200">{{ $studentRows->count() }}</strong> inscription(s)
+            {{ __('Affichage :') }} <strong class="text-slate-800 dark:text-slate-200">{{ $studentRows->count() }}</strong> {{ __('inscription(s)') }}
         </span>
     </div>
 
@@ -177,17 +177,17 @@
             {{-- Recherche --}}
             <div class="col-span-2 sm:col-span-1">
                 <label for="filter-search" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Recherche
+                    {{ __('Recherche') }}
                 </label>
                 <input type="text" name="search" id="filter-search" value="{{ $search ?? '' }}"
-                       placeholder="Nom, matricule, réf..."
+                       placeholder="{{ __('Nom, matricule, réf...') }}"
                        class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
             </div>
 
             {{-- Année scolaire --}}
             <div>
                 <label for="filter-sy" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Année
+                    {{ __('Année') }}
                 </label>
                 <select name="school_year" id="filter-sy" onchange="this.form.submit()"
                         class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
@@ -200,13 +200,13 @@
             {{-- Centre --}}
             <div>
                 <label for="filter-cnt" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Centre
+                    {{ __('Centre') }}
                 </label>
                 <select name="center_id" id="filter-cnt" onchange="this.form.submit()"
                         class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                    <option value="" {{ empty($centerId) ? 'selected' : '' }}>Tous centres</option>
+                    <option value="" {{ empty($centerId) ? 'selected' : '' }}>{{ __('Tous centres') }}</option>
                     @foreach($centers as $c)
-                        <option value="{{ $c->id }}" {{ $centerId === $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                        <option value="{{ $c->id }}" {{ $centerId === $c->id ? 'selected' : '' }}>{{ $c->translated('name') }}</option>
                     @endforeach
                 </select>
             </div>
@@ -214,13 +214,13 @@
             {{-- Domaine --}}
             <div>
                 <label for="filter-dom" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Domaine
+                    {{ __('Domaine') }}
                 </label>
                 <select name="domain" id="filter-dom" onchange="this.form.submit()"
                         class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                    <option value="all" {{ $domain === 'all' ? 'selected' : '' }}>Tous domaines</option>
+                    <option value="all" {{ $domain === 'all' ? 'selected' : '' }}>{{ __('Tous domaines') }}</option>
                     @foreach($domains as $slug => $d)
-                        <option value="{{ $slug }}" {{ $domain === $slug ? 'selected' : '' }}>{{ is_array($d) ? ($d['name'] ?? $slug) : $d }}</option>
+                        <option value="{{ $slug }}" {{ $domain === $slug ? 'selected' : '' }}>{{ __(is_array($d) ? ($d['name'] ?? $slug) : $d) }}</option>
                     @endforeach
                 </select>
             </div>
@@ -228,13 +228,13 @@
             {{-- Formation --}}
             <div>
                 <label for="filter-form" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Formation
+                    {{ __('Formation') }}
                 </label>
                 <select name="formation_id" id="filter-form" onchange="this.form.submit()"
                         class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                    <option value="" {{ empty($formationId) ? 'selected' : '' }}>Toutes formations</option>
+                    <option value="" {{ empty($formationId) ? 'selected' : '' }}>{{ __('Toutes formations') }}</option>
                     @foreach(($formationsList ?? $formations ?? []) as $f)
-                        <option value="{{ $f->id }}" {{ $formationId === $f->id ? 'selected' : '' }}>{{ $f->name }}</option>
+                        <option value="{{ $f->id }}" {{ $formationId === $f->id ? 'selected' : '' }}>{{ $f->translated('name') }}</option>
                     @endforeach
                 </select>
             </div>
@@ -242,14 +242,14 @@
             {{-- Statut --}}
             <div>
                 <label for="filter-st" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Statut
+                    {{ __('Statut') }}
                 </label>
                 <select name="status" id="filter-st" onchange="this.form.submit()"
                         class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                    <option value="all" {{ $status === 'all' ? 'selected' : '' }}>Tous statuts</option>
-                    <option value="paid" {{ $status === 'paid' ? 'selected' : '' }}>Soldé</option>
-                    <option value="partial" {{ $status === 'partial' ? 'selected' : '' }}>Partiel</option>
-                    <option value="unpaid" {{ $status === 'unpaid' ? 'selected' : '' }}>Non payé</option>
+                    <option value="all" {{ $status === 'all' ? 'selected' : '' }}>{{ __('Tous statuts') }}</option>
+                    <option value="paid" {{ $status === 'paid' ? 'selected' : '' }}>{{ __('Soldé') }}</option>
+                    <option value="partial" {{ $status === 'partial' ? 'selected' : '' }}>{{ __('Partiel') }}</option>
+                    <option value="unpaid" {{ $status === 'unpaid' ? 'selected' : '' }}>{{ __('Non payé') }}</option>
                 </select>
             </div>
         </div>
@@ -280,16 +280,16 @@
                                     {{ $group->period_label }}
                                 </h3>
                                 <div class="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
-                                    <span>{{ $group->payments_count }} versement(s)</span>
+                                    <span>{{ $group->payments_count }} {{ __('versement(s)') }}</span>
                                     <span>·</span>
-                                    <span>{{ $group->students_count }} étudiant(s)</span>
+                                    <span>{{ $group->students_count }} {{ __('étudiant(s)') }}</span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="flex items-center gap-5">
                             <div class="text-right">
-                                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Encaissé ce mois</span>
+                                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ __('Encaissé ce mois') }}</span>
                                 <span class="text-base sm:text-lg font-extrabold text-[#0DAD98] whitespace-nowrap">
                                     {{ format_price($group->total_collected, 'MAD') }}
                                 </span>
@@ -307,20 +307,20 @@
                             <table class="w-full text-left text-xs">
                                 <thead class="bg-slate-50/70 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-800/40">
                                     <tr>
-                                        <th class="py-2.5 px-4">Date</th>
-                                        <th class="py-2.5 px-4">Réf Versement</th>
-                                        <th class="py-2.5 px-4">Étudiant</th>
-                                        <th class="py-2.5 px-4">Formation & Centre</th>
-                                        <th class="py-2.5 px-4">Règlement</th>
-                                        <th class="py-2.5 px-4 text-right">Montant</th>
-                                        <th class="py-2.5 px-4 text-center">Action</th>
+                                        <th class="py-2.5 px-4">{{ __('Date') }}</th>
+                                        <th class="py-2.5 px-4">{{ __('Réf Versement') }}</th>
+                                        <th class="py-2.5 px-4">{{ __('Étudiant') }}</th>
+                                        <th class="py-2.5 px-4">{{ __('Formation & Centre') }}</th>
+                                        <th class="py-2.5 px-4">{{ __('Règlement') }}</th>
+                                        <th class="py-2.5 px-4 text-right">{{ __('Montant') }}</th>
+                                        <th class="py-2.5 px-4 text-center">{{ __('Action') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                                     @foreach($group->payments as $pay)
                                         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                                             <td class="py-3 px-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                                                {{ $pay->payment_date ? $pay->payment_date->format('d/m/Y') : '—' }}
+                                                {{ $pay->payment_date ? format_date($pay->payment_date, 'd/m/Y') : '—' }}
                                             </td>
                                             <td class="py-3 px-4 font-mono text-[11px] font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                                                 {{ $pay->reference ?? ('ENC-'.str_pad($pay->id, 5, '0', STR_PAD_LEFT)) }}
@@ -334,9 +334,9 @@
                                             </td>
                                             <td class="py-3 px-4 whitespace-nowrap">
                                                 <span class="inline-flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-300">
-                                                    @if($pay->method === 'cash') 💵 Espèces
-                                                    @elseif($pay->method === 'bank_transfer') 🏦 Virement
-                                                    @elseif($pay->method === 'credit_card') 💳 Carte
+                                                    @if($pay->method === 'cash') {{ __('💵 Espèces') }}
+                                                    @elseif($pay->method === 'bank_transfer') {{ __('🏦 Virement') }}
+                                                    @elseif($pay->method === 'credit_card') {{ __('💳 Carte') }}
                                                     @else 📄 {{ ucfirst($pay->method) }}
                                                     @endif
                                                 </span>
@@ -349,10 +349,10 @@
                                                     <a href="{{ route('super-admin.finance.receipt.pdf', $pay->id) }}"
                                                        target="_blank"
                                                        class="inline-flex items-center gap-1 rounded-md bg-slate-100 hover:bg-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                                        <span>Reçu #{{ $pay->receipt_number }}</span>
+                                                        <span>{{ __('Reçu #') }}{{ $pay->receipt_number }}</span>
                                                     </a>
                                                 @else
-                                                    <span class="text-slate-400 text-[11px]">Validé</span>
+                                                    <span class="text-slate-400 text-[11px]">{{ __('Validé') }}</span>
                                                 @endif
                                             </td>
                                         </tr>
@@ -367,7 +367,7 @@
                     <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-xl text-slate-400 dark:bg-slate-800">
                         📁
                     </div>
-                    <p class="mt-3 text-xs font-semibold text-slate-600 dark:text-slate-300">Aucun versement enregistré pour cette sélection.</p>
+                    <p class="mt-3 text-xs font-semibold text-slate-600 dark:text-slate-300">{{ __('Aucun versement enregistré pour cette sélection.') }}</p>
                 </div>
             @endforelse
         </div>
@@ -381,14 +381,14 @@
                 <table class="w-full text-left text-xs">
                     <thead class="bg-slate-50/80 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-800/50 dark:border-slate-800">
                         <tr>
-                            <th class="py-3 px-4">Étudiant</th>
-                            <th class="py-3 px-4">Formation & Centre</th>
-                            <th class="py-3 px-4 text-right">Prix annuel</th>
-                            <th class="py-3 px-4 text-right">Total payé</th>
-                            <th class="py-3 px-4 text-right">Reste à payer</th>
-                            <th class="py-3 px-4 text-center">Progression</th>
-                            <th class="py-3 px-4 text-center">Statut</th>
-                            <th class="py-3 px-4 text-right">Action</th>
+                            <th class="py-3 px-4">{{ __('Étudiant') }}</th>
+                            <th class="py-3 px-4">{{ __('Formation & Centre') }}</th>
+                            <th class="py-3 px-4 text-right">{{ __('Prix annuel') }}</th>
+                            <th class="py-3 px-4 text-right">{{ __('Total payé') }}</th>
+                            <th class="py-3 px-4 text-right">{{ __('Reste à payer') }}</th>
+                            <th class="py-3 px-4 text-center">{{ __('Progression') }}</th>
+                            <th class="py-3 px-4 text-center">{{ __('Statut') }}</th>
+                            <th class="py-3 px-4 text-right">{{ __('Action') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -431,11 +431,11 @@
                                 </td>
                                 <td class="py-3 px-4 text-center whitespace-nowrap">
                                     @if($row->status === 'paid')
-                                        <span class="finance-badge-paid">Payé</span>
+                                        <span class="finance-badge-paid">{{ __('Payé') }}</span>
                                     @elseif($row->status === 'partial')
-                                        <span class="finance-badge-partial">Partiel</span>
+                                        <span class="finance-badge-partial">{{ __('Partiel') }}</span>
                                     @else
-                                        <span class="finance-badge-unpaid">Non payé</span>
+                                        <span class="finance-badge-unpaid">{{ __('Non payé') }}</span>
                                     @endif
                                 </td>
                                 <td class="py-3 px-4 text-right whitespace-nowrap">
@@ -443,17 +443,17 @@
                                         <button type="button"
                                                 x-on:click="openQuickPayment('{{ $row->student->id }}', '{{ $row->formation->id }}', '{{ $row->remaining_amount }}')"
                                                 class="finance-btn-primary py-1 px-2.5 text-[11px]">
-                                            <span>Encaisser</span>
+                                            <span>{{ __('Encaisser') }}</span>
                                         </button>
                                     @else
-                                        <span class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Soldé ✓</span>
+                                        <span class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">{{ __('Soldé ✓') }}</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="8" class="py-10 text-center text-xs text-slate-400">
-                                    Aucun dossier d'étudiant trouvé avec ces critères.
+                                    {{ __('Aucun dossier d\'étudiant trouvé avec ces critères.') }}
                                 </td>
                             </tr>
                         @endforelse
@@ -470,14 +470,14 @@
             <div class="p-4 bg-rose-50/50 dark:bg-rose-950/20 border-b border-rose-100 dark:border-rose-900/40 flex items-center justify-between">
                 <div>
                     <h3 class="text-xs font-bold text-rose-900 dark:text-rose-200">
-                        Priorité de recouvrement des créances scolarité
+                        {{ __('Priorité de recouvrement des créances scolarité') }}
                     </h3>
                     <p class="text-[11px] text-rose-700/80 dark:text-rose-300/80">
-                        Liste ordonnée des étudiants ayant un reliquat supérieur à 0 DH.
+                        {{ __('Liste ordonnée des étudiants ayant un reliquat supérieur à 0 DH.') }}
                     </p>
                 </div>
                 <span class="text-xs font-extrabold text-rose-700 dark:text-rose-300">
-                    Total créances : {{ format_price($studentRows->where('remaining_amount', '>', 0)->sum('remaining_amount'), 'MAD') }}
+                    {{ __('Total créances :') }} {{ format_price($studentRows->where('remaining_amount', '>', 0)->sum('remaining_amount'), 'MAD') }}
                 </span>
             </div>
 
@@ -485,13 +485,13 @@
                 <table class="w-full text-left text-xs">
                     <thead class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-800">
                         <tr>
-                            <th class="py-3 px-4">Étudiant débiteur</th>
-                            <th class="py-3 px-4">Formation & Centre</th>
-                            <th class="py-3 px-4 text-right">Total attendu</th>
-                            <th class="py-3 px-4 text-right">Total encaissé</th>
-                            <th class="py-3 px-4 text-right">Reste à payer</th>
-                            <th class="py-3 px-4 text-center">Dernier versement</th>
-                            <th class="py-3 px-4 text-right">Action</th>
+                            <th class="py-3 px-4">{{ __('Étudiant débiteur') }}</th>
+                            <th class="py-3 px-4">{{ __('Formation & Centre') }}</th>
+                            <th class="py-3 px-4 text-right">{{ __('Total attendu') }}</th>
+                            <th class="py-3 px-4 text-right">{{ __('Total encaissé') }}</th>
+                            <th class="py-3 px-4 text-right">{{ __('Reste à payer') }}</th>
+                            <th class="py-3 px-4 text-center">{{ __('Dernier versement') }}</th>
+                            <th class="py-3 px-4 text-right">{{ __('Action') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -519,20 +519,20 @@
                                     {{ format_price($debtor->remaining_amount, 'MAD') }}
                                 </td>
                                 <td class="py-3 px-4 text-center text-slate-500 whitespace-nowrap">
-                                    {{ $debtor->last_payment?->payment_date ? $debtor->last_payment->payment_date->format('d/m/Y') : 'Aucun versement' }}
+                                    {{ $debtor->last_payment?->payment_date ? format_date($debtor->last_payment->payment_date, 'd/m/Y') : __('Aucun versement') }}
                                 </td>
                                 <td class="py-3 px-4 text-right whitespace-nowrap">
                                     <button type="button"
                                             x-on:click="openQuickPayment('{{ $debtor->student->id }}', '{{ $debtor->formation->id }}', '{{ $debtor->remaining_amount }}')"
                                             class="finance-btn-primary py-1 px-2.5 text-[11px]">
-                                        <span>Encaisser créance</span>
+                                        <span>{{ __('Encaisser créance') }}</span>
                                     </button>
                                 </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="7" class="py-10 text-center text-xs text-slate-400">
-                                    Félicitations, aucun impayé enregistré sur cette sélection.
+                                    {{ __('Félicitations, aucun impayé enregistré sur cette sélection.') }}
                                 </td>
                             </tr>
                         @endforelse
@@ -564,8 +564,8 @@
                         💰
                     </span>
                     <div>
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Encaisser un versement</h3>
-                        <p class="text-[11px] text-slate-500">Scolarité annuelle · Frais de scolarité</p>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ __('Encaisser un versement') }}</h3>
+                        <p class="text-[11px] text-slate-500">{{ __('Scolarité annuelle · Frais de scolarité') }}</p>
                     </div>
                 </div>
                 <button type="button" x-on:click="paymentModalOpen = false" class="text-slate-400 hover:text-slate-600">
@@ -578,11 +578,11 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Étudiant <span class="text-rose-500">*</span>
+                        {{ __('Étudiant') }} <span class="text-rose-500">*</span>
                     </label>
                     <select name="student_id" x-model="selectedStudentId" x-on:change="onStudentChange()" required
                             class="w-full rounded-lg border-slate-200 bg-white text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
-                        <option value="">-- Sélectionner un étudiant --</option>
+                        <option value="">{{ __('-- Sélectionner un étudiant --') }}</option>
                         @foreach($studentsList as $st)
                             <option value="{{ $st->id }}">
                                 {{ $st->full_name }} ({{ $st->student_number ?? 'ID: '.$st->id }}) — {{ $st->center->name ?? '' }}
@@ -594,11 +594,11 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            Formation <span class="text-rose-500">*</span>
+                            {{ __('Formation') }} <span class="text-rose-500">*</span>
                         </label>
                         <select name="formation_id" x-model="selectedFormationId" required
                                 class="w-full rounded-lg border-slate-200 bg-white text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
-                            <option value="">-- Formation --</option>
+                            <option value="">{{ __('-- Formation --') }}</option>
                             @foreach($formationsList as $fm)
                                 <option value="{{ $fm->id }}">{{ $fm->name }} ({{ $fm->center->name ?? '' }})</option>
                             @endforeach
@@ -607,9 +607,9 @@
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            Montant versé (DH) <span class="text-rose-500">*</span>
+                            {{ __('Montant versé (DH)') }} <span class="text-rose-500">*</span>
                         </label>
-                        <input type="number" name="amount" step="0.01" min="1" x-model="paymentAmount" required placeholder="Ex: 5000"
+                        <input type="number" name="amount" step="0.01" min="1" x-model="paymentAmount" required placeholder="{{ __('Ex: 5000') }}"
                                class="w-full rounded-lg border-slate-200 bg-white text-xs font-semibold text-slate-900 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
                     </div>
                 </div>
@@ -617,7 +617,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            Date du versement <span class="text-rose-500">*</span>
+                            {{ __('Date du versement') }} <span class="text-rose-500">*</span>
                         </label>
                         <input type="date" name="payment_date" value="{{ date('Y-m-d') }}" required
                                class="w-full rounded-lg border-slate-200 bg-white text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
@@ -625,33 +625,33 @@
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            Moyen de règlement <span class="text-rose-500">*</span>
+                            {{ __('Moyen de règlement') }} <span class="text-rose-500">*</span>
                         </label>
                         <select name="payment_method" required
                                 class="w-full rounded-lg border-slate-200 bg-white text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
-                            <option value="cash">Espèces</option>
-                            <option value="bank_transfer">Virement bancaire</option>
-                            <option value="credit_card">Carte bancaire</option>
-                            <option value="check">Chèque</option>
+                            <option value="cash">{{ __('Espèces') }}</option>
+                            <option value="bank_transfer">{{ __('Virement bancaire') }}</option>
+                            <option value="credit_card">{{ __('Carte bancaire') }}</option>
+                            <option value="check">{{ __('Chèque') }}</option>
                         </select>
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Référence / Notes (facultatif)
+                        {{ __('Référence / Notes (facultatif)') }}
                     </label>
-                    <input type="text" name="reference" placeholder="Ex: VIR-2026-OCT-09"
+                    <input type="text" name="reference" placeholder="{{ __('Ex: VIR-2026-OCT-09') }}"
                            class="w-full rounded-lg border-slate-200 bg-white text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
                 </div>
 
                 <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
                     <button type="button" x-on:click="paymentModalOpen = false"
                             class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">
-                        Annuler
+                        {{ __('Annuler') }}
                     </button>
                     <button type="submit" class="finance-btn-primary">
-                        Valider l'encaissement
+                        {{ __('Valider l\'encaissement') }}
                     </button>
                 </div>
             </form>

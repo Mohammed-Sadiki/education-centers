@@ -1,4 +1,4 @@
-@props(['title' => 'Aucun élément', 'description' => null])
+@props(['title' => __('Aucun élément'), 'description' => null])
 
 <div {{ $attributes->merge(['class' => 'flex flex-col items-center justify-center px-6 py-12 text-center']) }}>
     <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800">

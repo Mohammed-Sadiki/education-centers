@@ -2,13 +2,23 @@
 
 namespace App\Models;
 
+use App\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Expense extends Model
 {
     use HasFactory;
+    use HasTranslations;
+
+    /**
+     * Fields whose displayed value can be localized.
+     *
+     * @var list<string>
+     */
+    protected array $translatable = ['title', 'description'];
 
     protected $fillable = [
         'center_id',
@@ -28,13 +38,13 @@ class Expense extends Model
         'recorded_by',
     ];
 
-    public function items(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function items(): HasMany
     {
         return $this->hasMany(ExpenseItem::class);
     }
 
     protected $casts = [
-        'amount'       => 'decimal:2',
+        'amount' => 'decimal:2',
         'expense_date' => 'date',
     ];
 

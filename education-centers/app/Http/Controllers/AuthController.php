@@ -18,6 +18,7 @@ class AuthController extends Controller
             if (Auth::user()->isSuperAdmin()) {
                 return redirect()->route('super-admin.domaines');
             }
+
             return redirect()->route('dashboard');
         }
 
@@ -30,12 +31,12 @@ class AuthController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email'    => ['required', 'string', 'email'],
+            'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ], [
-            'email.required'    => 'L\'adresse e-mail est obligatoire.',
-            'email.email'       => 'Veuillez saisir une adresse e-mail valide.',
-            'password.required' => 'Le mot de passe est obligatoire.',
+            'email.required' => __('L\'adresse e-mail est obligatoire.'),
+            'email.email' => __('Veuillez saisir une adresse e-mail valide.'),
+            'password.required' => __('Le mot de passe est obligatoire.'),
         ]);
 
         $remember = $request->boolean('remember');
@@ -43,17 +44,25 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
+            if ($request->session()->pull('locale_explicit', false)) {
+                $locale = $request->session()->get('locale');
+
+                if (is_string($locale) && in_array($locale, LocaleController::SUPPORTED_LOCALES, true)) {
+                    Auth::user()->forceFill(['locale' => $locale])->saveQuietly();
+                }
+            }
+
             if (Auth::user()->isSuperAdmin()) {
                 return redirect()->intended(route('super-admin.domaines'))
-                    ->with('success', 'Connexion réussie. Bienvenue !');
+                    ->with('success', __('Connexion réussie. Bienvenue !'));
             }
 
             return redirect()->intended(route('dashboard'))
-                ->with('success', 'Connexion réussie. Bienvenue !');
+                ->with('success', __('Connexion réussie. Bienvenue !'));
         }
 
         return back()->withErrors([
-            'email' => 'Ces identifiants ne correspondent à aucun compte actif.',
+            'email' => __('Ces identifiants ne correspondent à aucun compte actif.'),
         ])->onlyInput('email');
     }
 
@@ -68,6 +77,6 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login')
-            ->with('success', 'Vous avez été déconnecté avec succès.');
+            ->with('success', __('Vous avez été déconnecté avec succès.'));
     }
 }

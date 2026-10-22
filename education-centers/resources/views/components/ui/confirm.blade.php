@@ -1,9 +1,9 @@
 @props([
     'action',
     'method' => 'DELETE',
-    'title' => 'Confirmer',
-    'message' => 'Cette action est irréversible.',
-    'confirm' => 'Confirmer',
+    'title' => __('Confirmer'),
+    'message' => __('Cette action est irréversible.'),
+    'confirm' => __('Confirmer'),
 ])
 
 <div x-data="{ open: false }" class="inline-flex">
@@ -22,7 +22,7 @@
                 <h2 class="text-lg font-semibold">{{ $title }}</h2>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ $message }}</p>
                 <div class="mt-5 flex justify-end gap-2">
-                    <button type="button" class="ec-btn-secondary" x-on:click="open = false">Annuler</button>
+                    <button type="button" class="ec-btn-secondary" x-on:click="open = false">{{ __('Annuler') }}</button>
                     <form method="POST" action="{{ $action }}">
                         @csrf
                         @method($method)

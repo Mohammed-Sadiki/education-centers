@@ -5,6 +5,8 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -16,10 +18,13 @@ class User extends Authenticatable
     /**
      * Rôles disponibles.
      */
-    public const ROLE_SUPER_ADMIN  = 'super_admin';
+    public const ROLE_SUPER_ADMIN = 'super_admin';
+
     public const ROLE_CENTER_ADMIN = 'center_admin';
-    public const ROLE_TEACHER      = 'teacher';
-    public const ROLE_STUDENT      = 'student';
+
+    public const ROLE_TEACHER = 'teacher';
+
+    public const ROLE_STUDENT = 'student';
 
     public const ROLES = [
         self::ROLE_SUPER_ADMIN,
@@ -31,7 +36,8 @@ class User extends Authenticatable
     /**
      * Statuts disponibles.
      */
-    public const STATUS_ACTIVE   = 'active';
+    public const STATUS_ACTIVE = 'active';
+
     public const STATUS_INACTIVE = 'inactive';
 
     /**
@@ -45,6 +51,7 @@ class User extends Authenticatable
         'center_id',
         'phone',
         'status',
+        'locale',
     ];
 
     /**
@@ -64,7 +71,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
+            'password' => 'hashed',
         ];
     }
 
@@ -86,7 +93,7 @@ class User extends Authenticatable
                 // Pour tout utilisateur non super_admin (center_admin, teacher, student) : center_id est obligatoire
                 if (empty($user->center_id)) {
                     throw new \InvalidArgumentException(
-                        "L'utilisateur avec le rôle [{$user->role}] doit obligatoirement être rattaché à un centre (center_id requis)."
+                        __('L\'utilisateur avec le rôle [:role] doit obligatoirement être rattaché à un centre (center_id requis).', ['role' => $user->role])
                     );
                 }
             }
@@ -109,7 +116,7 @@ class User extends Authenticatable
     /**
      * Un utilisateur étudiant possède un dossier étudiant (0 ou 1).
      */
-    public function student(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function student(): HasOne
     {
         return $this->hasOne(Student::class);
     }
@@ -117,12 +124,31 @@ class User extends Authenticatable
     /**
      * Un utilisateur professeur possède un dossier professeur (0 ou 1).
      */
-    public function teacher(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function teacher(): HasOne
     {
         return $this->hasOne(Teacher::class);
     }
 
+    public function conversationParticipants(): HasMany
+    {
+        return $this->hasMany(ConversationParticipant::class);
+    }
 
+    public function totalUnreadMessagesCount(): int
+    {
+        $participants = $this->conversationParticipants()->get();
+        $count = 0;
+        foreach ($participants as $participant) {
+            $query = Message::where('conversation_id', $participant->conversation_id)
+                ->where('sender_id', '!=', $this->id);
+            if ($participant->last_read_at) {
+                $query->where('created_at', '>', $participant->last_read_at);
+            }
+            $count += $query->count();
+        }
+
+        return $count;
+    }
 
     // ──────────────────────────────────────────────────────────────────────
     //  Vérification des Rôles
@@ -162,8 +188,6 @@ class User extends Authenticatable
 
     /**
      * Détermine si l'utilisateur a un rôle spécifique parmi une liste.
-     *
-     * @param string|array $roles
      */
     public function hasRole(string|array $roles): bool
     {

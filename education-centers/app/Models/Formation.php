@@ -2,13 +2,23 @@
 
 namespace App\Models;
 
+use App\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Formation extends Model
 {
     use HasFactory;
+    use HasTranslations;
+
+    /**
+     * Fields whose displayed value can be localized.
+     *
+     * @var list<string>
+     */
+    protected array $translatable = ['name', 'description'];
 
     /**
      * The attributes that are mass assignable.
@@ -39,8 +49,8 @@ class Formation extends Model
         return [
             'duration_hours' => 'integer',
             'duration_weeks' => 'integer',
-            'price'          => 'decimal:2',
-            'annual_price'   => 'decimal:2',
+            'price' => 'decimal:2',
+            'annual_price' => 'decimal:2',
         ];
     }
 
@@ -55,7 +65,7 @@ class Formation extends Model
     /**
      * Relation : Une formation possède plusieurs classes.
      */
-    public function classes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function classes(): HasMany
     {
         return $this->hasMany(ClassRoom::class);
     }
@@ -63,11 +73,10 @@ class Formation extends Model
     /**
      * Relation : Inscriptions liées à cette formation.
      */
-    public function enrollments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
     }
-
 
     /**
      * Vérifier si la formation est active.

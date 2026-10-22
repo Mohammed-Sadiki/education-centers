@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'Modifier ' . $center->name . ' — Education Centers')
+@section('title', __('Modifier') . ' ' . $center->translated('name') . ' — Education Centers')
 
 @section('breadcrumb')
     <li class="breadcrumb-item">
-        <a href="{{ route('centers.index') }}" class="text-decoration-none">Centres</a>
+        <a href="{{ route('centers.index') }}" class="text-decoration-none">{{ __('Centres') }}</a>
     </li>
     <li class="breadcrumb-item">
-        <a href="{{ route('centers.show', $center) }}" class="text-decoration-none">{{ $center->name }}</a>
+        <a href="{{ route('centers.show', $center) }}" class="text-decoration-none">{{ $center->translated('name') }}</a>
     </li>
-    <li class="breadcrumb-item active">Modifier</li>
+    <li class="breadcrumb-item active">{{ __('Modifier') }}</li>
 @endsection
 
 @section('content')
@@ -24,9 +24,9 @@
                 </a>
                 <div>
                     <h1 class="h3 fw-bold mb-0">
-                        <i class="bi bi-pencil-square me-2 text-primary"></i>Modifier le centre
+                        <i class="bi bi-pencil-square me-2 text-primary"></i>{{ __('Modifier le centre') }}
                     </h1>
-                    <p class="text-muted small mb-0">{{ $center->name }} (<code>{{ $center->code }}</code>)</p>
+                    <p class="text-muted small mb-0">{{ $center->translated('name') }} (<code>{{ $center->code }}</code>)</p>
                 </div>
             </div>
 
@@ -38,7 +38,7 @@
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-white border-bottom py-3">
                         <h6 class="mb-0 fw-semibold">
-                            <i class="bi bi-info-circle me-2 text-primary"></i>Informations générales
+                            <i class="bi bi-info-circle me-2 text-primary"></i>{{ __('Informations générales') }}
                         </h6>
                     </div>
                     <div class="card-body p-4">
@@ -46,7 +46,7 @@
                             {{-- Nom --}}
                             <div class="col-md-8">
                                 <label for="name" class="form-label fw-semibold">
-                                    Nom du centre <span class="text-danger">*</span>
+                                    {{ __('Nom du centre') }} <span class="text-danger">*</span>
                                 </label>
                                 <input type="text"
                                        id="name"
@@ -62,7 +62,7 @@
                             {{-- Code --}}
                             <div class="col-md-4">
                                 <label for="code" class="form-label fw-semibold">
-                                    Code unique <span class="text-danger">*</span>
+                                    {{ __('Code unique') }} <span class="text-danger">*</span>
                                 </label>
                                 <input type="text"
                                        id="code"
@@ -74,19 +74,19 @@
                                 @error('code')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @else
-                                    <div class="form-text">Majuscules, chiffres, - et _ uniquement</div>
+                                    <div class="form-text">{{ __('Majuscules, chiffres, - et _ uniquement') }}</div>
                                 @enderror
                             </div>
 
                             {{-- Statut --}}
                             <div class="col-md-4">
                                 <label for="status" class="form-label fw-semibold">
-                                    Statut <span class="text-danger">*</span>
+                                    {{ __('Statut') }} <span class="text-danger">*</span>
                                 </label>
                                 <select id="status" name="status"
                                         class="form-select @error('status') is-invalid @enderror">
-                                    <option value="active"   {{ old('status', $center->status) === 'active' ? 'selected' : '' }}>Actif</option>
-                                    <option value="inactive" {{ old('status', $center->status) === 'inactive' ? 'selected' : '' }}>Inactif</option>
+                                    <option value="active"   {{ old('status', $center->status) === 'active' ? 'selected' : '' }}>{{ __('Actif') }}</option>
+                                    <option value="inactive" {{ old('status', $center->status) === 'inactive' ? 'selected' : '' }}>{{ __('Inactif') }}</option>
                                 </select>
                                 @error('status')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -95,7 +95,7 @@
 
                             {{-- Email --}}
                             <div class="col-md-8">
-                                <label for="email" class="form-label fw-semibold">Email</label>
+                                <label for="email" class="form-label fw-semibold">{{ __('Email') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                                     <input type="email"
@@ -112,7 +112,7 @@
 
                             {{-- Téléphone --}}
                             <div class="col-md-4">
-                                <label for="phone" class="form-label fw-semibold">Téléphone</label>
+                                <label for="phone" class="form-label fw-semibold">{{ __('Téléphone') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                                     <input type="text"
@@ -134,13 +134,13 @@
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-white border-bottom py-3">
                         <h6 class="mb-0 fw-semibold">
-                            <i class="bi bi-geo-alt me-2 text-primary"></i>Adresse
+                            <i class="bi bi-geo-alt me-2 text-primary"></i>{{ __('Adresse') }}
                         </h6>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-12">
-                                <label for="address" class="form-label fw-semibold">Adresse</label>
+                                <label for="address" class="form-label fw-semibold">{{ __('Adresse') }}</label>
                                 <input type="text"
                                        id="address"
                                        name="address"
@@ -152,7 +152,7 @@
                             </div>
 
                             <div class="col-md-3">
-                                <label for="postal_code" class="form-label fw-semibold">Code postal</label>
+                                <label for="postal_code" class="form-label fw-semibold">{{ __('Code postal') }}</label>
                                 <input type="text"
                                        id="postal_code"
                                        name="postal_code"
@@ -164,7 +164,7 @@
                             </div>
 
                             <div class="col-md-5">
-                                <label for="city" class="form-label fw-semibold">Ville</label>
+                                <label for="city" class="form-label fw-semibold">{{ __('Ville') }}</label>
                                 <input type="text"
                                        id="city"
                                        name="city"
@@ -176,7 +176,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label for="country" class="form-label fw-semibold">Pays</label>
+                                <label for="country" class="form-label fw-semibold">{{ __('Pays') }}</label>
                                 <input type="text"
                                        id="country"
                                        name="country"
@@ -194,13 +194,13 @@
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-white border-bottom py-3">
                         <h6 class="mb-0 fw-semibold">
-                            <i class="bi bi-image me-2 text-primary"></i>Logo du centre
+                            <i class="bi bi-image me-2 text-primary"></i>{{ __('Logo du centre') }}
                         </h6>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3 align-items-center">
                             <div class="col-md-8">
-                                <label for="logo" class="form-label fw-semibold">Remplacer le logo</label>
+                                <label for="logo" class="form-label fw-semibold">{{ __('Remplacer le logo') }}</label>
                                 <input type="file"
                                        id="logo"
                                        name="logo"
@@ -210,7 +210,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @else
                                     <div class="form-text">
-                                        Laissez vide pour conserver le logo actuel. Formats : JPG, PNG, WebP (max 2 Mo).
+                                        {{ __('Laissez vide pour conserver le logo actuel. Formats : JPG, PNG, WebP (max 2 Mo).') }}
                                     </div>
                                 @enderror
                             </div>
@@ -219,7 +219,7 @@
                                      class="border rounded-3 d-flex align-items-center justify-content-center bg-light"
                                      style="height: 100px; width: 100px; margin: auto;">
                                     @if($center->logo_url)
-                                        <img src="{{ $center->logo_url }}" alt="Logo actuel" style="max-height:96px;max-width:96px;object-fit:contain;border-radius:.375rem;">
+                                        <img src="{{ $center->logo_url }}" alt="{{ __('Logo actuel') }}" style="max-height:96px;max-width:96px;object-fit:contain;border-radius:.375rem;">
                                     @else
                                         <i class="bi bi-building text-muted fs-2"></i>
                                     @endif
@@ -232,10 +232,10 @@
                 {{-- ── Boutons ── --}}
                 <div class="d-flex gap-2 justify-content-end mb-5">
                     <a href="{{ route('centers.show', $center) }}" class="btn btn-outline-secondary px-4">
-                        Annuler
+                        {{ __('Annuler') }}
                     </a>
                     <button type="submit" class="btn btn-primary px-4">
-                        <i class="bi bi-floppy-fill me-2"></i>Enregistrer les modifications
+                        <i class="bi bi-floppy-fill me-2"></i>{{ __('Enregistrer les modifications') }}
                     </button>
                 </div>
 
@@ -253,7 +253,7 @@ document.getElementById('logo').addEventListener('change', function(e) {
     if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = function(ev) {
-            preview.innerHTML = `<img src="${ev.target.result}" alt="Aperçu" style="max-height:96px;max-width:96px;object-fit:contain;border-radius:.375rem;">`;
+            preview.innerHTML = `<img src="${ev.target.result}" alt="${@js(__('Aperçu'))}" style="max-height:96px;max-width:96px;object-fit:contain;border-radius:.375rem;">`;
         };
         reader.readAsDataURL(file);
     }

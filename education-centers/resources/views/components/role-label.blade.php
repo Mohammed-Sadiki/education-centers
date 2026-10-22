@@ -2,10 +2,10 @@
 
 @php
     $label = match ($role) {
-        'super_admin' => 'Super Admin',
-        'center_admin' => 'Admin Centre',
-        'teacher' => 'Professeur',
-        'student' => 'Élève',
+        'super_admin' => __('Super Admin'),
+        'center_admin' => __('Admin Centre'),
+        'teacher' => __('Professeur'),
+        'student' => __('Élève'),
         default => (string) $role,
     };
     $tone = match ($role) {

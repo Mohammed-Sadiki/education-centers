@@ -31,11 +31,11 @@ class TeacherSalary extends Model
     protected function casts(): array
     {
         return [
-            'month'           => 'integer',
-            'year'            => 'integer',
+            'month' => 'integer',
+            'year' => 'integer',
             'expected_amount' => 'decimal:2',
-            'paid_amount'     => 'decimal:2',
-            'payment_date'    => 'date',
+            'paid_amount' => 'decimal:2',
+            'payment_date' => 'date',
         ];
     }
 
@@ -62,9 +62,9 @@ class TeacherSalary extends Model
     public function getMonthNameAttribute(): string
     {
         $months = [
-            1 => 'Janvier', 2 => 'Février', 3 => 'Mars', 4 => 'Avril',
-            5 => 'Mai', 6 => 'Juin', 7 => 'Juillet', 8 => 'Août',
-            9 => 'Septembre', 10 => 'Octobre', 11 => 'Novembre', 12 => 'Décembre',
+            1 => __('Janvier'), 2 => __('Février'), 3 => __('Mars'), 4 => __('Avril'),
+            5 => __('Mai'), 6 => __('Juin'), 7 => __('Juillet'), 8 => __('Août'),
+            9 => __('Septembre'), 10 => __('Octobre'), 11 => __('Novembre'), 12 => __('Décembre'),
         ];
 
         return $months[$this->month] ?? (string) $this->month;
@@ -73,20 +73,20 @@ class TeacherSalary extends Model
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
-            'paid'    => 'Payé',
-            'partial' => 'Partiellement payé',
-            'unpaid'  => 'Non payé',
-            default   => ucfirst($this->status),
+            'paid' => __('Payé'),
+            'partial' => __('Partiellement payé'),
+            'unpaid' => __('Non payé'),
+            default => ucfirst($this->status),
         };
     }
 
     public function getStatusBadgeClassAttribute(): string
     {
         return match ($this->status) {
-            'paid'    => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
+            'paid' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
             'partial' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800',
-            'unpaid'  => 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800',
-            default   => 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300',
+            'unpaid' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800',
+            default => 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300',
         };
     }
 }

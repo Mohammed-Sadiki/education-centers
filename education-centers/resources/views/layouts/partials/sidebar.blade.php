@@ -19,12 +19,12 @@
 
     // Configuration visuelle par domaine
     $domainMeta = [
-        'sante'            => ['label' => 'Santé',            'color' => 'emerald', 'icon' => 'heart'],
-        'informatique'     => ['label' => 'Informatique',     'color' => 'blue',    'icon' => 'monitor'],
-        'hotellerie'       => ['label' => 'Hôtellerie',       'color' => 'amber',   'icon' => 'building'],
-        'maconnerie'       => ['label' => 'Maçonnerie',       'color' => 'orange',  'icon' => 'wrench'],
-        'design-interieur' => ['label' => 'Design intérieur', 'color' => 'violet',  'icon' => 'home'],
-        'design-graphique' => ['label' => 'Design graphique', 'color' => 'pink',    'icon' => 'brush'],
+        'sante'            => ['label' => __('Santé'),            'color' => 'emerald', 'icon' => 'heart'],
+        'informatique'     => ['label' => __('Informatique'),     'color' => 'blue',    'icon' => 'monitor'],
+        'hotellerie'       => ['label' => __('Hôtellerie'),       'color' => 'amber',   'icon' => 'building'],
+        'maconnerie'       => ['label' => __('Maçonnerie'),       'color' => 'orange',  'icon' => 'wrench'],
+        'design-interieur' => ['label' => __('Design intérieur'), 'color' => 'violet',  'icon' => 'home'],
+        'design-graphique' => ['label' => __('Design graphique'), 'color' => 'pink',    'icon' => 'brush'],
     ];
     $currentDomainMeta = $domainMeta[$activeDomain] ?? $domainMeta['sante'];
     $domainLabel       = $currentDomainMeta['label'];
@@ -112,34 +112,34 @@
         $groups[] = [
             'title' => null,
             'items' => array_filter([
-                $link('Tableau de bord', 'super-admin.finance.dashboard', 'chart', 'super-admin.finance.dashboard'),
-                $link('Statistiques', 'super-admin.finance.statistics', 'arrow-trending-up', 'super-admin.finance.statistics'),
+                $link(__('Tableau de bord'), 'super-admin.finance.dashboard', 'chart', 'super-admin.finance.dashboard'),
+                $link(__('Statistiques'), 'super-admin.finance.statistics', 'arrow-trending-up', 'super-admin.finance.statistics'),
             ])
         ];
 
         $groups[] = [
-            'title' => 'Gestion financière',
+            'title' => __('Gestion financière'),
             'items' => array_filter([
-                $link('Paiements', 'super-admin.finance.students', 'academic', 'super-admin.finance.students'),
-                $link('Dépenses', 'super-admin.finance.expenses', 'banknotes', 'super-admin.finance.expenses'),
-                $link('Recouvrement', 'super-admin.finance.recovery', 'clock', 'super-admin.finance.recovery'),
+                $link(__('Paiements'), 'super-admin.finance.students', 'academic', 'super-admin.finance.students'),
+                $link(__('Dépenses'), 'super-admin.finance.expenses', 'banknotes', 'super-admin.finance.expenses'),
+                $link(__('Recouvrement'), 'super-admin.finance.recovery', 'clock', 'super-admin.finance.recovery'),
             ])
         ];
 
         $groups[] = [
-            'title' => 'Trésorerie & Comptabilité',
+            'title' => __('Trésorerie & Comptabilité'),
             'items' => array_filter([
-                $link('Compte bancaire', 'super-admin.finance.bank', 'building', 'super-admin.finance.bank'),
-                $link('Comptabilité', 'super-admin.finance.accounting', 'document-text', 'super-admin.finance.accounting'),
-                $link('Salaires des professeurs', 'super-admin.finance.teachers', 'user', 'super-admin.finance.teachers'),
+                $link(__('Compte bancaire'), 'super-admin.finance.bank', 'building', 'super-admin.finance.bank'),
+                $link(__('Comptabilité'), 'super-admin.finance.accounting', 'document-text', 'super-admin.finance.accounting'),
+                $link(__('Salaires des professeurs'), 'super-admin.finance.teachers', 'user', 'super-admin.finance.teachers'),
             ])
         ];
 
         $groups[] = [
-            'title' => 'Configuration & Rapports',
+            'title' => __('Configuration & Rapports'),
             'items' => array_filter([
-                $link('Configuration des prix', 'super-admin.finance.configuration', 'wrench', 'super-admin.finance.configuration'),
-                $link('Rapports financiers', 'super-admin.finance.reports', 'document', 'super-admin.finance.reports'),
+                $link(__('Configuration des prix'), 'super-admin.finance.configuration', 'wrench', 'super-admin.finance.configuration'),
+                $link(__('Rapports financiers'), 'super-admin.finance.reports', 'document', 'super-admin.finance.reports'),
             ])
         ];
 
@@ -148,26 +148,26 @@
         // CONTEXTE DÉDIÉ : GESTION ADMINISTRATIVE DES STAGIAIRES
         // ────────────────────────────────────────────────────────────
         $groups[] = [
-            'title' => 'Dashboard',
+            'title' => __('Dashboard'),
             'items' => array_filter([
-                $link('Tableau de bord', 'stagiaires.dashboard', 'chart', 'stagiaires.dashboard'),
+                $link(__('Tableau de bord'), 'stagiaires.dashboard', 'chart', 'stagiaires.dashboard'),
             ])
         ];
 
         $groups[] = [
-            'title' => 'Gestion des stagiaires',
+            'title' => __('Gestion des stagiaires'),
             'items' => array_filter([
-                $link('Tous les stagiaires', 'stagiaires.index', 'users', 'stagiaires.index'),
-                $link('Ajouter un stagiaire', 'stagiaires.create', 'plus', 'stagiaires.create'),
+                $link(__('Tous les stagiaires'), 'stagiaires.index', 'users', 'stagiaires.index'),
+                $link(__('Ajouter un stagiaire'), 'stagiaires.create', 'plus', 'stagiaires.create'),
             ])
         ];
 
         $groups[] = [
-            'title' => 'Dossiers',
+            'title' => __('Dossiers'),
             'items' => array_filter([
-                $link('Dossiers complets', 'stagiaires.index', 'check', 'stagiaires.index', null, ['filter' => 'complets']),
-                $link('Dossiers incomplets', 'stagiaires.index', 'warning', 'stagiaires.index', null, ['filter' => 'incomplets']),
-                $link('Documents', 'stagiaires.documents', 'document', 'stagiaires.documents*'),
+                $link(__('Dossiers complets'), 'stagiaires.index', 'check', 'stagiaires.index', null, ['filter' => 'complets']),
+                $link(__('Dossiers incomplets'), 'stagiaires.index', 'warning', 'stagiaires.index', null, ['filter' => 'incomplets']),
+                $link(__('Documents'), 'stagiaires.documents', 'document', 'stagiaires.documents*'),
             ])
         ];
 
@@ -183,87 +183,90 @@
             : route('super-admin.domain.dashboard', $activeDomain ?? 'sante');
 
         $groups[] = ['title' => null, 'items' => array_filter([
-            ['label' => 'Dashboard ' . $domainLabel, 'url' => $dashboardRoute, 'icon' => $domainIcon,
+            ['label' => __('Dashboard ') . $domainLabel, 'url' => $dashboardRoute, 'icon' => $domainIcon,
              'active' => request()->routeIs(['super-admin.sante.dashboard', 'super-admin.domain.dashboard'])],
         ])];
 
         $adminItems = array_filter([
-            $link('Centres', 'centers.index', 'building', 'centers.*'),
-            $link('Utilisateurs', 'users.index', 'users', 'users.*'),
-            $link('Étudiants', 'students.index', 'academic', 'students.*'),
-            $link('Professeurs', 'teachers.index', 'user', 'teachers.*'),
-            $link('Formations', 'formations.index', 'book', 'formations.*'),
-            $link('Classes', 'classes.index', 'classes', 'classes.*'),
-            $link('Salles', 'rooms.index', 'door', 'rooms.*'),
-            $link('Emploi du temps', 'schedules.index', 'calendar', 'schedules.*'),
-            $link('Inscriptions', 'enrollments.index', 'clipboard', 'enrollments.*'),
+            $link(__('Centres'), 'centers.index', 'building', 'centers.*'),
+            $link(__('Utilisateurs'), 'users.index', 'users', 'users.*'),
+            $link(__('Étudiants'), 'students.index', 'academic', 'students.*'),
+            $link(__('Professeurs'), 'teachers.index', 'user', 'teachers.*'),
+            $link(__('Formations'), 'formations.index', 'book', 'formations.*'),
+            $link(__('Classes'), 'classes.index', 'classes', 'classes.*'),
+            $link(__('Salles'), 'rooms.index', 'door', 'rooms.*'),
+            $link(__('Emploi du temps'), 'schedules.index', 'calendar', 'schedules.*'),
+            $link(__('Inscriptions'), 'enrollments.index', 'clipboard', 'enrollments.*'),
         ]);
-        $groups[] = ['title' => 'Pédagogie', 'items' => $adminItems];
+        $groups[] = ['title' => __('Pédagogie'), 'items' => $adminItems];
 
         $ops = array_filter([
-            $link('Présences', 'attendances.index', 'clock', 'attendances.*'),
-            $link('Évaluations', 'evaluations.index', 'chart', 'evaluations.*'),
-            $link('Paiements', 'payments.index', 'banknotes', 'payments.*'),
-            $link('Factures', 'invoices.index', 'document', 'invoices.*'),
-            $link('Documents', 'documents.index', 'document', 'documents.*'),
-            $link('Certificats', 'certificates.index', 'certificate', 'certificates.*'),
+            $link(__('Présences'), 'attendances.index', 'clock', 'attendances.*'),
+            $link(__('Évaluations'), 'evaluations.index', 'chart', 'evaluations.*'),
+            $link(__('Paiements'), 'payments.index', 'banknotes', 'payments.*'),
+            $link(__('Factures'), 'invoices.index', 'document', 'invoices.*'),
+            $link(__('Documents'), 'documents.index', 'document', 'documents.*'),
+            $link(__('Certificats'), 'certificates.index', 'certificate', 'certificates.*'),
         ]);
-        $groups[] = ['title' => 'Gestion', 'items' => $ops];
+        $groups[] = ['title' => __('Gestion'), 'items' => $ops];
 
         $com = array_filter([
-            $link('Notifications', 'notifications.index', 'bell', 'notifications.*'),
-            $link('Annonces', 'announcements.index', 'megaphone', 'announcements.*'),
-            $link('Audit Logs', 'audit.index', 'shield', 'audit.*'),
+            $link(__('Notifications'), 'notifications.index', 'bell', 'notifications.*'),
+            $link(__('Annonces'), 'announcements.index', 'megaphone', 'announcements.*'),
+            $link(__('Audit Logs'), 'audit.index', 'shield', 'audit.*'),
+            $link(__('Messagerie'), 'messages.index', 'message', 'messages.*'),
+            $link(__('Traductions'), 'super-admin.translations.index', 'book', 'super-admin.translations.*'),
         ]);
-        $groups[] = ['title' => 'Communication', 'items' => $com];
+        $groups[] = ['title' => __('Communication'), 'items' => $com];
 
     } elseif ($user->isCenterAdmin()) {
         $groups[] = ['title' => null, 'items' => array_filter([
-            $link('Dashboard', 'dashboard', 'home', 'dashboard'),
+            $link(__('Dashboard'), 'dashboard', 'home', 'dashboard'),
         ])];
 
         $adminItems = array_filter([
-            $link('Utilisateurs', 'users.index', 'users', 'users.*'),
-            $link('Étudiants', 'students.index', 'academic', 'students.*'),
-            $link('Professeurs', 'teachers.index', 'user', 'teachers.*'),
-            $link('Formations', 'formations.index', 'book', 'formations.*'),
-            $link('Classes', 'classes.index', 'classes', 'classes.*'),
-            $link('Salles', 'rooms.index', 'door', 'rooms.*'),
-            $link('Emploi du temps', 'schedules.index', 'calendar', 'schedules.*'),
-            $link('Inscriptions', 'enrollments.index', 'clipboard', 'enrollments.*'),
+            $link(__('Utilisateurs'), 'users.index', 'users', 'users.*'),
+            $link(__('Étudiants'), 'students.index', 'academic', 'students.*'),
+            $link(__('Professeurs'), 'teachers.index', 'user', 'teachers.*'),
+            $link(__('Formations'), 'formations.index', 'book', 'formations.*'),
+            $link(__('Classes'), 'classes.index', 'classes', 'classes.*'),
+            $link(__('Salles'), 'rooms.index', 'door', 'rooms.*'),
+            $link(__('Emploi du temps'), 'schedules.index', 'calendar', 'schedules.*'),
+            $link(__('Inscriptions'), 'enrollments.index', 'clipboard', 'enrollments.*'),
         ]);
-        $groups[] = ['title' => 'Pédagogie', 'items' => $adminItems];
+        $groups[] = ['title' => __('Pédagogie'), 'items' => $adminItems];
 
         $ops = array_filter([
-            $link('Présences', 'attendances.index', 'clock', 'attendances.*'),
-            $link('Évaluations', 'evaluations.index', 'chart', 'evaluations.*'),
-            $link('Paiements', 'payments.index', 'banknotes', 'payments.*'),
-            $link('Factures', 'invoices.index', 'document', 'invoices.*'),
-            $link('Documents', 'documents.index', 'document', 'documents.*'),
-            $link('Certificats', 'certificates.index', 'certificate', 'certificates.*'),
+            $link(__('Présences'), 'attendances.index', 'clock', 'attendances.*'),
+            $link(__('Évaluations'), 'evaluations.index', 'chart', 'evaluations.*'),
+            $link(__('Paiements'), 'payments.index', 'banknotes', 'payments.*'),
+            $link(__('Factures'), 'invoices.index', 'document', 'invoices.*'),
+            $link(__('Documents'), 'documents.index', 'document', 'documents.*'),
+            $link(__('Certificats'), 'certificates.index', 'certificate', 'certificates.*'),
         ]);
-        $groups[] = ['title' => 'Gestion', 'items' => $ops];
+        $groups[] = ['title' => __('Gestion'), 'items' => $ops];
 
         $com = array_filter([
-            $link('Notifications', 'notifications.index', 'bell', 'notifications.*'),
-            $link('Annonces', 'announcements.index', 'megaphone', 'announcements.*'),
-            $link('Audit Logs', 'audit.index', 'shield', 'audit.*'),
+            $link(__('Notifications'), 'notifications.index', 'bell', 'notifications.*'),
+            $link(__('Annonces'), 'announcements.index', 'megaphone', 'announcements.*'),
+            $link(__('Audit Logs'), 'audit.index', 'shield', 'audit.*'),
+            $link(__('Messagerie'), 'messages.index', 'message', 'messages.*'),
         ]);
-        $groups[] = ['title' => 'Communication', 'items' => $com];
+        $groups[] = ['title' => __('Communication'), 'items' => $com];
 
     } elseif ($user->isTeacher()) {
-        $groups[] = ['title' => 'Enseignement', 'items' => array_filter([
-            $link('Présences', 'attendances.index', 'clock', 'attendances.*'),
-            $link('Évaluations & notes', 'evaluations.index', 'chart', 'evaluations.*'),
-            $link('Notifications', 'notifications.index', 'bell', 'notifications.*'),
+        $groups[] = ['title' => __('Enseignement'), 'items' => array_filter([
+            $link(__('Présences'), 'attendances.index', 'clock', 'attendances.*'),
+            $link(__('Évaluations & notes'), 'evaluations.index', 'chart', 'evaluations.*'),
+            $link(__('Notifications'), 'notifications.index', 'bell', 'notifications.*'),
         ])];
     } elseif ($user->isStudent()) {
-        $groups[] = ['title' => 'Mon espace', 'items' => array_filter([
-            $link('Mes présences', 'student.attendances', 'clock', 'student.attendances'),
-            $link('Mes notes', 'student.evaluations', 'chart', 'student.evaluations'),
-            $link('Mes documents', 'student.documents', 'document', 'student.documents*'),
-            $link('Mes certificats', 'student.certificates', 'certificate', 'student.certificates*'),
-            $link('Notifications', 'notifications.index', 'bell', 'notifications.*'),
+        $groups[] = ['title' => __('Mon espace'), 'items' => array_filter([
+            $link(__('Mes présences'), 'student.attendances', 'clock', 'student.attendances'),
+            $link(__('Mes notes'), 'student.evaluations', 'chart', 'student.evaluations'),
+            $link(__('Mes documents'), 'student.documents', 'document', 'student.documents*'),
+            $link(__('Mes certificats'), 'student.certificates', 'certificate', 'student.certificates*'),
+            $link(__('Notifications'), 'notifications.index', 'bell', 'notifications.*'),
         ])];
     }
 @endphp
@@ -277,7 +280,7 @@
         'ec-sidebar': !$store.ui.sidebarCollapsed,
         'ec-sidebar-collapsed': $store.ui.sidebarCollapsed
     }"
-    aria-label="Navigation principale"
+    aria-label="{{ __('Navigation principale') }}"
 >
     <div class="flex h-16 items-center border-b border-slate-200 px-3.5 dark:border-slate-800"
          :class="$store.ui.sidebarCollapsed ? 'justify-center' : 'justify-between'">
@@ -287,14 +290,14 @@
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white shadow-2xs">
                 <x-icon name="academic" class="h-5 w-5" />
             </span>
-            <span class="truncate font-semibold tracking-tight">Education Centers</span>
+            <span class="truncate font-semibold tracking-tight">{{ __('Education Centers') }}</span>
         </a>
 
         {{-- Bouton de réduction / agrandissement pour Desktop (icône seule) --}}
         <button type="button"
                 x-on:click="$store.ui.toggleCollapsed()"
-                :aria-label="$store.ui.sidebarCollapsed ? 'Agrandir la sidebar' : 'Réduire la sidebar'"
-                :title="$store.ui.sidebarCollapsed ? 'Agrandir la sidebar' : 'Réduire la sidebar'"
+                :aria-label="$store.ui.sidebarCollapsed ? @js(__('Agrandir la sidebar')) : @js(__('Réduire la sidebar'))"
+                :title="$store.ui.sidebarCollapsed ? @js(__('Agrandir la sidebar')) : @js(__('Réduire la sidebar'))"
                 :aria-expanded="!$store.ui.sidebarCollapsed"
                 class="hidden lg:inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700/80 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white transition-colors">
             <x-icon name="chevron-left" class="h-4 w-4 transition-transform duration-200" x-bind:class="$store.ui.sidebarCollapsed ? 'rotate-180' : ''" />
@@ -311,22 +314,22 @@
                             📊
                         </span>
                         <div class="min-w-0">
-                            <span class="block text-[9px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Contexte actif</span>
-                            <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">Gestion financière</span>
+                            <span class="block text-[9px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">{{ __('Contexte actif') }}</span>
+                            <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">{{ __('Gestion financière') }}</span>
                         </div>
                     </div>
                     <a href="{{ route('super-admin.domaines') }}"
                        id="sidebar-changer-finance"
                        class="w-full flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 py-1.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
-                       title="Changer de contexte">
+                       title="{{ __('Changer de contexte') }}">
                         <x-icon name="arrow-uturn-left" class="h-3 w-3 text-slate-400" />
-                        <span>Changer de contexte</span>
+                        <span>{{ __('Changer de contexte') }}</span>
                     </a>
                 </div>
                 <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
                     <a href="{{ route('super-admin.domaines') }}"
                        class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ECFDF5] text-[#0DAD98] hover:bg-[#0DAD98] hover:text-white transition-colors shadow-2xs"
-                       title="Gestion financière — Cliquer pour changer de contexte">
+                       title="{{ __('Gestion financière — Cliquer pour changer de contexte') }}">
                         <x-icon name="banknotes" class="h-4.5 w-4.5" />
                     </a>
                 </div>
@@ -340,21 +343,21 @@
                             🧑‍💼
                         </span>
                         <div class="min-w-0">
-                            <span class="block text-[10px] uppercase font-bold tracking-wider text-purple-800 dark:text-purple-300">Espace administratif</span>
-                            <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">Stagiaires</span>
+                            <span class="block text-[10px] uppercase font-bold tracking-wider text-purple-800 dark:text-purple-300">{{ __('Espace administratif') }}</span>
+                            <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">{{ __('Stagiaires') }}</span>
                         </div>
                     </div>
                     <a href="{{ route('super-admin.domaines') }}"
                        class="inline-flex items-center gap-1 rounded-lg border border-purple-300/80 bg-white px-2 py-1 text-[11px] font-semibold text-purple-700 hover:bg-purple-100 hover:text-purple-800 dark:border-purple-700/80 dark:bg-slate-900 dark:text-purple-300 dark:hover:bg-purple-900/40 transition-colors shadow-2xs shrink-0"
-                       title="Changer de domaine / contexte">
+                       title="{{ __('Changer de domaine / contexte') }}">
                         <x-icon name="arrow-uturn-left" class="h-3 w-3" />
-                        <span>Changer</span>
+                        <span>{{ __('Changer') }}</span>
                     </a>
                 </div>
                 <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
                     <a href="{{ route('super-admin.domaines') }}"
                        class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-2xs"
-                       title="Espace Stagiaires — Cliquer pour changer de domaine / contexte">
+                       title="{{ __('Espace Stagiaires — Cliquer pour changer de domaine / contexte') }}">
                         <x-icon name="briefcase" class="h-4.5 w-4.5" />
                     </a>
                 </div>
@@ -370,22 +373,22 @@
                             <x-icon name="{{ $domainIcon }}" class="h-4 w-4" />
                         </span>
                         <div class="min-w-0">
-                            <span class="block text-[10px] uppercase font-bold tracking-wider {{ $pal['label_text'] }}">Domaine</span>
+                            <span class="block text-[10px] uppercase font-bold tracking-wider {{ $pal['label_text'] }}">{{ __('Domaine') }}</span>
                             <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">{{ $domainLabel }}</span>
                         </div>
                     </div>
                     <a href="{{ route('super-admin.domaines') }}"
                        class="inline-flex items-center gap-1 rounded-lg border {{ $pal['btn_border'] }} bg-white px-2 py-1 text-[11px] font-semibold {{ $pal['btn_text'] }} {{ $pal['btn_hover'] }} dark:bg-slate-900 transition-colors shadow-2xs shrink-0"
-                       title="Changer de domaine"
+                       title="{{ __('Changer de domaine') }}"
                        id="sidebar-changer-domaine">
                         <x-icon name="arrow-uturn-left" class="h-3 w-3" />
-                        <span>Changer</span>
+                        <span>{{ __('Changer') }}</span>
                     </a>
                 </div>
                 <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
                     <a href="{{ route('super-admin.domaines') }}"
                        class="flex h-8 w-8 items-center justify-center rounded-lg {{ $pal['icon_bg'] }} text-white {{ $pal['icon_hover'] }} transition-colors shadow-2xs"
-                       title="{{ $domainLabel }} — Cliquer pour changer de domaine">
+                       title="{{ $domainLabel }} — {{ __('Cliquer pour changer de domaine') }}">
                         <x-icon name="{{ $domainIcon }}" class="h-4.5 w-4.5" />
                     </a>
                 </div>
@@ -448,7 +451,22 @@
                                            @if($item['active']) aria-current="page" @endif
                                            title="{{ $item['label'] }}">
                                             <x-icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
-                                            <span class="truncate" x-show="!$store.ui.sidebarCollapsed">{{ $item['label'] }}</span>
+                                            <span class="flex-1 truncate" x-show="!$store.ui.sidebarCollapsed">{{ $item['label'] }}</span>
+                                            @if($item['icon'] === 'message' && ($user->isSuperAdmin() || $user->isCenterAdmin()))
+                                                <span x-data="{ count: 0 }"
+                                                      x-init="
+                                                          fetch('{{ route('messages.unread-count') }}')
+                                                              .then(r => r.json())
+                                                              .then(d => count = d.unread_count);
+                                                          setInterval(() => fetch('{{ route('messages.unread-count') }}')
+                                                              .then(r => r.json())
+                                                              .then(d => count = d.unread_count), 5000);
+                                                      "
+                                                      x-show="count > 0 && !$store.ui.sidebarCollapsed"
+                                                      x-text="count > 99 ? '99+' : count"
+                                                      class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[#0DAD98] px-1 text-[10px] font-bold text-white">
+                                                </span>
+                                            @endif
                                         </a>
                                     </li>
                                 @endforeach
@@ -474,7 +492,22 @@
                                        @if($item['active']) aria-current="page" @endif
                                        title="{{ $item['label'] }}">
                                         <x-icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
-                                        <span class="truncate" x-show="!$store.ui.sidebarCollapsed">{{ $item['label'] }}</span>
+                                        <span class="flex-1 truncate" x-show="!$store.ui.sidebarCollapsed">{{ $item['label'] }}</span>
+                                        @if($item['icon'] === 'message' && ($user->isSuperAdmin() || $user->isCenterAdmin()))
+                                            <span x-data="{ count: 0 }"
+                                                  x-init="
+                                                      fetch('{{ route('messages.unread-count') }}')
+                                                          .then(r => r.json())
+                                                          .then(d => count = d.unread_count);
+                                                      setInterval(() => fetch('{{ route('messages.unread-count') }}')
+                                                          .then(r => r.json())
+                                                          .then(d => count = d.unread_count), 5000);
+                                                  "
+                                                  x-show="count > 0 && !$store.ui.sidebarCollapsed"
+                                                  x-text="count > 99 ? '99+' : count"
+                                                  class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[#0DAD98] px-1 text-[10px] font-bold text-white">
+                                            </span>
+                                        @endif
                                     </a>
                                 </li>
                             @endforeach

@@ -26,11 +26,11 @@ class StagiaireDocument extends Model
     public function getTypeLabelAttribute(): string
     {
         return match ($this->type) {
-            'certificat'  => 'Certificat',
-            'attestation' => 'Attestation',
-            'convention'  => 'Convention de stage',
-            'cv'          => 'Curriculum Vitae',
-            default       => 'Document administratif',
+            'certificat' => __('Certificat'),
+            'attestation' => __('Attestation'),
+            'convention' => __('Convention de stage'),
+            'cv' => __('Curriculum Vitae'),
+            default => __('Document administratif'),
         };
     }
 }

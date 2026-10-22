@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateClassRequest;
 use App\Models\Center;
 use App\Models\ClassRoom;
 use App\Models\Formation;
+use App\Models\Teacher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -106,7 +107,7 @@ class ClassController extends Controller
 
         return redirect()
             ->route('classes.show', $classRoom)
-            ->with('success', "La classe \"{$classRoom->name}\" ({$classRoom->code}) a été créée avec succès.");
+            ->with('success', __('La classe \\":name\\" (:code) a été créée avec succès.', ['name' => $classRoom->name, 'code' => $classRoom->code]));
     }
 
     /**
@@ -119,7 +120,7 @@ class ClassController extends Controller
         $class->load(['center', 'formation', 'teachers.user']);
 
         // Récupérer les professeurs actifs du centre qui ne sont pas encore affectés à cette classe
-        $availableTeachers = \App\Models\Teacher::where('center_id', $class->center_id)
+        $availableTeachers = Teacher::where('center_id', $class->center_id)
             ->where('status', 'active')
             ->whereNotIn('id', $class->teachers->pluck('id'))
             ->orderBy('last_name')
@@ -127,7 +128,6 @@ class ClassController extends Controller
 
         return view('classes.show', compact('class', 'availableTeachers'));
     }
-
 
     /**
      * Formulaire d'édition d'une classe.
@@ -157,7 +157,7 @@ class ClassController extends Controller
 
         return redirect()
             ->route('classes.show', $class)
-            ->with('success', "La classe \"{$class->name}\" a été mise à jour avec succès.");
+            ->with('success', __('La classe \\":name\\" a été mise à jour avec succès.', ['name' => $class->name]));
     }
 
     /**
@@ -171,8 +171,8 @@ class ClassController extends Controller
         $class->update(['status' => $newStatus]);
 
         $message = $newStatus === 'active'
-            ? "La classe \"{$class->name}\" a été activée."
-            : "La classe \"{$class->name}\" a été désactivée.";
+            ? __('La classe \\":name\\" a été activée.', ['name' => $class->name])
+            : __('La classe \\":name\\" a été désactivée.', ['name' => $class->name]);
 
         return back()->with('success', $message);
     }
@@ -186,7 +186,7 @@ class ClassController extends Controller
 
         // Protection contre les dépendances futures (inscriptions, présences, etc.)
         if (method_exists($class, 'enrollments') && $class->enrollments()->exists()) {
-            return back()->with('error', "Impossible de supprimer la classe : des inscriptions y sont associées.");
+            return back()->with('error', __('Impossible de supprimer la classe : des inscriptions y sont associées.'));
         }
 
         $name = $class->name;
@@ -194,6 +194,6 @@ class ClassController extends Controller
 
         return redirect()
             ->route('classes.index')
-            ->with('success', "La classe \"{$name}\" a été supprimée avec succès.");
+            ->with('success', __('La classe \\":name\\" a été supprimée avec succès.', ['name' => $name]));
     }
 }

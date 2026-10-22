@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ClassRoom extends Model
 {
@@ -42,9 +44,9 @@ class ClassRoom extends Model
     protected function casts(): array
     {
         return [
-            'capacity'   => 'integer',
+            'capacity' => 'integer',
             'start_date' => 'date',
-            'end_date'   => 'date',
+            'end_date' => 'date',
         ];
     }
 
@@ -67,7 +69,7 @@ class ClassRoom extends Model
     /**
      * Relation : Professeurs affectés à cette classe.
      */
-    public function teachers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function teachers(): BelongsToMany
     {
         return $this->belongsToMany(Teacher::class, 'class_teacher', 'class_id', 'teacher_id')
             ->withTimestamps();
@@ -86,7 +88,7 @@ class ClassRoom extends Model
     /**
      * Relation : Séances d'emploi du temps de la classe.
      */
-    public function schedules(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function schedules(): HasMany
     {
         return $this->hasMany(Schedule::class, 'class_id');
     }
@@ -94,13 +96,20 @@ class ClassRoom extends Model
     /**
      * Relation : Inscriptions affectées à cette classe.
      */
-    public function enrollments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class, 'class_id');
     }
 
-    public function attendances(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Attendance::class, 'class_id'); }
-    public function evaluations(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Evaluation::class, 'class_id'); }
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class, 'class_id');
+    }
+
+    public function evaluations(): HasMany
+    {
+        return $this->hasMany(Evaluation::class, 'class_id');
+    }
 
     /**
      * Compte des inscriptions acceptées occupant une place.
@@ -115,12 +124,13 @@ class ClassRoom extends Model
      */
     public function isFull(): bool
     {
-        if (!$this->capacity) {
+        if (! $this->capacity) {
             return false; // Capacité illimitée
         }
 
         return $this->accepted_enrollments_count >= $this->capacity;
     }
+
     /**
      * Vérifier si la classe est active.
      */
@@ -153,13 +163,13 @@ class ClassRoom extends Model
     public function getFormattedPeriodAttribute(): string
     {
         if ($this->start_date && $this->end_date) {
-            return $this->start_date->format('d/m/Y') . ' au ' . $this->end_date->format('d/m/Y');
+            return $this->start_date->format('d/m/Y').' au '.$this->end_date->format('d/m/Y');
         } elseif ($this->start_date) {
-            return 'Dès le ' . $this->start_date->format('d/m/Y');
+            return __('Dès le ').$this->start_date->format('d/m/Y');
         } elseif ($this->end_date) {
-            return 'Jusqu’au ' . $this->end_date->format('d/m/Y');
+            return 'Jusqu’au '.$this->end_date->format('d/m/Y');
         }
 
-        return 'Non définie';
+        return __('Non définie');
     }
 }

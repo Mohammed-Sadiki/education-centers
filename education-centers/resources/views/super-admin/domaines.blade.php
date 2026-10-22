@@ -1,20 +1,20 @@
 @extends('layouts.portal')
 
-@section('title', 'Sélection du domaine — Super Admin')
-@section('description', 'Choisissez le domaine d\'activité à administrer.')
+@section('title', __('Sélection du domaine') . ' — ' . config('app.name'))
+@section('description', __('Choisissez le domaine d\'activité à administrer.'))
 
 @section('content')
     {{-- En-tête de bienvenue du portail --}}
     <div class="mb-10 text-center sm:text-left">
         <div class="inline-flex items-center gap-2 rounded-full bg-brand-50 border border-brand-200/60 px-3.5 py-1 text-xs font-semibold text-brand-700 dark:bg-brand-950/50 dark:border-brand-800/60 dark:text-brand-300 mb-3 shadow-xs">
             <span class="flex h-2 w-2 rounded-full bg-brand-500 animate-pulse"></span>
-            Espace Super Administrateur
+            {{ __('Espace Super Administrateur') }}
         </div>
         <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Sélectionnez votre domaine
+            {{ __('Sélectionnez votre domaine') }}
         </h1>
         <p class="mt-2 text-base text-slate-600 dark:text-slate-400 max-w-2xl">
-            Bienvenue dans le portail d'administration. Choisissez une filière de formation ou accédez aux modules de gestion administrative indépendants.
+            {{ __('Bienvenue dans le portail d\'administration. Choisissez une filière de formation ou accédez aux modules de gestion administrative indépendants.') }}
         </p>
     </div>
 
@@ -25,10 +25,10 @@
         <div>
             <h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                 <span class="flex h-2.5 w-2.5 rounded-full bg-brand-500"></span>
-                Domaines de formation
+                {{ __('Domaines de formation') }}
             </h2>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-                Filières de formation pédagogique et gestion des centres par domaine.
+                {{ __('Filières de formation pédagogique et gestion des centres par domaine.') }}
             </p>
         </div>
     </div>
@@ -45,7 +45,7 @@
                   hover:border-emerald-500 hover:shadow-xl hover:-translate-y-1
                   dark:border-emerald-600/70 dark:bg-slate-900 dark:hover:border-emerald-400
                   transition-all duration-200 cursor-pointer ring-1 ring-emerald-500/20"
-           aria-label="Accéder au domaine Santé">
+           aria-label="{{ __('Accéder au domaine Santé') }}">
 
             {{-- Dégradé interactif au survol --}}
             <div class="absolute inset-0 bg-gradient-to-br from-emerald-50/60 via-transparent to-brand-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:from-emerald-950/20 dark:to-transparent pointer-events-none rounded-2xl"></div>
@@ -59,23 +59,23 @@
                     </div>
                     <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 shadow-2xs">
                         <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                        Actif
+                        {{ __('Actif') }}
                     </span>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <h2 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors duration-200">
-                        Santé
+                        {{ __('Santé') }}
                     </h2>
                 </div>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Formations paramédicales, soins infirmiers, aides-soignants, secrétariat médical et professions de santé.
+                    {{ __('Formations paramédicales, soins infirmiers, aides-soignants, secrétariat médical et professions de santé.') }}
                 </p>
             </div>
 
             <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                 <div class="flex items-center justify-between text-sm font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">
-                    <span>Accéder à l'espace Santé</span>
+                    <span>{{ __('Accéder à l\'espace Santé') }}</span>
                     <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white group-hover:translate-x-1 transition-all duration-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:group-hover:bg-emerald-600 dark:group-hover:text-white">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
@@ -94,7 +94,7 @@
                   hover:border-blue-500 hover:shadow-xl hover:-translate-y-1
                   dark:border-blue-600/70 dark:bg-slate-900 dark:hover:border-blue-400
                   transition-all duration-200 cursor-pointer ring-1 ring-blue-500/20"
-           aria-label="Accéder au domaine Informatique">
+           aria-label="{{ __('Accéder au domaine Informatique') }}">
 
             <div class="absolute inset-0 bg-gradient-to-br from-blue-50/60 via-transparent to-sky-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:from-blue-950/20 dark:to-transparent pointer-events-none rounded-2xl"></div>
 
@@ -107,23 +107,23 @@
                     </div>
                     <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 shadow-2xs">
                         <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-                        Actif
+                        {{ __('Actif') }}
                     </span>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <h2 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors duration-200">
-                        Informatique
+                        {{ __('Informatique') }}
                     </h2>
                 </div>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Développement web, cybersécurité, réseaux, administration systèmes et intelligence artificielle.
+                    {{ __('Développement web, cybersécurité, réseaux, administration systèmes et intelligence artificielle.') }}
                 </p>
             </div>
 
             <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                 <div class="flex items-center justify-between text-sm font-semibold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300">
-                    <span>Accéder à l'espace Informatique</span>
+                    <span>{{ __('Accéder à l\'espace Informatique') }}</span>
                     <span class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white group-hover:translate-x-1 transition-all duration-200 dark:bg-blue-950/60 dark:text-blue-400 dark:group-hover:bg-blue-600 dark:group-hover:text-white">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
@@ -142,7 +142,7 @@
                   hover:border-amber-500 hover:shadow-xl hover:-translate-y-1
                   dark:border-amber-600/70 dark:bg-slate-900 dark:hover:border-amber-400
                   transition-all duration-200 cursor-pointer ring-1 ring-amber-500/20"
-           aria-label="Accéder au domaine Hôtellerie">
+           aria-label="{{ __('Accéder au domaine Hôtellerie') }}">
 
             <div class="absolute inset-0 bg-gradient-to-br from-amber-50/60 via-transparent to-yellow-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:from-amber-950/20 dark:to-transparent pointer-events-none rounded-2xl"></div>
 
@@ -155,23 +155,23 @@
                     </div>
                     <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 shadow-2xs">
                         <span class="h-2 w-2 rounded-full bg-amber-500"></span>
-                        Actif
+                        {{ __('Actif') }}
                     </span>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <h2 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors duration-200">
-                        Hôtellerie
+                        {{ __('Hôtellerie') }}
                     </h2>
                 </div>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Arts culinaires, service en salle, gestion hôtelière, hébergement et tourisme.
+                    {{ __('Arts culinaires, service en salle, gestion hôtelière, hébergement et tourisme.') }}
                 </p>
             </div>
 
             <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                 <div class="flex items-center justify-between text-sm font-semibold text-amber-600 dark:text-amber-400 group-hover:text-amber-700 dark:group-hover:text-amber-300">
-                    <span>Accéder à l'espace Hôtellerie</span>
+                    <span>{{ __('Accéder à l\'espace Hôtellerie') }}</span>
                     <span class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white group-hover:translate-x-1 transition-all duration-200 dark:bg-amber-950/60 dark:text-amber-400 dark:group-hover:bg-amber-600 dark:group-hover:text-white">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
@@ -190,7 +190,7 @@
                   hover:border-orange-500 hover:shadow-xl hover:-translate-y-1
                   dark:border-orange-600/70 dark:bg-slate-900 dark:hover:border-orange-400
                   transition-all duration-200 cursor-pointer ring-1 ring-orange-500/20"
-           aria-label="Accéder au domaine Maçonnerie">
+           aria-label="{{ __('Accéder au domaine Maçonnerie') }}">
 
             <div class="absolute inset-0 bg-gradient-to-br from-orange-50/60 via-transparent to-red-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:from-orange-950/20 dark:to-transparent pointer-events-none rounded-2xl"></div>
 
@@ -203,23 +203,23 @@
                     </div>
                     <span class="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 shadow-2xs">
                         <span class="h-2 w-2 rounded-full bg-orange-500"></span>
-                        Actif
+                        {{ __('Actif') }}
                     </span>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <h2 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-orange-700 dark:group-hover:text-orange-400 transition-colors duration-200">
-                        Maçonnerie
+                        {{ __('Maçonnerie') }}
                     </h2>
                 </div>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Gros œuvre, maçonnerie générale, rénovation, béton armé et conduite de chantiers du BTP.
+                    {{ __('Gros œuvre, maçonnerie générale, rénovation, béton armé et conduite de chantiers du BTP.') }}
                 </p>
             </div>
 
             <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                 <div class="flex items-center justify-between text-sm font-semibold text-orange-600 dark:text-orange-400 group-hover:text-orange-700 dark:group-hover:text-orange-300">
-                    <span>Accéder à l'espace Maçonnerie</span>
+                    <span>{{ __('Accéder à l\'espace Maçonnerie') }}</span>
                     <span class="flex h-7 w-7 items-center justify-center rounded-full bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white group-hover:translate-x-1 transition-all duration-200 dark:bg-orange-950/60 dark:text-orange-400 dark:group-hover:bg-orange-600 dark:group-hover:text-white">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
@@ -238,7 +238,7 @@
                   hover:border-violet-500 hover:shadow-xl hover:-translate-y-1
                   dark:border-violet-600/70 dark:bg-slate-900 dark:hover:border-violet-400
                   transition-all duration-200 cursor-pointer ring-1 ring-violet-500/20"
-           aria-label="Accéder au domaine Design intérieur">
+           aria-label="{{ __('Accéder au domaine Design intérieur') }}">
 
             <div class="absolute inset-0 bg-gradient-to-br from-violet-50/60 via-transparent to-purple-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:from-violet-950/20 dark:to-transparent pointer-events-none rounded-2xl"></div>
 
@@ -251,23 +251,23 @@
                     </div>
                     <span class="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-800 dark:bg-violet-900/50 dark:text-violet-300 shadow-2xs">
                         <span class="h-2 w-2 rounded-full bg-violet-500"></span>
-                        Actif
+                        {{ __('Actif') }}
                     </span>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <h2 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors duration-200">
-                        Design intérieur
+                        {{ __('Design intérieur') }}
                     </h2>
                 </div>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Aménagement d'espace, décoration, modélisation 3D architecturale et scénographie.
+                    {{ __('Aménagement d\'espace, décoration, modélisation 3D architecturale et scénographie.') }}
                 </p>
             </div>
 
             <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                 <div class="flex items-center justify-between text-sm font-semibold text-violet-600 dark:text-violet-400 group-hover:text-violet-700 dark:group-hover:text-violet-300">
-                    <span>Accéder à l'espace Design intérieur</span>
+                    <span>{{ __('Accéder à l\'espace Design intérieur') }}</span>
                     <span class="flex h-7 w-7 items-center justify-center rounded-full bg-violet-50 text-violet-600 group-hover:bg-violet-600 group-hover:text-white group-hover:translate-x-1 transition-all duration-200 dark:bg-violet-950/60 dark:text-violet-400 dark:group-hover:bg-violet-600 dark:group-hover:text-white">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
@@ -286,7 +286,7 @@
                   hover:border-pink-500 hover:shadow-xl hover:-translate-y-1
                   dark:border-pink-600/70 dark:bg-slate-900 dark:hover:border-pink-400
                   transition-all duration-200 cursor-pointer ring-1 ring-pink-500/20"
-           aria-label="Accéder au domaine Design graphique">
+           aria-label="{{ __('Accéder au domaine Design graphique') }}">
 
             <div class="absolute inset-0 bg-gradient-to-br from-pink-50/60 via-transparent to-rose-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:from-pink-950/20 dark:to-transparent pointer-events-none rounded-2xl"></div>
 
@@ -299,23 +299,23 @@
                     </div>
                     <span class="inline-flex items-center gap-1.5 rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold text-pink-800 dark:bg-pink-900/50 dark:text-pink-300 shadow-2xs">
                         <span class="h-2 w-2 rounded-full bg-pink-500"></span>
-                        Actif
+                        {{ __('Actif') }}
                     </span>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <h2 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-pink-700 dark:group-hover:text-pink-400 transition-colors duration-200">
-                        Design graphique
+                        {{ __('Design graphique') }}
                     </h2>
                 </div>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Identité visuelle, typographie, illustration vectorielle, UI/UX design et packaging.
+                    {{ __('Identité visuelle, typographie, illustration vectorielle, UI/UX design et packaging.') }}
                 </p>
             </div>
 
             <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                 <div class="flex items-center justify-between text-sm font-semibold text-pink-600 dark:text-pink-400 group-hover:text-pink-700 dark:group-hover:text-pink-300">
-                    <span>Accéder à l'espace Design graphique</span>
+                    <span>{{ __('Accéder à l\'espace Design graphique') }}</span>
                     <span class="flex h-7 w-7 items-center justify-center rounded-full bg-pink-50 text-pink-600 group-hover:bg-pink-600 group-hover:text-white group-hover:translate-x-1 transition-all duration-200 dark:bg-pink-950/60 dark:text-pink-400 dark:group-hover:bg-pink-600 dark:group-hover:text-white">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
@@ -335,13 +335,13 @@
             <div>
                 <div class="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200/70 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/50 dark:border-indigo-800/70 dark:text-indigo-300 mb-2">
                     <span class="flex h-2 w-2 rounded-full bg-indigo-500"></span>
-                    Espace transversal indépendant
+                    {{ __('Espace transversal indépendant') }}
                 </div>
                 <h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                    Gestion administrative
+                    {{ __('Gestion administrative') }}
                 </h2>
                 <p class="text-xs text-slate-500 dark:text-slate-400">
-                    Modules administratifs indépendants du cursus pédagogique (non liés aux formations scolaires, classes ou examens).
+                    {{ __('Modules administratifs indépendants du cursus pédagogique (non liés aux formations scolaires, classes ou examens).') }}
                 </p>
             </div>
         </div>
@@ -357,7 +357,7 @@
                       hover:border-indigo-500 hover:shadow-xl hover:-translate-y-1
                       dark:border-indigo-600/70 dark:bg-slate-900 dark:hover:border-indigo-400
                       transition-all duration-200 cursor-pointer ring-1 ring-indigo-500/20"
-               aria-label="Accéder au module Stagiaires">
+               aria-label="{{ __('Accéder au module Stagiaires') }}">
 
                 {{-- Dégradé interactif au survol --}}
                 <div class="absolute inset-0 bg-gradient-to-br from-indigo-50/60 via-transparent to-violet-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:from-indigo-950/20 dark:to-transparent pointer-events-none rounded-2xl"></div>
@@ -369,26 +369,26 @@
                         </div>
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300 shadow-2xs">
                             <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
-                            Actif
+                            {{ __('Actif') }}
                         </span>
                     </div>
 
                     <div class="flex items-center gap-2">
                         <h3 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-indigo-700 dark:group-hover:text-indigo-400 transition-colors duration-200">
-                            Stagiaires
+                            {{ __('Stagiaires') }}
                         </h3>
                         <span class="rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60">
-                            Dossiers de stage
+                            {{ __('Dossiers de stage') }}
                         </span>
                     </div>
                     <p class="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Gestion complète des dossiers de stage, conventions, identité CIN, diplômes, documents et prix convenu du stage.
+                        {{ __('Gestion complète des dossiers de stage, conventions, identité CIN, diplômes, documents et prix convenu du stage.') }}
                     </p>
                 </div>
 
                 <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                     <div class="flex items-center justify-between text-sm font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300">
-                        <span>Accéder à l'espace Stagiaires</span>
+                        <span>{{ __('Accéder à l\'espace Stagiaires') }}</span>
                         <span class="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white group-hover:translate-x-1 transition-all duration-200 dark:bg-indigo-950/60 dark:text-indigo-400 dark:group-hover:bg-indigo-600 dark:group-hover:text-white">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
@@ -407,7 +407,7 @@
                       hover:border-emerald-500 hover:shadow-xl hover:-translate-y-1
                       dark:border-emerald-600/70 dark:bg-slate-900 dark:hover:border-emerald-400
                       transition-all duration-200 cursor-pointer ring-1 ring-emerald-500/20"
-               aria-label="Accéder au module Gestion financière">
+               aria-label="{{ __('Accéder au module Gestion financière') }}">
 
                 {{-- Dégradé interactif au survol --}}
                 <div class="absolute inset-0 bg-gradient-to-br from-emerald-50/60 via-transparent to-teal-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:from-emerald-950/20 dark:to-transparent pointer-events-none rounded-2xl"></div>
@@ -419,26 +419,26 @@
                         </div>
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 shadow-2xs">
                             <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                            Actif
+                            {{ __('Actif') }}
                         </span>
                     </div>
 
                     <div class="flex items-center gap-2">
                         <h3 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors duration-200">
-                            Gestion financière
+                            {{ __('Gestion financière') }}
                         </h3>
                         <span class="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
-                            Vue globale
+                            {{ __('Vue globale') }}
                         </span>
                     </div>
                     <p class="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Vision financière globale de la plateforme : encaissements étudiants, suivi des impayés, salaires des professeurs et filtres par domaine.
+                        {{ __('Vision financière globale de la plateforme : encaissements étudiants, suivi des impayés, salaires des professeurs et filtres par domaine.') }}
                     </p>
                 </div>
 
                 <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                     <div class="flex items-center justify-between text-sm font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">
-                        <span>Accéder à l'espace Financier</span>
+                        <span>{{ __('Accéder à l\'espace Financier') }}</span>
                         <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white group-hover:translate-x-1 transition-all duration-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:group-hover:bg-emerald-600 dark:group-hover:text-white">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>

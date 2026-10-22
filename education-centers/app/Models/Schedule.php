@@ -94,26 +94,28 @@ class Schedule extends Model
     {
         $start = substr($this->start_time, 0, 5);
         $end = substr($this->end_time, 0, 5);
+
         return "{$start} → {$end}";
     }
 
     public function getDurationMinutesAttribute(): int
     {
-        if (!$this->start_time || !$this->end_time) {
+        if (! $this->start_time || ! $this->end_time) {
             return 0;
         }
         $start = Carbon::parse($this->start_time);
         $end = Carbon::parse($this->end_time);
+
         return $start->diffInMinutes($end);
     }
 
     public function getTypeLabelAttribute(): string
     {
         return match ($this->type) {
-            'course' => 'Cours',
-            'exam' => 'Examen',
-            'workshop' => 'Atelier / TP',
-            'other' => 'Autre',
+            'course' => __('Cours'),
+            'exam' => __('Examen'),
+            'workshop' => __('Atelier / TP'),
+            'other' => __('Autre'),
             default => ucfirst($this->type),
         };
     }

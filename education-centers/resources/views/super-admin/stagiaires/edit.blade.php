@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Modifier le stagiaire — ' . $stagiaire->first_name . ' ' . $stagiaire->last_name)
+@section('title', __('Modifier le stagiaire') . ' — ' . $stagiaire->first_name . ' ' . $stagiaire->last_name)
 
 @section('content')
 <div class="space-y-6">
@@ -8,19 +8,19 @@
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <nav class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
-                <a href="{{ route('super-admin.domaines') }}" class="hover:text-slate-800 dark:hover:text-slate-200">Portail</a>
+                <a href="{{ route('super-admin.domaines') }}" class="hover:text-slate-800 dark:hover:text-slate-200">{{ __('Portail') }}</a>
                 <span>/</span>
-                <a href="{{ route('stagiaires.dashboard') }}" class="hover:text-slate-800 dark:hover:text-slate-200">Stagiaires</a>
+                <a href="{{ route('stagiaires.dashboard') }}" class="hover:text-slate-800 dark:hover:text-slate-200">{{ __('Stagiaires') }}</a>
                 <span>/</span>
                 <a href="{{ route('stagiaires.show', $stagiaire) }}" class="hover:text-slate-800 dark:hover:text-slate-200">{{ $stagiaire->first_name }} {{ $stagiaire->last_name }}</a>
                 <span>/</span>
-                <span class="text-slate-700 font-semibold dark:text-slate-300">Modifier</span>
+                <span class="text-slate-700 font-semibold dark:text-slate-300">{{ __('Modifier') }}</span>
             </nav>
             <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                Modifier le dossier : {{ $stagiaire->first_name }} {{ $stagiaire->last_name }}
+                {{ __('Modifier le dossier :') }} {{ $stagiaire->first_name }} {{ $stagiaire->last_name }}
             </h1>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-                Mise à jour des informations personnelles, pièce d'identité, documents et conditions du stage.
+                {{ __('Mise à jour des informations personnelles, pièce d\'identité, documents et conditions du stage.') }}
             </p>
         </div>
 
@@ -28,7 +28,7 @@
             <a href="{{ route('stagiaires.show', $stagiaire) }}"
                class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 transition">
                 <x-icon name="chevron-left" class="h-4 w-4" />
-                <span>Voir le dossier</span>
+                <span>{{ __('Voir le dossier') }}</span>
             </a>
         </div>
     </div>
@@ -38,7 +38,7 @@
         <div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
             <div class="font-bold mb-1 flex items-center gap-1.5">
                 <x-icon name="warning" class="h-4 w-4" />
-                <span>Veuillez corriger les erreurs ci-dessous :</span>
+                <span>{{ __('Veuillez corriger les erreurs ci-dessous :') }}</span>
             </div>
             <ul class="list-disc list-inside space-y-0.5">
                 @foreach ($errors->all() as $error)
@@ -78,8 +78,8 @@
                     <x-icon name="user" class="h-5 w-5" />
                 </span>
                 <div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white">1. Informations personnelles</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Coordonnées et état civil du stagiaire.</p>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ __('1. Informations personnelles') }}</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">{{ __('Coordonnées et état civil du stagiaire.') }}</p>
                 </div>
             </div>
 
@@ -87,7 +87,7 @@
                 {{-- Nom --}}
                 <div>
                     <label for="last_name" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Nom de famille <span class="text-rose-500">*</span>
+                        {{ __('Nom de famille') }} <span class="text-rose-500">*</span>
                     </label>
                     <input type="text" name="last_name" id="last_name" required
                            value="{{ old('last_name', $stagiaire->last_name) }}"
@@ -98,7 +98,7 @@
                 {{-- Prénom --}}
                 <div>
                     <label for="first_name" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Prénom <span class="text-rose-500">*</span>
+                        {{ __('Prénom') }} <span class="text-rose-500">*</span>
                     </label>
                     <input type="text" name="first_name" id="first_name" required
                            value="{{ old('first_name', $stagiaire->first_name) }}"
@@ -108,10 +108,10 @@
 
                 {{-- Genre --}}
                 <div>
-                    <label for="gender" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Sexe / Genre</label>
+                    <label for="gender" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ __('Sexe / Genre') }}</label>
                     <select name="gender" id="gender"
                             class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
-                        <option value="">Sélectionner</option>
+                        <option value="">{{ __('Sélectionner') }}</option>
                         <option value="homme" {{ old('gender', $stagiaire->gender) === 'homme' ? 'selected' : '' }}>Homme</option>
                         <option value="femme" {{ old('gender', $stagiaire->gender) === 'femme' ? 'selected' : '' }}>Femme</option>
                         <option value="autre" {{ old('gender', $stagiaire->gender) === 'autre' ? 'selected' : '' }}>Autre</option>
@@ -120,7 +120,7 @@
 
                 {{-- Date de naissance --}}
                 <div>
-                    <label for="birth_date" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Date de naissance</label>
+                    <label for="birth_date" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ __('Date de naissance') }}</label>
                     <input type="date" name="birth_date" id="birth_date"
                            value="{{ old('birth_date', $stagiaire->birth_date?->format('Y-m-d')) }}"
                            class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
@@ -128,7 +128,7 @@
 
                 {{-- Lieu de naissance --}}
                 <div>
-                    <label for="birth_place" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Lieu de naissance</label>
+                    <label for="birth_place" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ __('Lieu de naissance') }}</label>
                     <input type="text" name="birth_place" id="birth_place"
                            value="{{ old('birth_place', $stagiaire->birth_place) }}"
                            class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
@@ -136,7 +136,7 @@
 
                 {{-- Nationalité --}}
                 <div>
-                    <label for="nationality" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Nationalité</label>
+                    <label for="nationality" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ __('Nationalité') }}</label>
                     <input type="text" name="nationality" id="nationality"
                            value="{{ old('nationality', $stagiaire->nationality) }}"
                            class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
@@ -144,7 +144,7 @@
 
                 {{-- Téléphone --}}
                 <div>
-                    <label for="phone" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Téléphone</label>
+                    <label for="phone" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ __('Téléphone') }}</label>
                     <input type="tel" name="phone" id="phone"
                            value="{{ old('phone', $stagiaire->phone) }}"
                            class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
@@ -152,7 +152,7 @@
 
                 {{-- Email --}}
                 <div>
-                    <label for="email" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Adresse email</label>
+                    <label for="email" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ __('Adresse email') }}</label>
                     <input type="email" name="email" id="email"
                            value="{{ old('email', $stagiaire->email) }}"
                            class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
@@ -161,13 +161,13 @@
 
                 {{-- Centre de rattachement --}}
                 <div>
-                    <label for="center_id" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Centre d'accueil</label>
+                    <label for="center_id" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ __('Centre d\'accueil') }}</label>
                     <select name="center_id" id="center_id"
                             class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
-                        <option value="">Sélectionner un centre</option>
+                        <option value="">{{ __('Sélectionner un centre') }}</option>
                         @foreach($centers as $c)
                             <option value="{{ $c->id }}" {{ old('center_id', $stagiaire->center_id) == $c->id ? 'selected' : '' }}>
-                                {{ $c->name }}
+                                {{ $c->translated('name') }}
                             </option>
                         @endforeach
                     </select>
@@ -175,7 +175,7 @@
 
                 {{-- Adresse --}}
                 <div class="sm:col-span-2 lg:col-span-3">
-                    <label for="address" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Adresse résidentielle</label>
+                    <label for="address" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ __('Adresse résidentielle') }}</label>
                     <textarea name="address" id="address" rows="2"
                               class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">{{ old('address', $stagiaire->address) }}</textarea>
                 </div>
@@ -189,15 +189,15 @@
                     <x-icon name="shield" class="h-5 w-5" />
                 </span>
                 <div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white">2. Carte Nationale d'Identité (CIN)</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Numéro et justificatifs scannés.</p>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ __('2. Carte Nationale d\'Identité (CIN)') }}</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">{{ __('Numéro et justificatifs scannés.') }}</p>
                 </div>
             </div>
 
             <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {{-- Numéro CIN --}}
                 <div>
-                    <label for="cin_number" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Numéro CIN</label>
+                    <label for="cin_number" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ __('Numéro CIN') }}</label>
                     <input type="text" name="cin_number" id="cin_number"
                            value="{{ old('cin_number', $stagiaire->cin_number) }}"
                            class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-mono text-slate-900 uppercase focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
@@ -205,7 +205,7 @@
 
                 {{-- Date de délivrance --}}
                 <div>
-                    <label for="cin_delivered_at" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Date de délivrance</label>
+                    <label for="cin_delivered_at" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ __('Date de délivrance') }}</label>
                     <input type="date" name="cin_delivered_at" id="cin_delivered_at"
                            value="{{ old('cin_delivered_at', $stagiaire->cin_delivered_at?->format('Y-m-d')) }}"
                            class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
@@ -213,7 +213,7 @@
 
                 {{-- Lieu de délivrance --}}
                 <div>
-                    <label for="cin_delivered_place" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Lieu de délivrance</label>
+                    <label for="cin_delivered_place" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ __('Lieu de délivrance') }}</label>
                     <input type="text" name="cin_delivered_place" id="cin_delivered_place"
                            value="{{ old('cin_delivered_place', $stagiaire->cin_delivered_place) }}"
                            class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
@@ -224,14 +224,14 @@
                 {{-- CIN Recto --}}
                 <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/40">
                     <label for="cin_recto" class="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                        Remplacer CIN — Recto
+                        {{ __('Remplacer CIN — Recto') }}
                     </label>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-2">Formats acceptés : PDF, PNG, JPG (max 5 Mo)</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-2">{{ __('Formats acceptés : PDF, PNG, JPG (max 5 Mo)') }}</p>
 
                     @if($stagiaire->cin_recto_path)
                         <div class="mb-3 flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-                            <span>Fichier actuel sauvegardé</span>
-                            <a href="{{ route('stagiaires.cin-download', [$stagiaire, 'recto']) }}" class="font-bold underline">Télécharger</a>
+                            <span>{{ __('Fichier actuel sauvegardé') }}</span>
+                            <a href="{{ route('stagiaires.cin-download', [$stagiaire, 'recto']) }}" class="font-bold underline">{{ __('Télécharger') }}</a>
                         </div>
                     @endif
 
@@ -242,14 +242,14 @@
                 {{-- CIN Verso --}}
                 <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/40">
                     <label for="cin_verso" class="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                        Remplacer CIN — Verso
+                        {{ __('Remplacer CIN — Verso') }}
                     </label>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-2">Formats acceptés : PDF, PNG, JPG (max 5 Mo)</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-2">{{ __('Formats acceptés : PDF, PNG, JPG (max 5 Mo)') }}</p>
 
                     @if($stagiaire->cin_verso_path)
                         <div class="mb-3 flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-                            <span>Fichier actuel sauvegardé</span>
-                            <a href="{{ route('stagiaires.cin-download', [$stagiaire, 'verso']) }}" class="font-bold underline">Télécharger</a>
+                            <span>{{ __('Fichier actuel sauvegardé') }}</span>
+                            <a href="{{ route('stagiaires.cin-download', [$stagiaire, 'verso']) }}" class="font-bold underline">{{ __('Télécharger') }}</a>
                         </div>
                     @endif
 
@@ -266,8 +266,8 @@
                     <x-icon name="briefcase" class="h-5 w-5" />
                 </span>
                 <div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white">3. Informations du stage & Prix convenu</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Modalités administratives et tarification du stage.</p>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ __('3. Informations du stage & Prix convenu') }}</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">{{ __('Modalités administratives et tarification du stage.') }}</p>
                 </div>
             </div>
 
@@ -275,7 +275,7 @@
                 {{-- Date début --}}
                 <div>
                     <label for="stage_start_date" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Date de début du stage
+                        {{ __('Date de début du stage') }}
                     </label>
                     <input type="date" name="stage_start_date" id="stage_start_date"
                            value="{{ old('stage_start_date', $stagiaire->stage_start_date?->format('Y-m-d')) }}"
@@ -285,7 +285,7 @@
                 {{-- Date fin --}}
                 <div>
                     <label for="stage_end_date" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Date de fin prévue
+                        {{ __('Date de fin prévue') }}
                     </label>
                     <input type="date" name="stage_end_date" id="stage_end_date"
                            value="{{ old('stage_end_date', $stagiaire->stage_end_date?->format('Y-m-d')) }}"
@@ -295,23 +295,23 @@
                 {{-- Type de stage --}}
                 <div>
                     <label for="stage_type" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Type de stage
+                        {{ __('Type de stage') }}
                     </label>
                     <input type="text" name="stage_type" id="stage_type"
-                           placeholder="ex: Stage d'observation, Stage pratique"
+                           placeholder="{{ __('ex: Stage d\'observation, Stage pratique') }}"
                            value="{{ old('stage_type', $stagiaire->stage_type) }}"
                            class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
                 </div>
 
                 {{-- Statut --}}
                 <div>
-                    <label for="status" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Statut du dossier</label>
+                    <label for="status" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ __('Statut du dossier') }}</label>
                     <select name="status" id="status"
                             class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
-                        <option value="nouveau" {{ old('status', $stagiaire->status) === 'nouveau' ? 'selected' : '' }}>Nouveau</option>
-                        <option value="en_cours" {{ old('status', $stagiaire->status) === 'en_cours' ? 'selected' : '' }}>En cours</option>
-                        <option value="termine" {{ old('status', $stagiaire->status) === 'termine' ? 'selected' : '' }}>Terminé</option>
-                        <option value="annule" {{ old('status', $stagiaire->status) === 'annule' ? 'selected' : '' }}>Annulé</option>
+                        <option value="nouveau" {{ old('status', $stagiaire->status) === 'nouveau' ? 'selected' : '' }}>{{ __('Nouveau') }}</option>
+                        <option value="en_cours" {{ old('status', $stagiaire->status) === 'en_cours' ? 'selected' : '' }}>{{ __('En cours') }}</option>
+                        <option value="termine" {{ old('status', $stagiaire->status) === 'termine' ? 'selected' : '' }}>{{ __('Terminé') }}</option>
+                        <option value="annule" {{ old('status', $stagiaire->status) === 'annule' ? 'selected' : '' }}>{{ __('Annulé') }}</option>
                     </select>
                 </div>
             </div>
@@ -321,10 +321,10 @@
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div class="sm:col-span-2">
                         <label for="stage_price" class="block text-xs font-bold text-purple-900 dark:text-purple-300">
-                            Prix du stage <span class="text-rose-500">*</span>
+                            {{ __('Prix du stage') }} <span class="text-rose-500">*</span>
                         </label>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-1.5">
-                            Montant convenu que le stagiaire doit verser pour effectuer son stage.
+                            {{ __('Montant convenu que le stagiaire doit verser pour effectuer son stage.') }}
                         </p>
                         <div class="relative rounded-xl">
                             <input type="number" step="0.01" min="0" max="999999.99" name="stage_price" id="stage_price" required
@@ -336,9 +336,9 @@
 
                     <div>
                         <label for="currency" class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            Devise
+                            {{ __('Devise') }}
                         </label>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-1.5">Monnaie de facturation</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-1.5">{{ __('Monnaie de facturation') }}</p>
                         <select name="currency" id="currency"
                                 class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
                             <option value="MAD" {{ old('currency', $stagiaire->currency ?? 'MAD') === 'MAD' ? 'selected' : '' }}>MAD (DH)</option>
@@ -351,7 +351,7 @@
 
             {{-- Notes --}}
             <div class="mt-4">
-                <label for="notes" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Observations / Notes sur le stage</label>
+                <label for="notes" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">{{ __('Observations / Notes sur le stage') }}</label>
                 <textarea name="notes" id="notes" rows="2"
                           class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">{{ old('notes', $stagiaire->notes) }}</textarea>
             </div>
@@ -365,34 +365,34 @@
                         <x-icon name="certificate" class="h-5 w-5" />
                     </span>
                     <div>
-                        <h2 class="text-base font-bold text-slate-900 dark:text-white">4. Diplômes du stagiaire</h2>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Gérez les diplômes actuels ou ajoutez-en de nouveaux.</p>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ __('4. Diplômes du stagiaire') }}</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">{{ __('Gérez les diplômes actuels ou ajoutez-en de nouveaux.') }}</p>
                     </div>
                 </div>
 
                 <button type="button" @click="addDiploma()"
                         class="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800 shadow-2xs hover:bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300 transition">
                     <x-icon name="plus" class="h-4 w-4" />
-                    <span>+ Ajouter un diplôme</span>
+                    <span>{{ __('+ Ajouter un diplôme') }}</span>
                 </button>
             </div>
 
             {{-- Diplômes actuels --}}
             @if($stagiaire->diplomas->isNotEmpty())
                 <div class="mt-4 space-y-3">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Diplômes existants :</h3>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ __('Diplômes existants :') }}</h3>
                     @foreach($stagiaire->diplomas as $diploma)
                         <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 text-xs dark:border-slate-700/60 dark:bg-slate-800/40">
                             <div>
                                 <span class="font-bold text-slate-900 dark:text-white">{{ $diploma->title }}</span>
                                 <span class="text-slate-500 dark:text-slate-400">
-                                    — {{ $diploma->institution ?? 'Établissement non renseigné' }} ({{ $diploma->year ?? 'Année non renseignée' }})
+                                    — {{ $diploma->institution ?? __('Établissement non renseigné') }} ({{ $diploma->year ?? __('Année non renseignée') }})
                                 </span>
                             </div>
                             <div class="flex items-center gap-2">
                                 @if($diploma->file_path)
                                     <a href="{{ route('stagiaires.diploma-download', [$stagiaire, $diploma]) }}"
-                                       class="text-indigo-600 hover:underline dark:text-indigo-400 font-semibold">Télécharger</a>
+                                       class="text-indigo-600 hover:underline dark:text-indigo-400 font-semibold">{{ __('Télécharger') }}</a>
                                 @endif
                             </div>
                         </div>
@@ -402,34 +402,34 @@
 
             {{-- Nouveaux Diplômes (Alpine.js) --}}
             <div class="mt-4 space-y-3" x-show="newDiplomas.length > 0">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Nouveaux diplômes à ajouter :</h3>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">{{ __('Nouveaux diplômes à ajouter :') }}</h3>
                 <template x-for="(dip, idx) in newDiplomas" :key="dip.id">
                     <div class="rounded-xl border border-amber-200 bg-amber-50/40 p-4 dark:border-amber-900/60 dark:bg-amber-950/20">
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-bold text-amber-900 dark:text-amber-200" x-text="'Nouveau diplôme #' + (idx + 1)"></span>
+                            <span class="text-xs font-bold text-amber-900 dark:text-amber-200" x-text="@js(__('Nouveau diplôme')) + ' #' + (idx + 1)"></span>
                             <button type="button" @click="removeDiploma(idx)"
                                     class="text-rose-600 hover:text-rose-800 dark:text-rose-400 text-xs font-semibold">
-                                Supprimer
+                                {{ __('Supprimer') }}
                             </button>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">Intitulé du diplôme *</label>
+                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">{{ __('Intitulé du diplôme *') }}</label>
                                 <input type="text" :name="'diplomas[' + idx + '][title]'" required
                                        class="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">Établissement</label>
+                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">{{ __('Établissement') }}</label>
                                 <input type="text" :name="'diplomas[' + idx + '][institution]'"
                                        class="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">Année d'obtention</label>
+                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">{{ __('Année d\'obtention') }}</label>
                                 <input type="number" min="1950" max="2100" :name="'diplomas[' + idx + '][year]'"
                                        class="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
                             </div>
                             <div class="sm:col-span-3">
-                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">Fichier justificatif (PDF, image)</label>
+                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">{{ __('Fichier justificatif (PDF, image)') }}</label>
                                 <input type="file" :name="'diplomas[' + idx + '][file]'" accept=".pdf,.png,.jpg,.jpeg"
                                        class="mt-1 block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-amber-600 file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-amber-700 dark:text-slate-300">
                             </div>
@@ -447,22 +447,22 @@
                         <x-icon name="document" class="h-5 w-5" />
                     </span>
                     <div>
-                        <h2 class="text-base font-bold text-slate-900 dark:text-white">5. Autres documents administratifs</h2>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Attestations, certificats ou conventions annexes.</p>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ __('5. Autres documents administratifs') }}</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">{{ __('Attestations, certificats ou conventions annexes.') }}</p>
                     </div>
                 </div>
 
                 <button type="button" @click="addDocument()"
                         class="inline-flex items-center gap-1.5 rounded-xl border border-teal-300 bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-800 shadow-2xs hover:bg-teal-100 dark:border-teal-900/60 dark:bg-teal-950/40 dark:text-teal-300 transition">
                     <x-icon name="plus" class="h-4 w-4" />
-                    <span>+ Ajouter un document</span>
+                    <span>{{ __('+ Ajouter un document') }}</span>
                 </button>
             </div>
 
             {{-- Documents actuels --}}
             @if($stagiaire->documents->isNotEmpty())
                 <div class="mt-4 space-y-3">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Documents existants :</h3>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ __('Documents existants :') }}</h3>
                     @foreach($stagiaire->documents as $doc)
                         <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 text-xs dark:border-slate-700/60 dark:bg-slate-800/40">
                             <div>
@@ -473,7 +473,7 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <a href="{{ route('stagiaires.document-download', [$stagiaire, $doc]) }}"
-                                   class="text-teal-600 hover:underline dark:text-teal-400 font-semibold">Télécharger</a>
+                                   class="text-teal-600 hover:underline dark:text-teal-400 font-semibold">{{ __('Télécharger') }}</a>
                             </div>
                         </div>
                     @endforeach
@@ -482,34 +482,34 @@
 
             {{-- Nouveaux Documents (Alpine.js) --}}
             <div class="mt-4 space-y-3" x-show="newDocuments.length > 0">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-400">Nouveaux documents à ajouter :</h3>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-400">{{ __('Nouveaux documents à ajouter :') }}</h3>
                 <template x-for="(doc, idx) in newDocuments" :key="doc.id">
                     <div class="rounded-xl border border-teal-200 bg-teal-50/40 p-4 dark:border-teal-900/60 dark:bg-teal-950/20">
                         <div class="flex items-center justify-between mb-3">
                             <span class="text-xs font-bold text-teal-900 dark:text-teal-200" x-text="'Nouveau document #' + (idx + 1)"></span>
                             <button type="button" @click="removeDocument(idx)"
                                     class="text-rose-600 hover:text-rose-800 dark:text-rose-400 text-xs font-semibold">
-                                Supprimer
+                                {{ __('Supprimer') }}
                             </button>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">Titre du document *</label>
+                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">{{ __('Titre du document *') }}</label>
                                 <input type="text" :name="'other_documents[' + idx + '][title]'" required
                                        class="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">Type</label>
+                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">{{ __('Type') }}</label>
                                 <select :name="'other_documents[' + idx + '][type]'"
                                         class="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
-                                    <option value="autre">Autre</option>
-                                    <option value="attestation">Attestation</option>
-                                    <option value="certificat">Certificat</option>
-                                    <option value="convention">Convention</option>
+                                    <option value="autre">{{ __('Autre') }}</option>
+                                    <option value="attestation">{{ __('Attestation') }}</option>
+                                    <option value="certificat">{{ __('Certificat') }}</option>
+                                    <option value="convention">{{ __('Convention') }}</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">Fichier *</label>
+                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">{{ __('Fichier *') }}</label>
                                 <input type="file" :name="'other_documents[' + idx + '][file]'" accept=".pdf,.png,.jpg,.jpeg" required
                                        class="mt-1 block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-teal-600 file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-teal-700 dark:text-slate-300">
                             </div>
@@ -523,12 +523,12 @@
         <div class="flex items-center justify-end gap-3 pt-4">
             <a href="{{ route('stagiaires.show', $stagiaire) }}"
                class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition">
-                Annuler
+                {{ __('Annuler') }}
             </a>
             <button type="submit"
                     class="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-purple-700 transition">
                 <x-icon name="check" class="h-4 w-4" />
-                <span>Enregistrer les modifications</span>
+                <span>{{ __('Enregistrer les modifications') }}</span>
             </button>
         </div>
     </form>

@@ -51,11 +51,11 @@ class EnrollmentController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('registration_number', 'LIKE', "%{$search}%")
-                  ->orWhereHas('student', function ($sq) use ($search) {
-                      $sq->where('first_name', 'LIKE', "%{$search}%")
-                         ->orWhere('last_name', 'LIKE', "%{$search}%")
-                         ->orWhere('student_number', 'LIKE', "%{$search}%");
-                  });
+                    ->orWhereHas('student', function ($sq) use ($search) {
+                        $sq->where('first_name', 'LIKE', "%{$search}%")
+                            ->orWhere('last_name', 'LIKE', "%{$search}%")
+                            ->orWhere('student_number', 'LIKE', "%{$search}%");
+                    });
             });
         }
 
@@ -109,24 +109,24 @@ class EnrollmentController extends Controller
         $authUser = $request->user();
         $centers = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
 
-        $selectedCenterId = $authUser->isCenterAdmin() 
-            ? $authUser->center_id 
+        $selectedCenterId = $authUser->isCenterAdmin()
+            ? $authUser->center_id
             : ($request->input('center_id') ?? $centers->first()?->id);
 
         $students = Student::query()
-            ->when($selectedCenterId, fn($q) => $q->where('center_id', $selectedCenterId))
+            ->when($selectedCenterId, fn ($q) => $q->where('center_id', $selectedCenterId))
             ->where('status', 'active')
             ->orderBy('last_name')
             ->get();
 
         $formations = Formation::query()
-            ->when($selectedCenterId, fn($q) => $q->where('center_id', $selectedCenterId))
+            ->when($selectedCenterId, fn ($q) => $q->where('center_id', $selectedCenterId))
             ->where('status', 'active')
             ->orderBy('name')
             ->get();
 
         $classes = ClassRoom::query()
-            ->when($selectedCenterId, fn($q) => $q->where('center_id', $selectedCenterId))
+            ->when($selectedCenterId, fn ($q) => $q->where('center_id', $selectedCenterId))
             ->where('status', 'active')
             ->with('formation')
             ->orderBy('name')
@@ -168,7 +168,7 @@ class EnrollmentController extends Controller
 
         return redirect()
             ->route('enrollments.show', $enrollment)
-            ->with('success', "L'inscription {$enrollment->registration_number} a été créée avec succès en attente de traitement.");
+            ->with('success', __('L\'inscription :registration_number a été créée avec succès en attente de traitement.', ['registration_number' => $enrollment->registration_number]));
     }
 
     /**
@@ -242,7 +242,7 @@ class EnrollmentController extends Controller
 
         return redirect()
             ->route('enrollments.show', $enrollment)
-            ->with('success', "L'inscription {$enrollment->registration_number} a été mise à jour.");
+            ->with('success', __('L\'inscription :registration_number a été mise à jour.', ['registration_number' => $enrollment->registration_number]));
     }
 
     /**
@@ -266,7 +266,7 @@ class EnrollmentController extends Controller
 
         return redirect()
             ->route('enrollments.show', $enrollment)
-            ->with('success', "Le statut de l'inscription a été mis à jour vers \"{$enrollment->fresh()->status_label}\".");
+            ->with('success', __('Le statut de l\'inscription a été mis à jour vers \\":status_label\\".', ['status_label' => $enrollment->fresh()->status_label]));
     }
 
     /**
@@ -281,6 +281,6 @@ class EnrollmentController extends Controller
 
         return redirect()
             ->route('enrollments.index')
-            ->with('success', "L'inscription {$regNumber} a été supprimée avec succès.");
+            ->with('success', __('L\'inscription :regNumber a été supprimée avec succès.', ['regNumber' => $regNumber]));
     }
 }

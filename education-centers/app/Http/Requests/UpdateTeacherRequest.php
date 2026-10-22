@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Teacher;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -22,7 +23,7 @@ class UpdateTeacherRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -52,22 +53,22 @@ class UpdateTeacherRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'first_name' => 'prénom',
-            'last_name' => 'nom',
-            'date_of_birth' => 'date de naissance',
-            'place_of_birth' => 'lieu de naissance',
-            'gender' => 'genre',
-            'nationality' => 'nationalité',
-            'address' => 'adresse',
-            'postal_code' => 'code postal',
-            'city' => 'ville',
-            'country' => 'pays',
-            'phone' => 'téléphone',
-            'specialization' => 'spécialisation / matière',
-            'qualification' => 'diplômes / qualifications',
-            'hire_date' => 'date d’embauche',
-            'notes' => 'remarques',
-            'status' => 'statut',
+            'first_name' => __('prénom'),
+            'last_name' => __('nom'),
+            'date_of_birth' => __('date de naissance'),
+            'place_of_birth' => __('lieu de naissance'),
+            'gender' => __('genre'),
+            'nationality' => __('nationalité'),
+            'address' => __('adresse'),
+            'postal_code' => __('code postal'),
+            'city' => __('ville'),
+            'country' => __('pays'),
+            'phone' => __('téléphone'),
+            'specialization' => __('spécialisation / matière'),
+            'qualification' => __('diplômes / qualifications'),
+            'hire_date' => __('date d’embauche'),
+            'notes' => __('remarques'),
+            'status' => __('statut'),
         ];
     }
 }

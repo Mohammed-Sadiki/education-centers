@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\ClassRoom;
 use App\Models\Teacher;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AssignTeacherRequest extends FormRequest
@@ -22,7 +23,7 @@ class AssignTeacherRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -42,19 +43,22 @@ class AssignTeacherRequest extends FormRequest
 
                     // Le professeur doit être actif
                     if (! $teacher->isActive()) {
-                        $fail("Le professeur sélectionné n'est pas actif.");
+                        $fail(__('Le professeur sélectionné n\'est pas actif.'));
+
                         return;
                     }
 
                     // Le professeur et la classe doivent appartenir au même centre
                     if ($teacher->center_id !== $class->center_id) {
-                        $fail("Le professeur sélectionné n'appartient pas au même centre que la classe.");
+                        $fail(__('Le professeur sélectionné n\'appartient pas au même centre que la classe.'));
+
                         return;
                     }
 
                     // Le professeur ne doit pas déjà être affecté à cette classe
                     if ($class->hasTeacher($teacher)) {
-                        $fail("Ce professeur est déjà affecté à cette classe.");
+                        $fail(__('Ce professeur est déjà affecté à cette classe.'));
+
                         return;
                     }
                 },
@@ -68,7 +72,7 @@ class AssignTeacherRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'teacher_id' => 'professeur',
+            'teacher_id' => __('professeur'),
         ];
     }
 
@@ -78,8 +82,8 @@ class AssignTeacherRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'teacher_id.required' => 'Veuillez sélectionner un professeur.',
-            'teacher_id.exists'   => 'Le professeur sélectionné est introuvable.',
+            'teacher_id.required' => __('Veuillez sélectionner un professeur.'),
+            'teacher_id.exists' => __('Le professeur sélectionné est introuvable.'),
         ];
     }
 }

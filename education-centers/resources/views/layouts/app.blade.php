@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data x-init="$store.ui.init()">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ current_dir() }}" x-data x-init="$store.ui.init()">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name', 'Education Centers'))</title>
-    <meta name="description" content="@yield('description', 'Plateforme de gestion des centres d\'éducation')">
+    <meta name="description" content="@yield('description', __('Plateforme de gestion des centres d’éducation'))">
+    @include('layouts.partials.fonts')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script>
@@ -16,13 +17,13 @@
     @stack('styles')
 </head>
 <body class="min-h-screen">
-    <div class="flex min-h-screen">
+    <div class="app-shell flex min-h-screen">
         @include('layouts.partials.sidebar')
 
         <div class="flex min-w-0 flex-1 flex-col">
             @include('layouts.partials.topbar')
 
-            <main class="flex-1 p-4 sm:p-6 lg:p-8">
+            <main class="flex-1 @yield('main-class', 'p-4 sm:p-6 lg:p-8')">
                 @yield('content')
             </main>
         </div>

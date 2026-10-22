@@ -349,3 +349,108 @@ nav[role='navigation'] a {
 .btn-close { @apply rounded p-1 text-slate-400 hover:bg-slate-100; }
 .btn-close::before { content: '×'; font-size: 1.25rem; line-height: 1; }
 .visually-hidden, .sr-only { @apply sr-only; }
+
+/* ──────────────────────────────────────────────────────────────
+   RTL / ARABIC SUPPORT
+   ────────────────────────────────────────────────────────────── */
+html[dir='rtl'] {
+    font-family: 'Cairo', 'Tajawal', 'Segoe UI', sans-serif;
+}
+
+html[dir='rtl'] body,
+html[dir='rtl'] .font-sans {
+    font-family: 'Cairo', 'Tajawal', 'Segoe UI', sans-serif;
+}
+
+html[dir='rtl'] .app-shell {
+    flex-direction: row-reverse;
+}
+
+/* Sidebar is anchored to the inline-start (right) edge in RTL. */
+html[dir='rtl'] aside.fixed {
+    left: auto;
+    right: 0;
+    border-right-width: 0;
+    border-left-width: 1px;
+}
+
+@media (max-width: 1023px) {
+    html[dir='rtl'] aside.fixed.-translate-x-full:not(.translate-x-0) {
+        translate: 100%;
+        transform: none;
+    }
+}
+
+html[dir='rtl'] .text-left,
+html[dir='rtl'] .ec-table,
+html[dir='rtl'] .table {
+    text-align: right;
+}
+
+html[dir='rtl'] .text-right,
+html[dir='rtl'] .text-end {
+    text-align: left;
+}
+
+html[dir='rtl'] .text-start {
+    text-align: right;
+}
+
+/* Dropdown / popover alignment */
+html[dir='rtl'] .absolute.right-0 {
+    left: 0;
+    right: auto;
+}
+
+html[dir='rtl'] .absolute.left-0 {
+    right: 0;
+    left: auto;
+}
+
+html[dir='rtl'] .right-1 {
+    left: 0.25rem;
+    right: auto;
+}
+
+html[dir='rtl'] .right-0\.5 {
+    left: 0.125rem;
+    right: auto;
+}
+
+/* Keep technical values left-to-right even in Arabic mode. */
+html[dir='rtl'] input[type='email'],
+html[dir='rtl'] input[type='url'],
+html[dir='rtl'] input[type='tel'],
+html[dir='rtl'] input[type='number'],
+html[dir='rtl'] input[type='password'],
+html[dir='rtl'] input[type='date'],
+html[dir='rtl'] input[type='time'],
+html[dir='rtl'] .font-monospace,
+html[dir='rtl'] code,
+html[dir='rtl'] pre,
+html[dir='rtl'] .ltr {
+    direction: ltr;
+    text-align: left;
+}
+
+html[dir='rtl'] .ec-table th,
+html[dir='rtl'] .ec-table td,
+html[dir='rtl'] .table th,
+html[dir='rtl'] .table td {
+    text-align: inherit;
+}
+
+html[dir='rtl'] .breadcrumb,
+html[dir='rtl'] ol,
+html[dir='rtl'] ul {
+    /* Keep list markers on the correct side. */
+    padding-inline-start: 1.25rem;
+}
+
+html[dir='rtl'] .translate-x-full {
+    translate: -100%;
+}
+
+html[dir='rtl'] .-translate-x-full {
+    translate: 100%;
+}

@@ -43,23 +43,23 @@ class UpdateScheduleRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'class_id.required' => 'La classe est obligatoire.',
-            'class_id.exists' => 'La classe sélectionnée est introuvable.',
-            'teacher_id.required' => 'Le professeur est obligatoire.',
-            'teacher_id.exists' => 'Le professeur sélectionné est introuvable.',
-            'room_id.required' => 'La salle est obligatoire.',
-            'room_id.exists' => 'La salle sélectionnée est introuvable.',
-            'date.required' => 'La date de la séance est obligatoire.',
-            'date.date' => 'La date doit être valide.',
-            'start_time.required' => "L'heure de début est obligatoire.",
-            'start_time.date_format' => "L'heure de début doit être au format HH:MM.",
+            'class_id.required' => __('La classe est obligatoire.'),
+            'class_id.exists' => __('La classe sélectionnée est introuvable.'),
+            'teacher_id.required' => __('Le professeur est obligatoire.'),
+            'teacher_id.exists' => __('Le professeur sélectionné est introuvable.'),
+            'room_id.required' => __('La salle est obligatoire.'),
+            'room_id.exists' => __('La salle sélectionnée est introuvable.'),
+            'date.required' => __('La date de la séance est obligatoire.'),
+            'date.date' => __('La date doit être valide.'),
+            'start_time.required' => __('L\'heure de début est obligatoire.'),
+            'start_time.date_format' => __('L\'heure de début doit être au format HH:MM.'),
             'end_time.required' => "L'heure de fin est obligatoire.",
-            'end_time.date_format' => "L'heure de fin doit être au format HH:MM.",
-            'end_time.after' => "L'heure de fin doit être strictement postérieure à l'heure de début.",
-            'type.in' => 'Le type de séance sélectionné est invalide.',
-            'status.in' => 'Le statut sélectionné est invalide.',
-            'center_id.required' => 'Le centre est obligatoire pour le Super Admin.',
-            'center_id.exists' => 'Le centre sélectionné est introuvable.',
+            'end_time.date_format' => __('L\'heure de fin doit être au format HH:MM.'),
+            'end_time.after' => __('L\'heure de fin doit être strictement postérieure à l\'heure de début.'),
+            'type.in' => __('Le type de séance sélectionné est invalide.'),
+            'status.in' => __('Le statut sélectionné est invalide.'),
+            'center_id.required' => __('Le centre est obligatoire pour le Super Admin.'),
+            'center_id.exists' => __('Le centre sélectionné est introuvable.'),
         ];
     }
 
@@ -78,35 +78,35 @@ class UpdateScheduleRequest extends FormRequest
 
             // 1. Contrôle d'isolation de centre : Classe, Professeur et Salle doivent appartenir au même centre
             if ($class && $class->center_id !== $targetCenterId) {
-                $validator->errors()->add('class_id', 'La classe sélectionnée ne fait pas partie de ce centre.');
+                $validator->errors()->add('class_id', __('La classe sélectionnée ne fait pas partie de ce centre.'));
             }
 
             if ($teacher && $teacher->center_id !== $targetCenterId) {
-                $validator->errors()->add('teacher_id', 'Le professeur sélectionné ne fait pas partie de ce centre.');
+                $validator->errors()->add('teacher_id', __('Le professeur sélectionné ne fait pas partie de ce centre.'));
             }
 
             if ($room && $room->center_id !== $targetCenterId) {
-                $validator->errors()->add('room_id', 'La salle sélectionnée ne fait pas partie de ce centre.');
+                $validator->errors()->add('room_id', __('La salle sélectionnée ne fait pas partie de ce centre.'));
             }
 
             // 2. Statuts actifs
-            if ($class && !$class->isActive()) {
-                $validator->errors()->add('class_id', 'La classe sélectionnée est inactive.');
+            if ($class && ! $class->isActive()) {
+                $validator->errors()->add('class_id', __('La classe sélectionnée est inactive.'));
             }
 
-            if ($teacher && !$teacher->isActive()) {
-                $validator->errors()->add('teacher_id', 'Le professeur sélectionné est inactif.');
+            if ($teacher && ! $teacher->isActive()) {
+                $validator->errors()->add('teacher_id', __('Le professeur sélectionné est inactif.'));
             }
 
-            if ($room && !$room->isActive()) {
-                $validator->errors()->add('room_id', 'La salle sélectionnée est inactive.');
+            if ($room && ! $room->isActive()) {
+                $validator->errors()->add('room_id', __('La salle sélectionnée est inactive.'));
             }
 
             // 3. Professeur affecté à la classe
-            if ($class && $teacher && !$class->hasTeacher($teacher)) {
+            if ($class && $teacher && ! $class->hasTeacher($teacher)) {
                 $validator->errors()->add(
                     'teacher_id',
-                    "Le professeur {$teacher->full_name} n'est pas affecté à la classe {$class->name}."
+                    __('Le professeur :full_name n\'est pas affecté à la classe :name.', ['full_name' => $teacher->full_name, 'name' => $class->name])
                 );
             }
 

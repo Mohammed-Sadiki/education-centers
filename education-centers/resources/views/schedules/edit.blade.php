@@ -1,22 +1,22 @@
 @extends('layouts.app')
 
-@section('title', 'Modifier la séance')
+@section('title', __('Modifier la séance'))
 
 @section('content')
 <div class="container-fluid px-4 py-4">
 
     {{-- En-tête --}}
     <div class="mb-4">
-        <nav aria-label="breadcrumb">
+        <nav aria-label="{{ __('breadcrumb') }}">
             <ol class="breadcrumb mb-1">
-                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Tableau de bord</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('schedules.index') }}">Emplois du temps</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('schedules.show', $schedule) }}">Détail séance</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Modifier</li>
+                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">{{ __('Tableau de bord') }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('schedules.index') }}">{{ __('Emplois du temps') }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('schedules.show', $schedule) }}">{{ __('Détail séance') }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ __('Modifier') }}</li>
             </ol>
         </nav>
         <h1 class="h3 fw-bold mb-0 text-gray-800">
-            <i class="bi bi-pencil-square text-primary me-2"></i>Modifier la séance de formation
+            <i class="bi bi-pencil-square text-primary me-2"></i>{{ __('Modifier la séance de formation') }}
         </h1>
     </div>
 
@@ -25,7 +25,7 @@
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <div class="d-flex align-items-center gap-2 mb-2">
                 <i class="bi bi-exclamation-triangle-fill fs-5"></i>
-                <h6 class="mb-0 fw-bold">Impossible de modifier la séance :</h6>
+                <h6 class="mb-0 fw-bold">{{ __('Impossible de modifier la séance :') }}</h6>
             </div>
             <ul class="mb-0 ps-3">
                 @foreach($errors->all() as $error)
@@ -48,7 +48,7 @@
                         <div class="row mb-4 pb-3 border-bottom">
                             <div class="col-12">
                                 <h5 class="fw-bold text-dark mb-3">
-                                    <i class="bi bi-geo-alt text-primary me-2"></i>Centre de formation
+                                    <i class="bi bi-geo-alt text-primary me-2"></i>{{ __('Centre de formation') }}
                                 </h5>
 
                                 <div class="p-3 bg-light rounded border d-flex align-items-center gap-2">
@@ -56,7 +56,7 @@
                                     <div>
                                         <strong>{{ $schedule->center->name }}</strong>
                                         <span class="badge bg-secondary ms-2">{{ $schedule->center->code }}</span>
-                                        <small class="text-muted d-block mt-1">Le centre est verrouillé pour garantir l'intégrité de la séance.</small>
+                                        <small class="text-muted d-block mt-1">{{ __('Le centre est verrouillé pour garantir l\'intégrité de la séance.') }}</small>
                                     </div>
                                 </div>
                             </div>
@@ -66,20 +66,20 @@
                         <div class="row mb-4 pb-3 border-bottom g-3">
                             <div class="col-12">
                                 <h5 class="fw-bold text-dark mb-1">
-                                    <i class="bi bi-people text-primary me-2"></i>Classe, Professeur et Salle
+                                    <i class="bi bi-people text-primary me-2"></i>{{ __('Classe, Professeur et Salle') }}
                                 </h5>
-                                <p class="text-muted small mb-3">Le professeur doit impérativement être affecté à la classe choisie.</p>
+                                <p class="text-muted small mb-3">{{ __('Le professeur doit impérativement être affecté à la classe choisie.') }}</p>
                             </div>
 
                             {{-- Classe --}}
                             <div class="col-md-4">
-                                <label for="class_id" class="form-label fw-semibold">Classe <span class="text-danger">*</span></label>
+                                <label for="class_id" class="form-label fw-semibold">{{ __('Classe') }} <span class="text-danger">*</span></label>
                                 <select name="class_id" id="class_id" class="form-select @error('class_id') is-invalid @enderror" required>
                                     @foreach($classes as $cl)
                                         <option value="{{ $cl->id }}" 
                                             {{ old('class_id', $schedule->class_id) == $cl->id ? 'selected' : '' }}
                                             data-teachers="{{ $cl->teachers->pluck('id')->join(',') }}">
-                                            {{ $cl->name }} ({{ $cl->formation->name ?? 'Formation' }})
+                                            {{ $cl->name }} ({{ $cl->formation->name ?? __('Formation') }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -90,7 +90,7 @@
 
                             {{-- Professeur --}}
                             <div class="col-md-4">
-                                <label for="teacher_id" class="form-label fw-semibold">Professeur <span class="text-danger">*</span></label>
+                                <label for="teacher_id" class="form-label fw-semibold">{{ __('Professeur') }} <span class="text-danger">*</span></label>
                                 <select name="teacher_id" id="teacher_id" class="form-select @error('teacher_id') is-invalid @enderror" required>
                                     @foreach($teachers as $t)
                                         <option value="{{ $t->id }}" 
@@ -107,11 +107,11 @@
 
                             {{-- Salle --}}
                             <div class="col-md-4">
-                                <label for="room_id" class="form-label fw-semibold">Salle de cours <span class="text-danger">*</span></label>
+                                <label for="room_id" class="form-label fw-semibold">{{ __('Salle de cours') }} <span class="text-danger">*</span></label>
                                 <select name="room_id" id="room_id" class="form-select @error('room_id') is-invalid @enderror" required>
                                     @foreach($rooms as $r)
                                         <option value="{{ $r->id }}" {{ old('room_id', $schedule->room_id) == $r->id ? 'selected' : '' }}>
-                                            {{ $r->name }} ({{ $r->code }} — Capacité: {{ $r->capacity }})
+                                            {{ $r->name }} ({{ $r->code }} {{ __('— Capacité:') }} {{ $r->capacity }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -125,13 +125,13 @@
                         <div class="row mb-4 pb-3 border-bottom g-3">
                             <div class="col-12">
                                 <h5 class="fw-bold text-dark mb-1">
-                                    <i class="bi bi-clock text-primary me-2"></i>Date et Créneau horaire
+                                    <i class="bi bi-clock text-primary me-2"></i>{{ __('Date et Créneau horaire') }}
                                 </h5>
-                                <p class="text-muted small mb-3">L'heure de fin doit être strictement supérieure à l'heure de début.</p>
+                                <p class="text-muted small mb-3">{{ __('L\'heure de fin doit être strictement supérieure à l\'heure de début.') }}</p>
                             </div>
 
                             <div class="col-md-4">
-                                <label for="date" class="form-label fw-semibold">Date de la séance <span class="text-danger">*</span></label>
+                                <label for="date" class="form-label fw-semibold">{{ __('Date de la séance') }} <span class="text-danger">*</span></label>
                                 <input type="date" name="date" id="date" class="form-control @error('date') is-invalid @enderror" 
                                        value="{{ old('date', $schedule->date->format('Y-m-d')) }}" required>
                                 @error('date')
@@ -140,7 +140,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label for="start_time" class="form-label fw-semibold">Heure de début <span class="text-danger">*</span></label>
+                                <label for="start_time" class="form-label fw-semibold">{{ __('Heure de début') }} <span class="text-danger">*</span></label>
                                 <input type="time" name="start_time" id="start_time" class="form-control @error('start_time') is-invalid @enderror" 
                                        value="{{ old('start_time', substr($schedule->start_time, 0, 5)) }}" required>
                                 @error('start_time')
@@ -149,7 +149,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label for="end_time" class="form-label fw-semibold">Heure de fin <span class="text-danger">*</span></label>
+                                <label for="end_time" class="form-label fw-semibold">{{ __('Heure de fin') }} <span class="text-danger">*</span></label>
                                 <input type="time" name="end_time" id="end_time" class="form-control @error('end_time') is-invalid @enderror" 
                                        value="{{ old('end_time', substr($schedule->end_time, 0, 5)) }}" required>
                                 @error('end_time')
@@ -162,12 +162,12 @@
                         <div class="row mb-4 g-3">
                             <div class="col-12">
                                 <h5 class="fw-bold text-dark mb-1">
-                                    <i class="bi bi-card-text text-primary me-2"></i>Informations complémentaires
+                                    <i class="bi bi-card-text text-primary me-2"></i>{{ __('Informations complémentaires') }}
                                 </h5>
                             </div>
 
                             <div class="col-md-4">
-                                <label for="type" class="form-label fw-semibold">Type de séance <span class="text-danger">*</span></label>
+                                <label for="type" class="form-label fw-semibold">{{ __('Type de séance') }} <span class="text-danger">*</span></label>
                                 <select name="type" id="type" class="form-select @error('type') is-invalid @enderror" required>
                                     <option value="course" {{ old('type', $schedule->type) === 'course' ? 'selected' : '' }}>Cours</option>
                                     <option value="exam" {{ old('type', $schedule->type) === 'exam' ? 'selected' : '' }}>Examen</option>
@@ -180,11 +180,11 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label for="status" class="form-label fw-semibold">Statut <span class="text-danger">*</span></label>
+                                <label for="status" class="form-label fw-semibold">{{ __('Statut') }} <span class="text-danger">*</span></label>
                                 <select name="status" id="status" class="form-select @error('status') is-invalid @enderror" required>
-                                    <option value="scheduled" {{ old('status', $schedule->status) === 'scheduled' ? 'selected' : '' }}>Programmée</option>
-                                    <option value="completed" {{ old('status', $schedule->status) === 'completed' ? 'selected' : '' }}>Terminée</option>
-                                    <option value="cancelled" {{ old('status', $schedule->status) === 'cancelled' ? 'selected' : '' }}>Annulée</option>
+                                    <option value="scheduled" {{ old('status', $schedule->status) === 'scheduled' ? 'selected' : '' }}>{{ __('Programmée') }}</option>
+                                    <option value="completed" {{ old('status', $schedule->status) === 'completed' ? 'selected' : '' }}>{{ __('Terminée') }}</option>
+                                    <option value="cancelled" {{ old('status', $schedule->status) === 'cancelled' ? 'selected' : '' }}>{{ __('Annulée') }}</option>
                                 </select>
                                 @error('status')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -192,16 +192,16 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label for="title" class="form-label fw-semibold">Titre / Sujet de la séance</label>
+                                <label for="title" class="form-label fw-semibold">{{ __('Titre / Sujet de la séance') }}</label>
                                 <input type="text" name="title" id="title" class="form-control @error('title') is-invalid @enderror" 
-                                       value="{{ old('title', $schedule->title) }}" placeholder="Ex: Révisions grammaire">
+                                       value="{{ old('title', $schedule->title) }}" placeholder="{{ __('Ex: Révisions grammaire') }}">
                                 @error('title')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="col-12">
-                                <label for="description" class="form-label fw-semibold">Description / Remarques</label>
+                                <label for="description" class="form-label fw-semibold">{{ __('Description / Remarques') }}</label>
                                 <textarea name="description" id="description" rows="3" class="form-control @error('description') is-invalid @enderror">{{ old('description', $schedule->description) }}</textarea>
                                 @error('description')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -212,10 +212,10 @@
                         {{-- Boutons d'action --}}
                         <div class="d-flex justify-content-between align-items-center pt-3 border-top">
                             <a href="{{ route('schedules.show', $schedule) }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-1"></i>Annuler
+                                <i class="bi bi-arrow-left me-1"></i>{{ __('Annuler') }}
                             </a>
                             <button type="submit" class="btn btn-primary px-4">
-                                <i class="bi bi-check-lg me-1"></i>Enregistrer les modifications
+                                <i class="bi bi-check-lg me-1"></i>{{ __('Enregistrer les modifications') }}
                             </button>
                         </div>
                     </form>

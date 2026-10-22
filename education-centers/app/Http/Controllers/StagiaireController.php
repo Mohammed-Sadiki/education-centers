@@ -10,6 +10,7 @@ use App\Models\StagiaireDiploma;
 use App\Models\StagiaireDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -95,10 +96,10 @@ class StagiaireController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('cin_number', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('cin_number', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
@@ -109,15 +110,15 @@ class StagiaireController extends Controller
         if ($filter = $request->input('filter')) {
             if ($filter === 'complets') {
                 $query->whereNotNull('cin_number')
-                      ->whereNotNull('cin_recto_path')
-                      ->whereNotNull('stage_start_date')
-                      ->whereNotNull('stage_end_date');
+                    ->whereNotNull('cin_recto_path')
+                    ->whereNotNull('stage_start_date')
+                    ->whereNotNull('stage_end_date');
             } elseif ($filter === 'incomplets') {
                 $query->where(function ($q) {
                     $q->whereNull('cin_number')
-                      ->orWhereNull('cin_recto_path')
-                      ->orWhereNull('stage_start_date')
-                      ->orWhereNull('stage_end_date');
+                        ->orWhereNull('cin_recto_path')
+                        ->orWhereNull('stage_start_date')
+                        ->orWhereNull('stage_end_date');
                 });
             }
         }
@@ -160,13 +161,13 @@ class StagiaireController extends Controller
         if ($search) {
             $docsQuery->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhereHas('stagiaire', function ($sq) use ($search) {
-                      $sq->where('first_name', 'like', "%{$search}%")
-                         ->orWhere('last_name', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('stagiaire', function ($sq) use ($search) {
+                        $sq->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%");
+                    });
             });
         }
-        if ($typeFilter && !in_array($typeFilter, ['cin', 'diploma'])) {
+        if ($typeFilter && ! in_array($typeFilter, ['cin', 'diploma'])) {
             $docsQuery->where('type', $typeFilter);
         }
 
@@ -180,11 +181,11 @@ class StagiaireController extends Controller
         if ($search) {
             $diplomasQuery->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('institution', 'like', "%{$search}%")
-                  ->orWhereHas('stagiaire', function ($sq) use ($search) {
-                      $sq->where('first_name', 'like', "%{$search}%")
-                         ->orWhere('last_name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('institution', 'like', "%{$search}%")
+                    ->orWhereHas('stagiaire', function ($sq) use ($search) {
+                        $sq->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -198,8 +199,8 @@ class StagiaireController extends Controller
         if ($search) {
             $cinQuery->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('cin_number', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('cin_number', 'like', "%{$search}%");
             });
         }
 
@@ -262,19 +263,19 @@ class StagiaireController extends Controller
                 $file = $request->file("diplomas.{$index}.file")
                     ?? ($request->file('diplomas')[$index]['file'] ?? null)
                     ?? data_get($request->allFiles(), "diplomas.{$index}.file")
-                    ?? (isset($dip['file']) && $dip['file'] instanceof \Illuminate\Http\UploadedFile ? $dip['file'] : null);
+                    ?? (isset($dip['file']) && $dip['file'] instanceof UploadedFile ? $dip['file'] : null);
 
-                if ($file instanceof \Illuminate\Http\UploadedFile) {
+                if ($file instanceof UploadedFile) {
                     $fileName = $file->getClientOriginalName();
                     $filePath = $file->store("stagiaires/{$stagiaire->id}/diplomas", 'local');
                 }
 
                 $stagiaire->diplomas()->create([
-                    'title'       => $dip['title'],
+                    'title' => $dip['title'],
                     'institution' => $dip['institution'] ?? null,
-                    'year'        => $dip['year'] ?? null,
-                    'file_path'   => $filePath,
-                    'file_name'   => $fileName,
+                    'year' => $dip['year'] ?? null,
+                    'file_path' => $filePath,
+                    'file_name' => $fileName,
                 ]);
             }
         }
@@ -292,17 +293,17 @@ class StagiaireController extends Controller
                 $file = $request->file("other_documents.{$index}.file")
                     ?? ($request->file('other_documents')[$index]['file'] ?? null)
                     ?? data_get($request->allFiles(), "other_documents.{$index}.file")
-                    ?? (isset($doc['file']) && $doc['file'] instanceof \Illuminate\Http\UploadedFile ? $doc['file'] : null);
+                    ?? (isset($doc['file']) && $doc['file'] instanceof UploadedFile ? $doc['file'] : null);
 
-                if ($file instanceof \Illuminate\Http\UploadedFile) {
+                if ($file instanceof UploadedFile) {
                     $fileName = $file->getClientOriginalName();
                     $filePath = $file->store("stagiaires/{$stagiaire->id}/documents", 'local');
                 }
 
                 if ($filePath) {
                     $stagiaire->documents()->create([
-                        'title'     => $doc['title'],
-                        'type'      => $doc['type'] ?? 'autre',
+                        'title' => $doc['title'],
+                        'type' => $doc['type'] ?? 'autre',
                         'file_path' => $filePath,
                         'file_name' => $fileName,
                     ]);
@@ -312,7 +313,7 @@ class StagiaireController extends Controller
 
         return redirect()
             ->route('stagiaires.show', $stagiaire)
-            ->with('success', "Le dossier du stagiaire {$stagiaire->full_name} a été créé avec succès.");
+            ->with('success', __('Le dossier du stagiaire :full_name a été créé avec succès.', ['full_name' => $stagiaire->full_name]));
     }
 
     /**
@@ -376,19 +377,19 @@ class StagiaireController extends Controller
                 $file = $request->file("diplomas.{$index}.file")
                     ?? ($request->file('diplomas')[$index]['file'] ?? null)
                     ?? data_get($request->allFiles(), "diplomas.{$index}.file")
-                    ?? (isset($dip['file']) && $dip['file'] instanceof \Illuminate\Http\UploadedFile ? $dip['file'] : null);
+                    ?? (isset($dip['file']) && $dip['file'] instanceof UploadedFile ? $dip['file'] : null);
 
-                if ($file instanceof \Illuminate\Http\UploadedFile) {
+                if ($file instanceof UploadedFile) {
                     $fileName = $file->getClientOriginalName();
                     $filePath = $file->store("stagiaires/{$stagiaire->id}/diplomas", 'local');
                 }
 
                 $stagiaire->diplomas()->create([
-                    'title'       => $dip['title'],
+                    'title' => $dip['title'],
                     'institution' => $dip['institution'] ?? null,
-                    'year'        => $dip['year'] ?? null,
-                    'file_path'   => $filePath,
-                    'file_name'   => $fileName,
+                    'year' => $dip['year'] ?? null,
+                    'file_path' => $filePath,
+                    'file_name' => $fileName,
                 ]);
             }
         }
@@ -406,17 +407,17 @@ class StagiaireController extends Controller
                 $file = $request->file("other_documents.{$index}.file")
                     ?? ($request->file('other_documents')[$index]['file'] ?? null)
                     ?? data_get($request->allFiles(), "other_documents.{$index}.file")
-                    ?? (isset($doc['file']) && $doc['file'] instanceof \Illuminate\Http\UploadedFile ? $doc['file'] : null);
+                    ?? (isset($doc['file']) && $doc['file'] instanceof UploadedFile ? $doc['file'] : null);
 
-                if ($file instanceof \Illuminate\Http\UploadedFile) {
+                if ($file instanceof UploadedFile) {
                     $fileName = $file->getClientOriginalName();
                     $filePath = $file->store("stagiaires/{$stagiaire->id}/documents", 'local');
                 }
 
                 if ($filePath) {
                     $stagiaire->documents()->create([
-                        'title'     => $doc['title'],
-                        'type'      => $doc['type'] ?? 'autre',
+                        'title' => $doc['title'],
+                        'type' => $doc['type'] ?? 'autre',
                         'file_path' => $filePath,
                         'file_name' => $fileName,
                     ]);
@@ -426,7 +427,7 @@ class StagiaireController extends Controller
 
         return redirect()
             ->route('stagiaires.show', $stagiaire)
-            ->with('success', "Le dossier de {$stagiaire->full_name} a été mis à jour avec succès.");
+            ->with('success', __('Le dossier de :full_name a été mis à jour avec succès.', ['full_name' => $stagiaire->full_name]));
     }
 
     /**
@@ -452,7 +453,7 @@ class StagiaireController extends Controller
 
         return redirect()
             ->route('stagiaires.index')
-            ->with('success', "Le dossier du stagiaire {$fullName} a été supprimé.");
+            ->with('success', __('Le dossier du stagiaire :fullName a été supprimé.', ['fullName' => $fullName]));
     }
 
     /**
@@ -464,8 +465,8 @@ class StagiaireController extends Controller
 
         $path = $side === 'recto' ? $stagiaire->cin_recto_path : $stagiaire->cin_verso_path;
 
-        if (!$path || !Storage::disk('local')->exists($path)) {
-            abort(404, 'Fichier introuvable.');
+        if (! $path || ! Storage::disk('local')->exists($path)) {
+            abort(404, __('Fichier introuvable.'));
         }
 
         return response()->download(Storage::disk('local')->path($path));
@@ -478,8 +479,8 @@ class StagiaireController extends Controller
     {
         Gate::authorize('view', $stagiaire);
 
-        if ($diploma->stagiaire_id !== $stagiaire->id || !$diploma->file_path || !Storage::disk('local')->exists($diploma->file_path)) {
-            abort(404, 'Fichier introuvable.');
+        if ($diploma->stagiaire_id !== $stagiaire->id || ! $diploma->file_path || ! Storage::disk('local')->exists($diploma->file_path)) {
+            abort(404, __('Fichier introuvable.'));
         }
 
         return response()->download(
@@ -495,8 +496,8 @@ class StagiaireController extends Controller
     {
         Gate::authorize('view', $stagiaire);
 
-        if ($document->stagiaire_id !== $stagiaire->id || !$document->file_path || !Storage::disk('local')->exists($document->file_path)) {
-            abort(404, 'Fichier introuvable.');
+        if ($document->stagiaire_id !== $stagiaire->id || ! $document->file_path || ! Storage::disk('local')->exists($document->file_path)) {
+            abort(404, __('Fichier introuvable.'));
         }
 
         return response()->download(
@@ -519,7 +520,7 @@ class StagiaireController extends Controller
             $diploma->delete();
         }
 
-        return back()->with('success', 'Diplôme supprimé.');
+        return back()->with('success', __('Diplôme supprimé.'));
     }
 
     /**
@@ -536,6 +537,6 @@ class StagiaireController extends Controller
             $document->delete();
         }
 
-        return back()->with('success', 'Document supprimé.');
+        return back()->with('success', __('Document supprimé.'));
     }
 }

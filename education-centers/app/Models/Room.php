@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Room extends Model
 {
@@ -50,7 +51,7 @@ class Room extends Model
     /**
      * Relation : Séances programmées dans cette salle.
      */
-    public function schedules(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function schedules(): HasMany
     {
         return $this->hasMany(Schedule::class);
     }
@@ -94,12 +95,12 @@ class Room extends Model
     {
         $parts = [];
         if ($this->building) {
-            $parts[] = "Bâtiment {$this->building}";
+            $parts[] = __('Bâtiment :building', ['building' => $this->building]);
         }
         if ($this->floor !== null && $this->floor !== '') {
-            $parts[] = "Étage {$this->floor}";
+            $parts[] = __('Étage :floor', ['floor' => $this->floor]);
         }
 
-        return ! empty($parts) ? implode(', ', $parts) : 'Non précisée';
+        return ! empty($parts) ? implode(', ', $parts) : __('Non précisée');
     }
 }

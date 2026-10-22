@@ -85,7 +85,7 @@ class FormationController extends Controller
 
         return redirect()
             ->route('formations.show', $formation)
-            ->with('success', "La formation \"{$formation->name}\" ({$formation->code}) a été créée avec succès.");
+            ->with('success', __('La formation \\":name\\" (:code) a été créée avec succès.', ['name' => $formation->name, 'code' => $formation->code]));
     }
 
     /**
@@ -121,7 +121,7 @@ class FormationController extends Controller
 
         return redirect()
             ->route('formations.show', $formation)
-            ->with('success', "La formation \"{$formation->name}\" a été mise à jour avec succès.");
+            ->with('success', __('La formation \\":name\\" a été mise à jour avec succès.', ['name' => $formation->name]));
     }
 
     /**
@@ -135,8 +135,8 @@ class FormationController extends Controller
         $formation->update(['status' => $newStatus]);
 
         $message = $newStatus === 'active'
-            ? "La formation \"{$formation->name}\" a été activée."
-            : "La formation \"{$formation->name}\" a été désactivée.";
+            ? __('La formation \\":name\\" a été activée.', ['name' => $formation->name])
+            : __('La formation \\":name\\" a été désactivée.', ['name' => $formation->name]);
 
         return back()->with('success', $message);
     }
@@ -151,7 +151,7 @@ class FormationController extends Controller
         // Vérification de sécurité pour les étapes futures (classes, inscriptions, etc.)
         // À cette étape, pas encore de relation classes/enrollments
         if (method_exists($formation, 'classes') && $formation->classes()->exists()) {
-            return back()->with('error', "Impossible de supprimer la formation : des classes y sont associées.");
+            return back()->with('error', __('Impossible de supprimer la formation : des classes y sont associées.'));
         }
 
         $name = $formation->name;
@@ -159,6 +159,6 @@ class FormationController extends Controller
 
         return redirect()
             ->route('formations.index')
-            ->with('success', "La formation \"{$name}\" a été supprimée avec succès.");
+            ->with('success', __('La formation \\":name\\" a été supprimée avec succès.', ['name' => $name]));
     }
 }

@@ -45,7 +45,7 @@ class CenterController extends Controller
 
         return redirect()
             ->route('centers.show', $center)
-            ->with('success', "Le centre « {$center->name} » a été créé avec succès.");
+            ->with('success', __('Le centre « :name » a été créé avec succès.', ['name' => $center->name]));
     }
 
     /**
@@ -90,7 +90,7 @@ class CenterController extends Controller
 
         return redirect()
             ->route('centers.show', $center)
-            ->with('success', "Le centre « {$center->name} » a été mis à jour avec succès.");
+            ->with('success', __('Le centre « :name » a été mis à jour avec succès.', ['name' => $center->name]));
     }
 
     /**
@@ -108,8 +108,8 @@ class CenterController extends Controller
                 ->route('centers.show', $center)
                 ->with(
                     'error',
-                    "Impossible de supprimer le centre « {$center->name} » : des utilisateurs y sont rattachés. " .
-                    "Désactivez-le plutôt ou transférez les utilisateurs."
+                    __('Impossible de supprimer le centre « :name » : des utilisateurs y sont rattachés. ', ['name' => $center->name]).
+                    __('Désactivez-le plutôt ou transférez les utilisateurs.')
                 );
         }
 
@@ -124,7 +124,7 @@ class CenterController extends Controller
 
         return redirect()
             ->route('centers.index')
-            ->with('success', "Le centre « {$centerName} » a été supprimé définitivement.");
+            ->with('success', __('Le centre « :centerName » a été supprimé définitivement.', ['centerName' => $centerName]));
     }
 
     /**
@@ -136,10 +136,10 @@ class CenterController extends Controller
         $center->status = $center->isActive() ? 'inactive' : 'active';
         $center->save();
 
-        $label = $center->isActive() ? 'activé' : 'désactivé';
+        $label = $center->isActive() ? __('activé') : __('désactivé');
 
         return redirect()
             ->route('centers.show', $center)
-            ->with('success', "Le centre « {$center->name} » a été {$label}.");
+            ->with('success', __('Le centre « :name » a été :label.', ['name' => $center->name, 'label' => $label]));
     }
 }

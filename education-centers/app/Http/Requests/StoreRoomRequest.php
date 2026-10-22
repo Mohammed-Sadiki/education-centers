@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Room;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,7 +20,7 @@ class StoreRoomRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -57,15 +58,15 @@ class StoreRoomRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'center_id' => 'centre éducatif',
-            'name' => 'nom de la salle',
-            'code' => 'code de la salle',
-            'capacity' => 'capacité d’accueil',
-            'description' => 'description',
-            'floor' => 'étage',
-            'building' => 'bâtiment',
-            'equipment' => 'équipements et matériel',
-            'status' => 'statut',
+            'center_id' => __('centre éducatif'),
+            'name' => __('nom de la salle'),
+            'code' => __('code de la salle'),
+            'capacity' => __('capacité d’accueil'),
+            'description' => __('description'),
+            'floor' => __('étage'),
+            'building' => __('bâtiment'),
+            'equipment' => __('équipements et matériel'),
+            'status' => __('statut'),
         ];
     }
 
@@ -75,8 +76,8 @@ class StoreRoomRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'code.unique' => 'Le code de salle est déjà utilisé au sein de ce centre.',
-            'capacity.min' => 'La capacité de la salle doit être un entier strictement supérieur à 0.',
+            'code.unique' => __('Le code de salle est déjà utilisé au sein de ce centre.'),
+            'capacity.min' => __('La capacité de la salle doit être un entier strictement supérieur à 0.'),
         ];
     }
 }

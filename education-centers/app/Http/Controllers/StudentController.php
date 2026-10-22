@@ -39,8 +39,8 @@ class StudentController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
             });
         }
 
@@ -117,7 +117,7 @@ class StudentController extends Controller
 
         return redirect()
             ->route('students.show', $student)
-            ->with('success', "Le dossier étudiant {$student->student_number} ({$student->full_name}) a été créé avec succès.");
+            ->with('success', __('Le dossier étudiant :student_number (:full_name) a été créé avec succès.', ['student_number' => $student->student_number, 'full_name' => $student->full_name]));
     }
 
     /**
@@ -153,7 +153,7 @@ class StudentController extends Controller
 
         return redirect()
             ->route('students.show', $student)
-            ->with('success', "Le dossier étudiant {$student->student_number} a été mis à jour avec succès.");
+            ->with('success', __('Le dossier étudiant :student_number a été mis à jour avec succès.', ['student_number' => $student->student_number]));
     }
 
     /**
@@ -167,8 +167,8 @@ class StudentController extends Controller
         $student->update(['status' => $newStatus]);
 
         $message = $newStatus === 'active'
-            ? "Le dossier étudiant {$student->student_number} a été activé."
-            : "Le dossier étudiant {$student->student_number} a été désactivé.";
+            ? __('Le dossier étudiant :student_number a été activé.', ['student_number' => $student->student_number])
+            : __('Le dossier étudiant :student_number a été désactivé.', ['student_number' => $student->student_number]);
 
         return back()->with('success', $message);
     }
@@ -185,6 +185,6 @@ class StudentController extends Controller
 
         return redirect()
             ->route('students.index')
-            ->with('success', "Le dossier étudiant {$studentNumber} a été supprimé.");
+            ->with('success', __('Le dossier étudiant :studentNumber a été supprimé.', ['studentNumber' => $studentNumber]));
     }
 }

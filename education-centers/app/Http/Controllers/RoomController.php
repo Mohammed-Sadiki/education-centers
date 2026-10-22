@@ -85,7 +85,7 @@ class RoomController extends Controller
 
         return redirect()
             ->route('rooms.show', $room)
-            ->with('success', "La salle \"{$room->name}\" ({$room->code}) a été créée avec succès.");
+            ->with('success', __('La salle \\":name\\" (:code) a été créée avec succès.', ['name' => $room->name, 'code' => $room->code]));
     }
 
     /**
@@ -121,7 +121,7 @@ class RoomController extends Controller
 
         return redirect()
             ->route('rooms.show', $room)
-            ->with('success', "La salle \"{$room->name}\" a été mise à jour avec succès.");
+            ->with('success', __('La salle \\":name\\" a été mise à jour avec succès.', ['name' => $room->name]));
     }
 
     /**
@@ -135,8 +135,8 @@ class RoomController extends Controller
         $room->update(['status' => $newStatus]);
 
         $message = $newStatus === 'active'
-            ? "La salle \"{$room->name}\" a été activée."
-            : "La salle \"{$room->name}\" a été désactivée.";
+            ? __('La salle \\":name\\" a été activée.', ['name' => $room->name])
+            : __('La salle \\":name\\" a été désactivée.', ['name' => $room->name]);
 
         return back()->with('success', $message);
     }
@@ -150,7 +150,7 @@ class RoomController extends Controller
 
         // Protection contre les dépendances futures (schedules, reservations, etc.)
         if (method_exists($room, 'schedules') && $room->schedules()->exists()) {
-            return back()->with('error', "Impossible de supprimer la salle : des séances y sont planifiées.");
+            return back()->with('error', __('Impossible de supprimer la salle : des séances y sont planifiées.'));
         }
 
         $name = $room->name;
@@ -158,6 +158,6 @@ class RoomController extends Controller
 
         return redirect()
             ->route('rooms.index')
-            ->with('success', "La salle \"{$name}\" a été supprimée avec succès.");
+            ->with('success', __('La salle \\":name\\" a été supprimée avec succès.', ['name' => $name]));
     }
 }

@@ -19,14 +19,14 @@ class ClassTeacherController extends Controller
 
         // Sécurité supplémentaire : vérification de centre
         if ($teacher->center_id !== $class->center_id) {
-            abort(403, "Le professeur et la classe n'appartiennent pas au même centre.");
+            abort(403, __('Le professeur et la classe n\'appartiennent pas au même centre.'));
         }
 
         $class->teachers()->syncWithoutDetaching([$teacher->id]);
 
         return redirect()
             ->route('classes.show', $class)
-            ->with('success', "Le professeur {$teacher->full_name} ({$teacher->teacher_number}) a été affecté à la classe {$class->code}.");
+            ->with('success', __('Le professeur :full_name (:teacher_number) a été affecté à la classe :code.', ['full_name' => $teacher->full_name, 'teacher_number' => $teacher->teacher_number, 'code' => $class->code]));
     }
 
     /**
@@ -38,7 +38,7 @@ class ClassTeacherController extends Controller
 
         // Sécurité multi-centres
         if ($teacher->center_id !== $class->center_id) {
-            abort(403, "Opération non autorisée.");
+            abort(403, __('Opération non autorisée.'));
         }
 
         // Détacher l'association sans supprimer le professeur
@@ -46,6 +46,6 @@ class ClassTeacherController extends Controller
 
         return redirect()
             ->route('classes.show', $class)
-            ->with('success', "Le professeur {$teacher->full_name} a été retiré de la classe {$class->code}.");
+            ->with('success', __('Le professeur :full_name a été retiré de la classe :code.', ['full_name' => $teacher->full_name, 'code' => $class->code]));
     }
 }

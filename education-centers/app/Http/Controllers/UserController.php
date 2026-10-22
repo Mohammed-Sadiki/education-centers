@@ -23,7 +23,7 @@ class UserController extends Controller
         Gate::authorize('viewAny', User::class);
 
         $authUser = $request->user();
-        $query    = User::with('center');
+        $query = User::with('center');
 
         // Isolation multi-centres
         if ($authUser->isCenterAdmin()) {
@@ -34,7 +34,7 @@ class UserController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -53,7 +53,7 @@ class UserController extends Controller
             $query->where('center_id', $centerId);
         }
 
-        $users   = $query->orderBy('name')->paginate(15)->withQueryString();
+        $users = $query->orderBy('name')->paginate(15)->withQueryString();
         $centers = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
 
         return view('users.index', compact('users', 'centers'));
@@ -67,7 +67,7 @@ class UserController extends Controller
         Gate::authorize('create', User::class);
 
         $authUser = $request->user();
-        $centers  = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
+        $centers = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
 
         // Rôles autorisés selon le créateur
         $allowedRoles = $this->getAllowedRoles($authUser);
@@ -82,7 +82,7 @@ class UserController extends Controller
     public function store(StoreUserRequest $request): RedirectResponse
     {
         $authUser = $request->user();
-        $data     = $request->validated();
+        $data = $request->validated();
 
         // Hasher le mot de passe
         $data['password'] = Hash::make($data['password']);
@@ -93,7 +93,7 @@ class UserController extends Controller
 
             // Admin Centre ne peut pas créer un super_admin ou center_admin
             if (in_array($data['role'], [User::ROLE_SUPER_ADMIN, User::ROLE_CENTER_ADMIN])) {
-                abort(403, 'Vous n\'êtes pas autorisé à créer ce type de compte.');
+                abort(403, __('Vous n\'êtes pas autorisé à créer ce type de compte.'));
             }
         } else {
             // Super Admin : center_id = null pour super_admin, sinon validé par le formulaire
@@ -106,7 +106,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('users.show', $user)
-            ->with('success', "L'utilisateur « {$user->name} » a été créé avec succès.");
+            ->with('success', __('L\'utilisateur « :name » a été créé avec succès.', ['name' => $user->name]));
     }
 
     /**
@@ -126,8 +126,8 @@ class UserController extends Controller
     {
         Gate::authorize('update', $user);
 
-        $authUser     = $request->user();
-        $centers      = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
+        $authUser = $request->user();
+        $centers = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
         $allowedRoles = $this->getAllowedRoles($authUser, $user);
 
         return view('users.edit', compact('user', 'centers', 'allowedRoles'));
@@ -140,7 +140,7 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
         $authUser = $request->user();
-        $data     = $request->validated();
+        $data = $request->validated();
 
         // Gestion du mot de passe (facultatif à la modification)
         if (empty($data['password'])) {
@@ -156,7 +156,7 @@ class UserController extends Controller
 
             // Admin Centre ne peut pas attribuer un rôle super_admin ou center_admin
             if (in_array($data['role'], [User::ROLE_SUPER_ADMIN, User::ROLE_CENTER_ADMIN])) {
-                abort(403, 'Vous n\'êtes pas autorisé à attribuer ce rôle.');
+                abort(403, __('Vous n\'êtes pas autorisé à attribuer ce rôle.'));
             }
         } else {
             // Super Admin : center_id = null si rôle super_admin
@@ -169,7 +169,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('users.show', $user)
-            ->with('success', "L'utilisateur « {$user->name} » a été mis à jour avec succès.");
+            ->with('success', __('L\'utilisateur « :name » a été mis à jour avec succès.', ['name' => $user->name]));
     }
 
     /**
@@ -184,7 +184,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('users.index')
-            ->with('success', "L'utilisateur « {$userName} » a été supprimé.");
+            ->with('success', __('L\'utilisateur « :userName » a été supprimé.', ['userName' => $userName]));
     }
 
     /**
@@ -197,11 +197,11 @@ class UserController extends Controller
         $user->status = $user->isActive() ? User::STATUS_INACTIVE : User::STATUS_ACTIVE;
         $user->save();
 
-        $label = $user->isActive() ? 'activé' : 'désactivé';
+        $label = $user->isActive() ? __('activé') : __('désactivé');
 
         return redirect()
             ->route('users.show', $user)
-            ->with('success', "L'utilisateur « {$user->name} » a été {$label}.");
+            ->with('success', __('L\'utilisateur « :name » a été :label.', ['name' => $user->name, 'label' => $label]));
     }
 
     /**
@@ -211,17 +211,17 @@ class UserController extends Controller
     {
         if ($authUser->isSuperAdmin()) {
             return [
-                User::ROLE_SUPER_ADMIN  => 'Super Admin',
-                User::ROLE_CENTER_ADMIN => 'Admin Centre',
-                User::ROLE_TEACHER      => 'Professeur',
-                User::ROLE_STUDENT      => 'Élève',
+                User::ROLE_SUPER_ADMIN => __('Super Admin'),
+                User::ROLE_CENTER_ADMIN => __('Admin Centre'),
+                User::ROLE_TEACHER => 'Professeur',
+                User::ROLE_STUDENT => __('Élève'),
             ];
         }
 
         // Admin Centre
         return [
             User::ROLE_TEACHER => 'Professeur',
-            User::ROLE_STUDENT => 'Élève',
+            User::ROLE_STUDENT => __('Élève'),
         ];
     }
 }

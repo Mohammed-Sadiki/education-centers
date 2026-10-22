@@ -1,32 +1,32 @@
 @extends('layouts.app')
-@section('title', 'Dossiers Élèves — ' . config('app.name'))
+@section('title', __('Dossiers Élèves') . ' — ' . config('app.name'))
 
 @section('content')
-<x-ui.page-header title="Dossiers Élèves" :description="auth()->user()->isSuperAdmin() ? 'Tous les centres' : 'Centre : '.auth()->user()->center?->name">
+<x-ui.page-header :title="__('Dossiers Élèves')" :description="auth()->user()->isSuperAdmin() ? __('Tous les centres') : __('Centre :') . ' ' . auth()->user()->center?->name">
     @can('create', \App\Models\Student::class)
-        <a href="{{ route('students.create') }}" class="ec-btn-primary" id="btn-create-student"><x-icon name="plus" class="h-4 w-4" /> Nouveau dossier élève</a>
+        <a href="{{ route('students.create') }}" class="ec-btn-primary" id="btn-create-student"><x-icon name="plus" class="h-4 w-4" /> {{ __('Nouveau dossier élève') }}</a>
     @endcan
 </x-ui.page-header>
 
 <x-ui.card class="mb-4">
     <form method="GET" action="{{ route('students.index') }}" id="form-filter-students" class="grid gap-3 md:grid-cols-6">
-        <input type="text" id="student_number" name="student_number" class="ec-input" placeholder="N° étudiant" value="{{ request('student_number') }}">
-        <input type="text" id="search" name="search" class="ec-input" placeholder="Nom ou prénom" value="{{ request('search') }}">
-        <input type="text" id="email" name="email" class="ec-input" placeholder="Email" value="{{ request('email') }}">
+        <input type="text" id="student_number" name="student_number" class="ec-input" placeholder="{{ __('N° étudiant') }}" value="{{ request('student_number') }}">
+        <input type="text" id="search" name="search" class="ec-input" placeholder="{{ __('Nom ou prénom') }}" value="{{ request('search') }}">
+        <input type="text" id="email" name="email" class="ec-input" placeholder="{{ __('Email') }}" value="{{ request('email') }}">
         <select id="status" name="status" class="ec-select">
-            <option value="">Tous les statuts</option>
-            <option value="active" @selected(request('status')==='active')>Actif</option>
-            <option value="inactive" @selected(request('status')==='inactive')>Inactif</option>
+            <option value="">{{ __('Tous les statuts') }}</option>
+            <option value="active" @selected(request('status')==='active')>{{ __('Actif') }}</option>
+            <option value="inactive" @selected(request('status')==='inactive')>{{ __('Inactif') }}</option>
         </select>
         @if(auth()->user()->isSuperAdmin())
             <select id="center_id" name="center_id" class="ec-select">
-                <option value="">Tous les centres</option>
+                <option value="">{{ __('Tous les centres') }}</option>
                 @foreach($centers as $center)
-                    <option value="{{ $center->id }}" @selected(request('center_id')==$center->id)>{{ $center->name }}</option>
+                    <option value="{{ $center->id }}" @selected(request('center_id')==$center->id)>{{ $center->translated('name') }}</option>
                 @endforeach
             </select>
         @endif
-        <button class="ec-btn-secondary">Filtrer</button>
+        <button class="ec-btn-secondary">{{ __('Filtrer') }}</button>
     </form>
 </x-ui.card>
 
@@ -34,11 +34,11 @@
     <table class="ec-table">
         <thead>
             <tr>
-                <th>Élève</th>
+                <th>{{ __('Élève') }}</th>
                 <th>N°</th>
-                <th>Email</th>
-                <th>Centre</th>
-                <th>Statut</th>
+                <th>{{ __('Email') }}</th>
+                <th>{{ __('Centre') }}</th>
+                <th>{{ __('Statut') }}</th>
                 <th></th>
             </tr>
         </thead>
@@ -60,12 +60,12 @@
                     <td><x-status-badge :status="$student->status" /></td>
                     <td class="text-right">
                         @can('view', $student)
-                            <a href="{{ route('students.show', $student) }}" class="ec-btn-ghost ec-btn-sm" id="btn-show-student-{{ $student->id }}">Voir</a>
+                            <a href="{{ route('students.show', $student) }}" class="ec-btn-ghost ec-btn-sm" id="btn-show-student-{{ $student->id }}">{{ __('Voir') }}</a>
                         @endcan
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6"><x-ui.empty title="Aucun dossier élève trouvé." /></td></tr>
+                <tr><td colspan="6"><x-ui.empty :title="__('Aucun dossier élève trouvé.')" /></td></tr>
             @endforelse
         </tbody>
     </table>

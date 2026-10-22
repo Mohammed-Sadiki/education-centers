@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\ClassRoom;
 use App\Models\Formation;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -23,7 +24,7 @@ class UpdateClassRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -43,7 +44,7 @@ class UpdateClassRequest extends FormRequest
                     }
 
                     if ($formation->center_id != $centerId) {
-                        $fail("La formation sélectionnée n'appartient pas au même centre que la classe.");
+                        $fail(__('La formation sélectionnée n\'appartient pas au même centre que la classe.'));
                     }
                 },
             ],
@@ -72,14 +73,14 @@ class UpdateClassRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'formation_id' => 'formation associée',
-            'name' => 'intitulé de la classe',
-            'code' => 'code de la classe',
-            'description' => 'description',
-            'capacity' => 'capacité d’accueil',
-            'start_date' => 'date de début',
-            'end_date' => 'date de fin',
-            'status' => 'statut',
+            'formation_id' => __('formation associée'),
+            'name' => __('intitulé de la classe'),
+            'code' => __('code de la classe'),
+            'description' => __('description'),
+            'capacity' => __('capacité d’accueil'),
+            'start_date' => __('date de début'),
+            'end_date' => __('date de fin'),
+            'status' => __('statut'),
         ];
     }
 
@@ -89,9 +90,9 @@ class UpdateClassRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'code.unique' => 'Le code de classe est déjà utilisé au sein de ce centre.',
-            'capacity.min' => 'La capacité de la classe doit être strictement supérieure à 0.',
-            'end_date.after_or_equal' => 'La date de fin doit être postérieure ou égale à la date de début.',
+            'code.unique' => __('Le code de classe est déjà utilisé au sein de ce centre.'),
+            'capacity.min' => __('La capacité de la classe doit être strictement supérieure à 0.'),
+            'end_date.after_or_equal' => __('La date de fin doit être postérieure ou égale à la date de début.'),
         ];
     }
 }

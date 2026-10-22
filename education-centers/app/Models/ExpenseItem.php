@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ExpenseItem extends Model
 {
     use HasFactory;
+    use HasTranslations;
+
+    /**
+     * Fields whose displayed value can be localized.
+     *
+     * @var list<string>
+     */
+    protected array $translatable = ['name'];
 
     protected $fillable = [
         'expense_id',
@@ -19,8 +28,8 @@ class ExpenseItem extends Model
     ];
 
     protected $casts = [
-        'unit_price'  => 'decimal:2',
-        'quantity'    => 'integer',
+        'unit_price' => 'decimal:2',
+        'quantity' => 'integer',
         'total_price' => 'decimal:2',
     ];
 

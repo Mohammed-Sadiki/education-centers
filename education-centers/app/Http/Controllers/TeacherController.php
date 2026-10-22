@@ -39,8 +39,8 @@ class TeacherController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
             });
         }
 
@@ -117,7 +117,7 @@ class TeacherController extends Controller
 
         return redirect()
             ->route('teachers.show', $teacher)
-            ->with('success', "Le dossier professeur {$teacher->teacher_number} ({$teacher->full_name}) a été créé avec succès.");
+            ->with('success', __('Le dossier professeur :teacher_number (:full_name) a été créé avec succès.', ['teacher_number' => $teacher->teacher_number, 'full_name' => $teacher->full_name]));
     }
 
     /**
@@ -153,7 +153,7 @@ class TeacherController extends Controller
 
         return redirect()
             ->route('teachers.show', $teacher)
-            ->with('success', "Le dossier professeur {$teacher->teacher_number} a été mis à jour avec succès.");
+            ->with('success', __('Le dossier professeur :teacher_number a été mis à jour avec succès.', ['teacher_number' => $teacher->teacher_number]));
     }
 
     /**
@@ -167,8 +167,8 @@ class TeacherController extends Controller
         $teacher->update(['status' => $newStatus]);
 
         $message = $newStatus === 'active'
-            ? "Le dossier professeur {$teacher->teacher_number} a été activé."
-            : "Le dossier professeur {$teacher->teacher_number} a été désactivé.";
+            ? __('Le dossier professeur :teacher_number a été activé.', ['teacher_number' => $teacher->teacher_number])
+            : __('Le dossier professeur :teacher_number a été désactivé.', ['teacher_number' => $teacher->teacher_number]);
 
         return back()->with('success', $message);
     }
@@ -185,6 +185,6 @@ class TeacherController extends Controller
 
         return redirect()
             ->route('teachers.index')
-            ->with('success', "Le dossier professeur {$teacherNumber} a été supprimé.");
+            ->with('success', __('Le dossier professeur :teacherNumber a été supprimé.', ['teacherNumber' => $teacherNumber]));
     }
 }

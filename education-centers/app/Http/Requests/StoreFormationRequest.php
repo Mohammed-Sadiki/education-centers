@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Formation;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,7 +20,7 @@ class StoreFormationRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -57,15 +58,15 @@ class StoreFormationRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'center_id' => 'centre éducatif',
-            'name' => 'intitulé de la formation',
-            'code' => 'code de la formation',
-            'description' => 'description du programme',
-            'duration_hours' => 'durée en heures',
-            'duration_weeks' => 'durée en semaines',
-            'price' => 'tarif',
-            'currency' => 'devise',
-            'status' => 'statut',
+            'center_id' => __('centre éducatif'),
+            'name' => __('intitulé de la formation'),
+            'code' => __('code de la formation'),
+            'description' => __('description du programme'),
+            'duration_hours' => __('durée en heures'),
+            'duration_weeks' => __('durée en semaines'),
+            'price' => __('tarif'),
+            'currency' => __('devise'),
+            'status' => __('statut'),
         ];
     }
 
@@ -75,7 +76,7 @@ class StoreFormationRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'code.unique' => 'Le code de formation est déjà utilisé au sein de ce centre.',
+            'code.unique' => __('Le code de formation est déjà utilisé au sein de ce centre.'),
         ];
     }
 }

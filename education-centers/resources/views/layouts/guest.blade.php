@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data x-init="$store.ui.init()">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ current_dir() }}" x-data x-init="$store.ui.init()">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name'))</title>
+    @include('layouts.partials.fonts')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script>
@@ -14,6 +15,9 @@
     </script>
 </head>
 <body class="min-h-screen bg-slate-100 dark:bg-slate-950">
+    <div class="fixed right-3 top-3 z-50 rtl:left-3 rtl:right-auto">
+        @include('layouts.partials.language-switcher')
+    </div>
     @include('layouts.partials.toasts')
     @yield('content')
 </body>

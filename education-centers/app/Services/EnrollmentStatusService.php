@@ -61,9 +61,9 @@ class EnrollmentStatusService
             return $enrollment;
         }
 
-        if (!$this->canTransition($enrollment->status, $newStatus)) {
+        if (! $this->canTransition($enrollment->status, $newStatus)) {
             throw ValidationException::withMessages([
-                'status' => "La transition du statut \"{$enrollment->status_label}\" vers \"{$newStatus}\" n'est pas autorisée.",
+                'status' => __('La transition du statut \\":status_label\\" vers \\":newStatus\\" n\'est pas autorisée.', ['status_label' => $enrollment->status_label, 'newStatus' => $newStatus]),
             ]);
         }
 
@@ -77,21 +77,21 @@ class EnrollmentStatusService
             if ($newStatus === Enrollment::STATUS_ACCEPTED && $targetClassId) {
                 $class = ClassRoom::lockForUpdate()->find($targetClassId);
 
-                if (!$class) {
+                if (! $class) {
                     throw ValidationException::withMessages([
-                        'class_id' => 'La classe sélectionnée est introuvable.',
+                        'class_id' => __('La classe sélectionnée est introuvable.'),
                     ]);
                 }
 
-                if (!$class->isActive()) {
+                if (! $class->isActive()) {
                     throw ValidationException::withMessages([
-                        'class_id' => "La classe \"{$class->name}\" est inactive.",
+                        'class_id' => __('La classe ":name" est inactive.', ['name' => $class->name]),
                     ]);
                 }
 
                 if ($class->formation_id !== $lockedEnrollment->formation_id) {
                     throw ValidationException::withMessages([
-                        'class_id' => "La classe \"{$class->name}\" n'appartient pas à la formation de cette inscription.",
+                        'class_id' => __('La classe \\":name\\" n\'appartient pas à la formation de cette inscription.', ['name' => $class->name]),
                     ]);
                 }
 
@@ -105,7 +105,7 @@ class EnrollmentStatusService
 
                     if ($currentAcceptedCount >= $class->capacity) {
                         throw ValidationException::withMessages([
-                            'class_id' => "Impossible d'accepter l'inscription : la classe \"{$class->name}\" est complète ({$currentAcceptedCount}/{$class->capacity} places).",
+                            'class_id' => __('Impossible d\'accepter l\'inscription : la classe \\":name\\" est complète (:currentAcceptedCount/:capacity places).', ['name' => $class->name, 'currentAcceptedCount' => $currentAcceptedCount, 'capacity' => $class->capacity]),
                         ]);
                     }
                 }

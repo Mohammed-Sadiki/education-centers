@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Teacher;
 use App\Models\User;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,7 +21,7 @@ class StoreTeacherRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -40,20 +41,23 @@ class StoreTeacherRequest extends FormRequest
 
                     // Doit impérativement avoir role = 'teacher'
                     if (! $targetUser->isTeacher()) {
-                        $fail("L'utilisateur sélectionné n'a pas le rôle professeur (teacher).");
+                        $fail(__('L\'utilisateur sélectionné n\'a pas le rôle professeur (teacher).'));
+
                         return;
                     }
 
                     // Pour Admin Centre : l'utilisateur doit appartenir à son centre
                     if ($authUser->isCenterAdmin() && $targetUser->center_id !== $authUser->center_id) {
-                        $fail("L'utilisateur sélectionné n'appartient pas à votre centre.");
+                        $fail(__('L\'utilisateur sélectionné n\'appartient pas à votre centre.'));
+
                         return;
                     }
 
                     // Pour Super Admin : si center_id fourni, l'utilisateur doit appartenir au centre sélectionné
                     if ($authUser->isSuperAdmin() && $this->filled('center_id')) {
                         if ($targetUser->center_id != $this->input('center_id')) {
-                            $fail("L'utilisateur sélectionné n'appartient pas au centre choisi.");
+                            $fail(__('L\'utilisateur sélectionné n\'appartient pas au centre choisi.'));
+
                             return;
                         }
                     }
@@ -88,24 +92,24 @@ class StoreTeacherRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'user_id' => 'compte utilisateur professeur',
-            'center_id' => 'centre éducatif',
-            'first_name' => 'prénom',
-            'last_name' => 'nom',
-            'date_of_birth' => 'date de naissance',
-            'place_of_birth' => 'lieu de naissance',
-            'gender' => 'genre',
-            'nationality' => 'nationalité',
-            'address' => 'adresse',
-            'postal_code' => 'code postal',
-            'city' => 'ville',
-            'country' => 'pays',
-            'phone' => 'téléphone',
-            'specialization' => 'spécialisation / matière',
-            'qualification' => 'diplômes / qualifications',
-            'hire_date' => 'date d’embauche',
-            'notes' => 'remarques',
-            'status' => 'statut',
+            'user_id' => __('compte utilisateur professeur'),
+            'center_id' => __('centre éducatif'),
+            'first_name' => __('prénom'),
+            'last_name' => __('nom'),
+            'date_of_birth' => __('date de naissance'),
+            'place_of_birth' => __('lieu de naissance'),
+            'gender' => __('genre'),
+            'nationality' => __('nationalité'),
+            'address' => __('adresse'),
+            'postal_code' => __('code postal'),
+            'city' => __('ville'),
+            'country' => __('pays'),
+            'phone' => __('téléphone'),
+            'specialization' => __('spécialisation / matière'),
+            'qualification' => __('diplômes / qualifications'),
+            'hire_date' => __('date d’embauche'),
+            'notes' => __('remarques'),
+            'status' => __('statut'),
         ];
     }
 }

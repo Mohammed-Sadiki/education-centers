@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', "Modifier la formation {$formation->name} — " . config('app.name'))
-@section('description', "Modification du programme {$formation->name}")
+@section('title', __('Modifier la formation :name', ['name' => $formation->translated('name')]) . ' — ' . config('app.name'))
+@section('description', __('Modification du programme :name', ['name' => $formation->translated('name')]))
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('formations.index') }}">Formations</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('formations.index') }}">{{ __('Formations') }}</a></li>
     <li class="breadcrumb-item"><a href="{{ route('formations.show', $formation) }}">{{ $formation->code }}</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Modifier</li>
+    <li class="breadcrumb-item active" aria-current="page">{{ __('Modifier') }}</li>
 @endsection
 
 @section('content')
@@ -19,16 +19,16 @@
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <div>
                     <h1 class="h3 fw-bold mb-0">
-                        <i class="bi bi-pencil-square text-primary me-2"></i>Modifier la Formation
+                        <i class="bi bi-pencil-square text-primary me-2"></i>{{ __('Modifier la Formation') }}
                     </h1>
                     <p class="text-muted small mb-0 mt-1">
-                        Code : <strong class="font-monospace text-primary">{{ $formation->code }}</strong>
-                        &bull; Centre : <strong>{{ $formation->center?->name }}</strong>
+                        {{ __('Code :') }} <strong class="font-monospace text-primary">{{ $formation->code }}</strong>
+                        &bull; Centre : <strong>{{ $formation->center?->translated('name') }}</strong>
                     </p>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{{ route('formations.show', $formation) }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i>Retour
+                        <i class="bi bi-arrow-left me-1"></i>{{ __('Retour') }}
                     </a>
                 </div>
             </div>
@@ -41,14 +41,14 @@
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-white py-3 border-bottom">
                         <h5 class="card-title mb-0 fw-bold text-primary">
-                            <i class="bi bi-info-circle me-2"></i>Informations générales
+                            <i class="bi bi-info-circle me-2"></i>{{ __('Informations générales') }}
                         </h5>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-md-8">
                                 <label for="name" class="form-label fw-semibold">
-                                    Intitulé de la formation <span class="text-danger">*</span>
+                                    {{ __('Intitulé de la formation') }} <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" id="name" name="name"
                                        class="form-control @error('name') is-invalid @enderror"
@@ -60,7 +60,7 @@
 
                             <div class="col-md-4">
                                 <label for="code" class="form-label fw-semibold">
-                                    Code formation <span class="text-danger">*</span>
+                                    {{ __('Code formation') }} <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" id="code" name="code"
                                        class="form-control @error('code') is-invalid @enderror text-uppercase"
@@ -68,11 +68,11 @@
                                 @error('code')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <div class="form-text">Unique au sein du centre.</div>
+                                <div class="form-text">{{ __('Unique au sein du centre.') }}</div>
                             </div>
 
                             <div class="col-md-12">
-                                <label for="description" class="form-label fw-semibold">Description du programme</label>
+                                <label for="description" class="form-label fw-semibold">{{ __('Description du programme') }}</label>
                                 <textarea id="description" name="description" rows="4"
                                           class="form-control @error('description') is-invalid @enderror">{{ old('description', $formation->description) }}</textarea>
                                 @error('description')
@@ -87,18 +87,18 @@
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-white py-3 border-bottom">
                         <h5 class="card-title mb-0 fw-bold text-primary">
-                            <i class="bi bi-clock-history me-2"></i>Durée, Tarification & Statut
+                            <i class="bi bi-clock-history me-2"></i>{{ __('Durée, Tarification & Statut') }}
                         </h5>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="duration_hours" class="form-label fw-semibold">Volume horaire total (heures)</label>
+                                <label for="duration_hours" class="form-label fw-semibold">{{ __('Volume horaire total (heures)') }}</label>
                                 <div class="input-group">
                                     <input type="number" id="duration_hours" name="duration_hours" min="0" step="1"
                                            class="form-control @error('duration_hours') is-invalid @enderror"
                                            value="{{ old('duration_hours', $formation->duration_hours) }}">
-                                    <span class="input-group-text">heures</span>
+                                    <span class="input-group-text">{{ __('heures') }}</span>
                                 </div>
                                 @error('duration_hours')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -106,12 +106,12 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label for="duration_weeks" class="form-label fw-semibold">Durée estimée (semaines)</label>
+                                <label for="duration_weeks" class="form-label fw-semibold">{{ __('Durée estimée (semaines)') }}</label>
                                 <div class="input-group">
                                     <input type="number" id="duration_weeks" name="duration_weeks" min="0" step="1"
                                            class="form-control @error('duration_weeks') is-invalid @enderror"
                                            value="{{ old('duration_weeks', $formation->duration_weeks) }}">
-                                    <span class="input-group-text">semaines</span>
+                                    <span class="input-group-text">{{ __('semaines') }}</span>
                                 </div>
                                 @error('duration_weeks')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -119,7 +119,7 @@
                             </div>
 
                             <div class="col-md-5">
-                                <label for="price" class="form-label fw-semibold">Prix / Tarif</label>
+                                <label for="price" class="form-label fw-semibold">{{ __('Prix / Tarif') }}</label>
                                 <input type="number" id="price" name="price" min="0" step="0.01"
                                        class="form-control @error('price') is-invalid @enderror"
                                        value="{{ old('price', $formation->price) }}">
@@ -129,7 +129,7 @@
                             </div>
 
                             <div class="col-md-3">
-                                <label for="currency" class="form-label fw-semibold">Devise</label>
+                                <label for="currency" class="form-label fw-semibold">{{ __('Devise') }}</label>
                                 <select id="currency" name="currency" class="form-select @error('currency') is-invalid @enderror">
                                     <option value="MAD" {{ old('currency', $formation->currency ?? 'MAD') === 'MAD' ? 'selected' : '' }}>MAD (DH)</option>
                                     <option value="EUR" {{ old('currency', $formation->currency) === 'EUR' ? 'selected' : '' }}>EUR (€)</option>
@@ -144,11 +144,11 @@
 
                             <div class="col-md-4">
                                 <label for="status" class="form-label fw-semibold">
-                                    Statut <span class="text-danger">*</span>
+                                    {{ __('Statut') }} <span class="text-danger">*</span>
                                 </label>
                                 <select id="status" name="status" class="form-select @error('status') is-invalid @enderror" required>
-                                    <option value="active"   {{ old('status', $formation->status) === 'active'   ? 'selected' : '' }}>Actif</option>
-                                    <option value="inactive" {{ old('status', $formation->status) === 'inactive' ? 'selected' : '' }}>Inactif</option>
+                                    <option value="active"   {{ old('status', $formation->status) === 'active'   ? 'selected' : '' }}>{{ __('Actif') }}</option>
+                                    <option value="inactive" {{ old('status', $formation->status) === 'inactive' ? 'selected' : '' }}>{{ __('Inactif') }}</option>
                                 </select>
                                 @error('status')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -160,9 +160,9 @@
 
                 {{-- Boutons d'action --}}
                 <div class="d-flex justify-content-end gap-3 mb-5">
-                    <a href="{{ route('formations.show', $formation) }}" class="btn btn-outline-secondary px-4">Annuler</a>
+                    <a href="{{ route('formations.show', $formation) }}" class="btn btn-outline-secondary px-4">{{ __('Annuler') }}</a>
                     <button type="submit" class="btn btn-primary px-5 shadow-sm" id="btn-update-formation">
-                        <i class="bi bi-save me-1"></i>Enregistrer les modifications
+                        <i class="bi bi-save me-1"></i>{{ __('Enregistrer les modifications') }}
                     </button>
                 </div>
             </form>

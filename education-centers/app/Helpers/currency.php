@@ -1,8 +1,29 @@
 <?php
 
 declare(strict_types=1);
+use Illuminate\Support\Facades\App;
 
-use function Illuminate\Support\Str;
+if (! function_exists('format_number')) {
+    /**
+     * Format a number using the active locale.
+     *
+     * French keeps the historical "1 500,00" output. Arabic uses Arabic
+     * thousands/decimal separators while keeping Western digits, which is the
+     * common convention in Moroccan Arabic interfaces.
+     */
+    function format_number(mixed $value, int $decimals = 0): string
+    {
+        if ($value === null || $value === '') {
+            return '—';
+        }
+
+        if (App::getLocale() === 'ar') {
+            return number_format((float) $value, $decimals, '٫', '٬');
+        }
+
+        return number_format((float) $value, $decimals, ',', ' ');
+    }
+}
 
 if (! function_exists('format_price')) {
     /**
@@ -14,7 +35,7 @@ if (! function_exists('format_price')) {
      *   format_price(null)           → "—"
      *
      * @param  float|int|string|null  $amount
-     * @param  string|null            $currency  Si null → devise du config (MAD)
+     * @param  string|null  $currency  Si null → devise du config (MAD)
      */
     function format_price(mixed $amount, ?string $currency = null): string
     {
@@ -22,13 +43,13 @@ if (! function_exists('format_price')) {
             return '—';
         }
 
-        $symbol   = $currency ?? config('currency.symbol', 'DH');
+        $symbol = $currency ?? config('currency.symbol', 'DH');
         // Si on passe le code ISO, afficher le symbol correspondant
         if (strtoupper((string) $symbol) === 'MAD') {
-            $symbol = 'DH';
+            $symbol = App::getLocale() === 'ar' ? 'د.م.' : 'DH';
         }
 
-        return number_format((float) $amount, 2, ',', ' ') . ' ' . $symbol;
+        return format_number((float) $amount, 2).' '.$symbol;
     }
 }
 
@@ -40,7 +61,11 @@ if (! function_exists('currency_symbol')) {
     function currency_symbol(?string $currency = null): string
     {
         $c = strtoupper($currency ?? config('currency.default', 'MAD'));
-        return $c === 'MAD' ? 'DH' : $c;
+        if ($c === 'MAD') {
+            return App::getLocale() === 'ar' ? 'د.م.' : 'DH';
+        }
+
+        return $c;
     }
 }
 

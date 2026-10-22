@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers;
+
 use App\Models\Announcement;
 use App\Models\Center;
 use App\Models\ContactMessage;
@@ -7,131 +9,169 @@ use App\Models\Enrollment;
 use App\Models\Formation;
 use App\Models\Student;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
-class PublicController extends Controller {
-    public function home(): View {
-        $centers   = Center::where('status','active')->withCount(['formations','classes'])->get();
-        $formations = Formation::where('status','active')->with('center')->take(6)->get();
+
+class PublicController extends Controller
+{
+    public function home(): View
+    {
+        $centers = Center::where('status', 'active')->withCount(['formations', 'classes'])->get();
+        $formations = Formation::where('status', 'active')->with('center')->take(6)->get();
         $stats = [
-            'centers'    => Center::where('status','active')->count(),
-            'students'   => Student::where('status','active')->count(),
-            'formations' => Formation::where('status','active')->count(),
+            'centers' => Center::where('status', 'active')->count(),
+            'students' => Student::where('status', 'active')->count(),
+            'formations' => Formation::where('status', 'active')->count(),
         ];
-        $announcements = Announcement::where('status','published')->where('is_public',true)->latest('published_at')->take(3)->get();
+        $announcements = Announcement::where('status', 'published')->where('is_public', true)->latest('published_at')->take(3)->get();
         $viewName = view()->exists('public.home') ? 'public.home' : 'home';
-        return view($viewName, compact('centers','formations','stats','announcements'));
+
+        return view($viewName, compact('centers', 'formations', 'stats', 'announcements'));
     }
-    public function centers(): View {
-        $centers = Center::where('status','active')->withCount(['formations','teachers','students'])->get();
+
+    public function centers(): View
+    {
+        $centers = Center::where('status', 'active')->withCount(['formations', 'teachers', 'students'])->get();
+
         return view('public.centers', compact('centers'));
     }
-    public function centerShow(Center $center): View {
+
+    public function centerShow(Center $center): View
+    {
         abort_if($center->status !== 'active', 404);
-        $formations = Formation::where('center_id',$center->id)->where('status','active')->get();
-        return view('public.center-show', compact('center','formations'));
+        $formations = Formation::where('center_id', $center->id)->where('status', 'active')->get();
+
+        return view('public.center-show', compact('center', 'formations'));
     }
-    public function formations(Request $request): View {
-        $query = Formation::where('status','active')->with('center');
-        if ($centerId = $request->input('center_id')) $query->where('center_id',$centerId);
+
+    public function formations(Request $request): View
+    {
+        $query = Formation::where('status', 'active')->with('center');
+        if ($centerId = $request->input('center_id')) {
+            $query->where('center_id', $centerId);
+        }
         $formations = $query->orderBy('name')->paginate(12)->withQueryString();
-        $centers = Center::where('status','active')->orderBy('name')->get();
-        return view('public.formations', compact('formations','centers'));
+        $centers = Center::where('status', 'active')->orderBy('name')->get();
+
+        return view('public.formations', compact('formations', 'centers'));
     }
-    public function formationShow(Formation $formation): View {
+
+    public function formationShow(Formation $formation): View
+    {
         abort_if($formation->status !== 'active', 404);
-        $formation->load(['center','classes']);
+        $formation->load(['center', 'classes']);
+
         return view('public.formation-show', compact('formation'));
     }
-    public function announcements(Request $request): View {
-        $announcements = Announcement::where('status','published')->where('is_public',true)
+
+    public function announcements(Request $request): View
+    {
+        $announcements = Announcement::where('status', 'published')->where('is_public', true)
             ->latest('published_at')->paginate(10)->withQueryString();
+
         return view('public.announcements', compact('announcements'));
     }
-    public function announcementShow(string $slug): View {
-        $announcement = Announcement::where('slug',$slug)->where('status','published')->where('is_public',true)->firstOrFail();
+
+    public function announcementShow(string $slug): View
+    {
+        $announcement = Announcement::where('slug', $slug)->where('status', 'published')->where('is_public', true)->firstOrFail();
+
         return view('public.announcement-show', compact('announcement'));
     }
-    public function contactForm(): View {
-        $centers = Center::where('status','active')->orderBy('name')->get();
+
+    public function contactForm(): View
+    {
+        $centers = Center::where('status', 'active')->orderBy('name')->get();
+
         return view('public.contact', compact('centers'));
     }
-    public function contactStore(Request $request): RedirectResponse {
+
+    public function contactStore(Request $request): RedirectResponse
+    {
         $data = $request->validate([
-            'name'      => ['required','string','max:100'],
-            'email'     => ['required','email','max:255'],
-            'phone'     => ['nullable','string','max:30'],
-            'center_id' => ['nullable','integer','exists:centers,id'],
-            'subject'   => ['required','string','max:200'],
-            'message'   => ['required','string','min:20','max:3000'],
+            'name' => ['required', 'string', 'max:100'],
+            'email' => ['required', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'center_id' => ['nullable', 'integer', 'exists:centers,id'],
+            'subject' => ['required', 'string', 'max:200'],
+            'message' => ['required', 'string', 'min:20', 'max:3000'],
         ]);
         $data['ip_address'] = $request->ip();
         ContactMessage::create($data);
-        return back()->with('success', 'Votre message a été envoyé. Nous vous répondrons dans les plus brefs délais.');
+
+        return back()->with('success', __('Votre message a été envoyé. Nous vous répondrons dans les plus brefs délais.'));
     }
-    public function applyForm(Request $request): View {
-        $centers = Center::where('status','active')->orderBy('name')->get();
+
+    public function applyForm(Request $request): View
+    {
+        $centers = Center::where('status', 'active')->orderBy('name')->get();
         $preselectedFormationId = $request->input('formation_id');
         $preselectedCenterId = $request->input('center_id');
-        $formations = Formation::where('status','active')->with('center')->orderBy('name')->get();
-        return view('public.apply', compact('centers','formations','preselectedFormationId','preselectedCenterId'));
+        $formations = Formation::where('status', 'active')->with('center')->orderBy('name')->get();
+
+        return view('public.apply', compact('centers', 'formations', 'preselectedFormationId', 'preselectedCenterId'));
     }
-    public function applyStore(Request $request): RedirectResponse {
+
+    public function applyStore(Request $request): RedirectResponse
+    {
         $data = $request->validate([
-            'first_name'   => ['required','string','max:100'],
-            'last_name'    => ['required','string','max:100'],
-            'email'        => ['required','email','max:255'],
-            'phone'        => ['required','string','max:30'],
-            'date_of_birth'=> ['required','date','before:today'],
-            'address'      => ['nullable','string','max:500'],
-            'center_id'    => ['required','integer','exists:centers,id'],
-            'formation_id' => ['required','integer','exists:formations,id'],
-            'notes'        => ['nullable','string','max:1000'],
+            'first_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['required', 'string', 'max:100'],
+            'email' => ['required', 'email', 'max:255'],
+            'phone' => ['required', 'string', 'max:30'],
+            'date_of_birth' => ['required', 'date', 'before:today'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'center_id' => ['required', 'integer', 'exists:centers,id'],
+            'formation_id' => ['required', 'integer', 'exists:formations,id'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ]);
-        $center    = Center::findOrFail($data['center_id']);
+        $center = Center::findOrFail($data['center_id']);
         $formation = Formation::findOrFail($data['formation_id']);
-        if ($formation->center_id !== (int)$data['center_id']) {
-            return back()->withErrors(['formation_id' => 'Cette formation n\'appartient pas à ce centre.'])->withInput();
+        if ($formation->center_id !== (int) $data['center_id']) {
+            return back()->withErrors(['formation_id' => __('Cette formation n\'appartient pas à ce centre.')])->withInput();
         }
         // Create user account (student role)
         $existingUser = User::where('email', $data['email'])->first();
         if ($existingUser) {
-            return back()->withErrors(['email' => 'Un compte existe déjà avec cet email.'])->withInput();
+            return back()->withErrors(['email' => __('Un compte existe déjà avec cet email.')])->withInput();
         }
         $user = User::create([
-            'name'      => $data['first_name'] . ' ' . $data['last_name'],
-            'email'     => $data['email'],
-            'password'  => bcrypt(str()->random(12)),
-            'role'      => User::ROLE_STUDENT,
+            'name' => $data['first_name'].' '.$data['last_name'],
+            'email' => $data['email'],
+            'password' => bcrypt(str()->random(12)),
+            'role' => User::ROLE_STUDENT,
             'center_id' => $center->id,
-            'status'    => 'active',
+            'status' => 'active',
         ]);
         $student = Student::create([
-            'user_id'        => $user->id,
-            'center_id'      => $center->id,
+            'user_id' => $user->id,
+            'center_id' => $center->id,
             'student_number' => Student::generateStudentNumber($center),
-            'first_name'     => $data['first_name'],
-            'last_name'      => $data['last_name'],
-            'date_of_birth'  => $data['date_of_birth'],
-            'phone'          => $data['phone'],
-            'address'        => $data['address'] ?? null,
-            'gender'         => 'other',
-            'nationality'    => '',
-            'status'         => 'active',
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'date_of_birth' => $data['date_of_birth'],
+            'phone' => $data['phone'],
+            'address' => $data['address'] ?? null,
+            'gender' => 'other',
+            'nationality' => '',
+            'status' => 'active',
         ]);
         Enrollment::create([
-            'center_id'           => $center->id,
-            'student_id'          => $student->id,
-            'formation_id'        => $formation->id,
+            'center_id' => $center->id,
+            'student_id' => $student->id,
+            'formation_id' => $formation->id,
             'registration_number' => Enrollment::generateRegistrationNumber($center),
-            'application_date'    => now()->toDateString(),
-            'status'              => Enrollment::STATUS_PENDING,
-            'notes'               => $data['notes'] ?? null,
+            'application_date' => now()->toDateString(),
+            'status' => Enrollment::STATUS_PENDING,
+            'notes' => $data['notes'] ?? null,
         ]);
-        return redirect()->route('public.apply.success')->with('success', "Votre candidature a été soumise! Numéro étudiant: {$student->student_number}");
+
+        return redirect()->route('public.apply.success')->with('success', __('Votre candidature a été soumise! Numéro étudiant: :student_number', ['student_number' => $student->student_number]));
     }
-    public function applySuccess(): View {
+
+    public function applySuccess(): View
+    {
         return view('public.apply-success');
     }
 }

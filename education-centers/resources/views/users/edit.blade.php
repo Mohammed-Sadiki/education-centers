@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Modifier ' . $user->name . ' — ' . config('app.name'))
+@section('title', __('Modifier') . ' ' . $user->name . ' — ' . config('app.name'))
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('users.index') }}" class="text-decoration-none">Utilisateurs</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('users.index') }}" class="text-decoration-none">{{ __('Utilisateurs') }}</a></li>
     <li class="breadcrumb-item"><a href="{{ route('users.show', $user) }}" class="text-decoration-none">{{ $user->name }}</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Modifier</li>
+    <li class="breadcrumb-item active" aria-current="page">{{ __('Modifier') }}</li>
 @endsection
 
 @section('content')
@@ -16,11 +16,11 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white border-bottom py-3">
                     <h4 class="fw-bold mb-0">
-                        <i class="bi bi-person-gear text-primary me-2"></i>Modifier {{ $user->name }}
+                        <i class="bi bi-person-gear text-primary me-2"></i>{{ __('Modifier') }} {{ $user->name }}
                     </h4>
                     @if(auth()->user()->isCenterAdmin())
                         <p class="text-muted small mb-0 mt-1">
-                            Centre : <strong>{{ auth()->user()->center?->name }}</strong>
+                            {{ __('Centre :') }} <strong>{{ auth()->user()->center?->name }}</strong>
                         </p>
                     @endif
                 </div>
@@ -34,7 +34,7 @@
                             {{-- Nom --}}
                             <div class="col-md-6">
                                 <label for="name" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-person me-1"></i>Nom complet <span class="text-danger">*</span>
+                                    <i class="bi bi-person me-1"></i>{{ __('Nom complet') }} <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" id="name" name="name"
                                        class="form-control @error('name') is-invalid @enderror"
@@ -45,7 +45,7 @@
                             {{-- Email --}}
                             <div class="col-md-6">
                                 <label for="email" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-envelope me-1"></i>Adresse e-mail <span class="text-danger">*</span>
+                                    <i class="bi bi-envelope me-1"></i>{{ __('Adresse e-mail') }} <span class="text-danger">*</span>
                                 </label>
                                 <input type="email" id="email" name="email"
                                        class="form-control @error('email') is-invalid @enderror"
@@ -56,7 +56,7 @@
                             {{-- Téléphone --}}
                             <div class="col-md-6">
                                 <label for="phone" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-telephone me-1"></i>Téléphone
+                                    <i class="bi bi-telephone me-1"></i>{{ __('Téléphone') }}
                                 </label>
                                 <input type="text" id="phone" name="phone"
                                        class="form-control @error('phone') is-invalid @enderror"
@@ -67,7 +67,7 @@
                             {{-- Rôle --}}
                             <div class="col-md-6">
                                 <label for="role" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-shield me-1"></i>Rôle <span class="text-danger">*</span>
+                                    <i class="bi bi-shield me-1"></i>{{ __('Rôle') }} <span class="text-danger">*</span>
                                 </label>
                                 <select id="role" name="role"
                                         class="form-select @error('role') is-invalid @enderror" required>
@@ -84,15 +84,15 @@
                             @if(auth()->user()->isSuperAdmin())
                                 <div class="col-md-6">
                                     <label for="center_id" class="form-label fw-semibold small text-secondary">
-                                        <i class="bi bi-building me-1"></i>Centre
+                                        <i class="bi bi-building me-1"></i>{{ __('Centre') }}
                                     </label>
                                     <select id="center_id" name="center_id"
                                             class="form-select @error('center_id') is-invalid @enderror">
-                                        <option value="">— Sans centre (Super Admin) —</option>
+                                        <option value="">{{ __('— Sans centre (Super Admin) —') }}</option>
                                         @foreach($centers as $center)
                                             <option value="{{ $center->id }}"
                                                 {{ old('center_id', $user->center_id) == $center->id ? 'selected' : '' }}>
-                                                {{ $center->name }} ({{ $center->city }})
+                                                {{ $center->translated('name') }} ({{ $center->city }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -102,7 +102,7 @@
                                 {{-- Admin Centre voit son propre centre en lecture seule --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold small text-secondary">
-                                        <i class="bi bi-building me-1"></i>Centre
+                                        <i class="bi bi-building me-1"></i>{{ __('Centre') }}
                                     </label>
                                     <input type="text" class="form-control bg-light"
                                            value="{{ auth()->user()->center?->name }}" readonly>
@@ -112,12 +112,12 @@
                             {{-- Statut --}}
                             <div class="col-md-6">
                                 <label for="status" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-toggle-on me-1"></i>Statut <span class="text-danger">*</span>
+                                    <i class="bi bi-toggle-on me-1"></i>{{ __('Statut') }} <span class="text-danger">*</span>
                                 </label>
                                 <select id="status" name="status"
                                         class="form-select @error('status') is-invalid @enderror" required>
-                                    <option value="active"   {{ old('status', $user->status) === 'active'   ? 'selected' : '' }}>Actif</option>
-                                    <option value="inactive" {{ old('status', $user->status) === 'inactive' ? 'selected' : '' }}>Inactif</option>
+                                    <option value="active"   {{ old('status', $user->status) === 'active'   ? 'selected' : '' }}>{{ __('Actif') }}</option>
+                                    <option value="inactive" {{ old('status', $user->status) === 'inactive' ? 'selected' : '' }}>{{ __('Inactif') }}</option>
                                 </select>
                                 @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
@@ -128,36 +128,36 @@
                             <div class="col-12">
                                 <div class="alert alert-info small py-2 mb-2">
                                     <i class="bi bi-info-circle me-1"></i>
-                                    Laissez le mot de passe vide pour conserver l'actuel.
+                                    {{ __('Laissez le mot de passe vide pour conserver l\'actuel.') }}
                                 </div>
                             </div>
 
                             <div class="col-md-6">
                                 <label for="password" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-lock me-1"></i>Nouveau mot de passe
+                                    <i class="bi bi-lock me-1"></i>{{ __('Nouveau mot de passe') }}
                                 </label>
                                 <input type="password" id="password" name="password"
                                        class="form-control @error('password') is-invalid @enderror"
-                                       placeholder="Laisser vide = conserver l'actuel" autocomplete="new-password">
+                                       placeholder="{{ __('Laisser vide = conserver l\'actuel') }}" autocomplete="new-password">
                                 @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
                             <div class="col-md-6">
                                 <label for="password_confirmation" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-lock-fill me-1"></i>Confirmer le mot de passe
+                                    <i class="bi bi-lock-fill me-1"></i>{{ __('Confirmer le mot de passe') }}
                                 </label>
                                 <input type="password" id="password_confirmation" name="password_confirmation"
-                                       class="form-control" placeholder="Répéter si nouveau mot de passe">
+                                       class="form-control" placeholder="{{ __('Répéter si nouveau mot de passe') }}">
                             </div>
 
                         </div>
 
                         <div class="d-flex gap-2 mt-4 pt-2 border-top">
                             <button type="submit" class="btn btn-primary shadow-sm">
-                                <i class="bi bi-check-lg me-1"></i>Enregistrer les modifications
+                                <i class="bi bi-check-lg me-1"></i>{{ __('Enregistrer les modifications') }}
                             </button>
                             <a href="{{ route('users.show', $user) }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-1"></i>Annuler
+                                <i class="bi bi-arrow-left me-1"></i>{{ __('Annuler') }}
                             </a>
                         </div>
 

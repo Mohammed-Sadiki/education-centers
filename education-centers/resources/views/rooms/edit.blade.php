@@ -4,9 +4,9 @@
 @section('description', "Modification de la salle {$room->name}")
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('rooms.index') }}">Salles</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('rooms.index') }}">{{ __('Salles') }}</a></li>
     <li class="breadcrumb-item"><a href="{{ route('rooms.show', $room) }}">{{ $room->code }}</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Modifier</li>
+    <li class="breadcrumb-item active" aria-current="page">{{ __('Modifier') }}</li>
 @endsection
 
 @section('content')
@@ -19,16 +19,16 @@
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <div>
                     <h1 class="h3 fw-bold mb-0">
-                        <i class="bi bi-pencil-square text-primary me-2"></i>Modifier la Salle
+                        <i class="bi bi-pencil-square text-primary me-2"></i>{{ __('Modifier la Salle') }}
                     </h1>
                     <p class="text-muted small mb-0 mt-1">
-                        Code : <strong class="font-monospace text-primary">{{ $room->code }}</strong>
+                        {{ __('Code :') }} <strong class="font-monospace text-primary">{{ $room->code }}</strong>
                         &bull; Centre : <strong>{{ $room->center?->name }}</strong>
                     </p>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{{ route('rooms.show', $room) }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i>Retour
+                        <i class="bi bi-arrow-left me-1"></i>{{ __('Retour') }}
                     </a>
                 </div>
             </div>
@@ -41,14 +41,14 @@
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-white py-3 border-bottom">
                         <h5 class="card-title mb-0 fw-bold text-primary">
-                            <i class="bi bi-info-circle me-2"></i>Informations de la salle
+                            <i class="bi bi-info-circle me-2"></i>{{ __('Informations de la salle') }}
                         </h5>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-md-8">
                                 <label for="name" class="form-label fw-semibold">
-                                    Nom de la salle <span class="text-danger">*</span>
+                                    {{ __('Nom de la salle') }} <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" id="name" name="name"
                                        class="form-control @error('name') is-invalid @enderror"
@@ -60,7 +60,7 @@
 
                             <div class="col-md-4">
                                 <label for="code" class="form-label fw-semibold">
-                                    Code de salle <span class="text-danger">*</span>
+                                    {{ __('Code de salle') }} <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" id="code" name="code"
                                        class="form-control @error('code') is-invalid @enderror text-uppercase"
@@ -68,18 +68,18 @@
                                 @error('code')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <div class="form-text">Unique au sein de ce centre.</div>
+                                <div class="form-text">{{ __('Unique au sein de ce centre.') }}</div>
                             </div>
 
                             <div class="col-md-4">
                                 <label for="capacity" class="form-label fw-semibold">
-                                    Capacité d'accueil <span class="text-danger">*</span>
+                                    {{ __('Capacité d\'accueil') }} <span class="text-danger">*</span>
                                 </label>
                                 <div class="input-group">
                                     <input type="number" id="capacity" name="capacity" min="1" step="1"
                                            class="form-control @error('capacity') is-invalid @enderror"
                                            value="{{ old('capacity', $room->capacity) }}" required>
-                                    <span class="input-group-text">places</span>
+                                    <span class="input-group-text">{{ __('places') }}</span>
                                 </div>
                                 @error('capacity')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -87,7 +87,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label for="building" class="form-label fw-semibold">Bâtiment</label>
+                                <label for="building" class="form-label fw-semibold">{{ __('Bâtiment') }}</label>
                                 <input type="text" id="building" name="building"
                                        class="form-control @error('building') is-invalid @enderror"
                                        value="{{ old('building', $room->building) }}">
@@ -97,7 +97,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label for="floor" class="form-label fw-semibold">Étage</label>
+                                <label for="floor" class="form-label fw-semibold">{{ __('Étage') }}</label>
                                 <input type="text" id="floor" name="floor"
                                        class="form-control @error('floor') is-invalid @enderror"
                                        value="{{ old('floor', $room->floor) }}">
@@ -107,7 +107,7 @@
                             </div>
 
                             <div class="col-md-12">
-                                <label for="equipment" class="form-label fw-semibold">Équipements & Matériel</label>
+                                <label for="equipment" class="form-label fw-semibold">{{ __('Équipements & Matériel') }}</label>
                                 <input type="text" id="equipment" name="equipment"
                                        class="form-control @error('equipment') is-invalid @enderror"
                                        value="{{ old('equipment', $room->equipment) }}">
@@ -117,7 +117,7 @@
                             </div>
 
                             <div class="col-md-12">
-                                <label for="description" class="form-label fw-semibold">Description / Remarques</label>
+                                <label for="description" class="form-label fw-semibold">{{ __('Description / Remarques') }}</label>
                                 <textarea id="description" name="description" rows="3"
                                           class="form-control @error('description') is-invalid @enderror">{{ old('description', $room->description) }}</textarea>
                                 @error('description')
@@ -127,11 +127,11 @@
 
                             <div class="col-md-4">
                                 <label for="status" class="form-label fw-semibold">
-                                    Statut <span class="text-danger">*</span>
+                                    {{ __('Statut') }} <span class="text-danger">*</span>
                                 </label>
                                 <select id="status" name="status" class="form-select @error('status') is-invalid @enderror" required>
-                                    <option value="active"   {{ old('status', $room->status) === 'active'   ? 'selected' : '' }}>Actif</option>
-                                    <option value="inactive" {{ old('status', $room->status) === 'inactive' ? 'selected' : '' }}>Inactif</option>
+                                    <option value="active"   {{ old('status', $room->status) === 'active'   ? 'selected' : '' }}>{{ __('Actif') }}</option>
+                                    <option value="inactive" {{ old('status', $room->status) === 'inactive' ? 'selected' : '' }}>{{ __('Inactif') }}</option>
                                 </select>
                                 @error('status')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -143,9 +143,9 @@
 
                 {{-- Actions --}}
                 <div class="d-flex justify-content-end gap-3 mb-5">
-                    <a href="{{ route('rooms.show', $room) }}" class="btn btn-outline-secondary px-4">Annuler</a>
+                    <a href="{{ route('rooms.show', $room) }}" class="btn btn-outline-secondary px-4">{{ __('Annuler') }}</a>
                     <button type="submit" class="btn btn-primary px-5 shadow-sm" id="btn-update-room">
-                        <i class="bi bi-save me-1"></i>Enregistrer les modifications
+                        <i class="bi bi-save me-1"></i>{{ __('Enregistrer les modifications') }}
                     </button>
                 </div>
             </form>

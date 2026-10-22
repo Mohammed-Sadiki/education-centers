@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Student;
 use App\Models\User;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,7 +21,7 @@ class StoreStudentRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -40,20 +41,23 @@ class StoreStudentRequest extends FormRequest
 
                     // Must have role = 'student'
                     if (! $targetUser->isStudent()) {
-                        $fail("L'utilisateur sélectionné n'a pas le rôle élève (student).");
+                        $fail(__('L\'utilisateur sélectionné n\'a pas le rôle élève (student).'));
+
                         return;
                     }
 
                     // For center admin: target user must belong to their center
                     if ($authUser->isCenterAdmin() && $targetUser->center_id !== $authUser->center_id) {
-                        $fail("L'utilisateur sélectionné n'appartient pas à votre centre.");
+                        $fail(__('L\'utilisateur sélectionné n\'appartient pas à votre centre.'));
+
                         return;
                     }
 
                     // For super admin: if center_id is supplied, ensure user belongs to selected center
                     if ($authUser->isSuperAdmin() && $this->filled('center_id')) {
                         if ($targetUser->center_id != $this->input('center_id')) {
-                            $fail("L'utilisateur sélectionné n'appartient pas au centre choisi.");
+                            $fail(__('L\'utilisateur sélectionné n\'appartient pas au centre choisi.'));
+
                             return;
                         }
                     }
@@ -88,24 +92,24 @@ class StoreStudentRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'user_id' => 'compte utilisateur élève',
-            'center_id' => 'centre éducatif',
-            'first_name' => 'prénom',
-            'last_name' => 'nom',
-            'date_of_birth' => 'date de naissance',
-            'place_of_birth' => 'lieu de naissance',
-            'gender' => 'genre',
-            'nationality' => 'nationalité',
-            'address' => 'adresse',
-            'postal_code' => 'code postal',
-            'city' => 'ville',
-            'country' => 'pays',
-            'phone' => 'téléphone',
-            'emergency_contact_name' => 'nom du contact d’urgence',
-            'emergency_contact_phone' => 'téléphone du contact d’urgence',
-            'emergency_contact_relation' => 'lien avec le contact d’urgence',
-            'notes' => 'remarques',
-            'status' => 'statut',
+            'user_id' => __('compte utilisateur élève'),
+            'center_id' => __('centre éducatif'),
+            'first_name' => __('prénom'),
+            'last_name' => __('nom'),
+            'date_of_birth' => __('date de naissance'),
+            'place_of_birth' => __('lieu de naissance'),
+            'gender' => __('genre'),
+            'nationality' => __('nationalité'),
+            'address' => __('adresse'),
+            'postal_code' => __('code postal'),
+            'city' => __('ville'),
+            'country' => __('pays'),
+            'phone' => __('téléphone'),
+            'emergency_contact_name' => __('nom du contact d’urgence'),
+            'emergency_contact_phone' => __('téléphone du contact d’urgence'),
+            'emergency_contact_relation' => __('lien avec le contact d’urgence'),
+            'notes' => __('remarques'),
+            'status' => __('statut'),
         ];
     }
 }

@@ -13,9 +13,13 @@ class Enrollment extends Model
     protected $table = 'enrollments';
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_UNDER_REVIEW = 'under_review';
+
     public const STATUS_ACCEPTED = 'accepted';
+
     public const STATUS_REJECTED = 'rejected';
+
     public const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
@@ -108,11 +112,11 @@ class Enrollment extends Model
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
-            self::STATUS_PENDING => 'En attente',
-            self::STATUS_UNDER_REVIEW => 'En examen',
-            self::STATUS_ACCEPTED => 'Acceptée',
-            self::STATUS_REJECTED => 'Refusée',
-            self::STATUS_CANCELLED => 'Annulée',
+            self::STATUS_PENDING => __('En attente'),
+            self::STATUS_UNDER_REVIEW => __('En examen'),
+            self::STATUS_ACCEPTED => __('Acceptée'),
+            self::STATUS_REJECTED => __('Refusée'),
+            self::STATUS_CANCELLED => __('Annulée'),
             default => ucfirst($this->status),
         };
     }
@@ -150,12 +154,12 @@ class Enrollment extends Model
             ->first();
 
         $nextNumber = 1;
-        if ($lastEnrollment && preg_match('/' . preg_quote($prefix, '/') . '(\d+)/', $lastEnrollment->registration_number, $matches)) {
+        if ($lastEnrollment && preg_match('/'.preg_quote($prefix, '/').'(\d+)/', $lastEnrollment->registration_number, $matches)) {
             $nextNumber = ((int) $matches[1]) + 1;
         }
 
         do {
-            $candidate = $prefix . str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+            $candidate = $prefix.str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
             $exists = static::where('registration_number', $candidate)->exists();
             if ($exists) {
                 $nextNumber++;

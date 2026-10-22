@@ -3,15 +3,15 @@
 
 @section('content')
 <x-ui.page-header title="{{ $certificate->certificate_number }}" :description="$certificate->type_label">
-    <a href="{{ route('certificates.download', $certificate) }}" class="ec-btn-primary"><x-icon name="download" class="h-4 w-4" /> Télécharger</a>
-    <button type="button" class="ec-btn-secondary" onclick="window.print()"><x-icon name="printer" class="h-4 w-4" /> Imprimer</button>
+    <a href="{{ route('certificates.download', $certificate) }}" class="ec-btn-primary"><x-icon name="download" class="h-4 w-4" /> {{ __('Télécharger') }}</a>
+    <button type="button" class="ec-btn-secondary" onclick="window.print()"><x-icon name="printer" class="h-4 w-4" /> {{ __('Imprimer') }}</button>
 </x-ui.page-header>
 <x-ui.card>
     <dl class="grid gap-3 text-sm sm:grid-cols-2">
-        <div><dt class="text-slate-500">Étudiant</dt><dd class="font-medium">{{ $certificate->student?->full_name }}</dd></div>
-        <div><dt class="text-slate-500">Formation</dt><dd>{{ $certificate->formation?->name ?? '—' }}</dd></div>
-        <div><dt class="text-slate-500">Date d’émission</dt><dd>{{ optional($certificate->issued_date)->format('d/m/Y') }}</dd></div>
-        <div><dt class="text-slate-500">Statut</dt><dd><x-status-badge :status="$certificate->status" /></dd></div>
+        <div><dt class="text-slate-500">{{ __('Étudiant') }}</dt><dd class="font-medium">{{ $certificate->student?->full_name }}</dd></div>
+        <div><dt class="text-slate-500">{{ __('Formation') }}</dt><dd>{{ $certificate->formation?->name ?? '—' }}</dd></div>
+        <div><dt class="text-slate-500">{{ __('Date d’émission') }}</dt><dd>{{ format_date($certificate->issued_date, 'd/m/Y') }}</dd></div>
+        <div><dt class="text-slate-500">{{ __('Statut') }}</dt><dd><x-status-badge :status="$certificate->status" type="certificate" /></dd></div>
     </dl>
 </x-ui.card>
 @endsection

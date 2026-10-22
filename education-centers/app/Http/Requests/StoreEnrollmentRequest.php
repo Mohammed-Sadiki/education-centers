@@ -36,15 +36,15 @@ class StoreEnrollmentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'student_id.required' => "L'étudiant est obligatoire.",
-            'student_id.exists' => "L'étudiant sélectionné est introuvable.",
-            'formation_id.required' => 'La formation est obligatoire.',
-            'formation_id.exists' => 'La formation sélectionnée est introuvable.',
-            'class_id.exists' => 'La classe sélectionnée est introuvable.',
-            'application_date.required' => 'La date de candidature est obligatoire.',
-            'application_date.date' => 'La date de candidature doit être une date valide.',
-            'center_id.required' => 'Le centre est obligatoire pour le Super Admin.',
-            'center_id.exists' => 'Le centre sélectionné est introuvable.',
+            'student_id.required' => __('L\'étudiant est obligatoire.'),
+            'student_id.exists' => __('L\'étudiant sélectionné est introuvable.'),
+            'formation_id.required' => __('La formation est obligatoire.'),
+            'formation_id.exists' => __('La formation sélectionnée est introuvable.'),
+            'class_id.exists' => __('La classe sélectionnée est introuvable.'),
+            'application_date.required' => __('La date de candidature est obligatoire.'),
+            'application_date.date' => __('La date de candidature doit être une date valide.'),
+            'center_id.required' => __('Le centre est obligatoire pour le Super Admin.'),
+            'center_id.exists' => __('Le centre sélectionné est introuvable.'),
         ];
     }
 
@@ -61,25 +61,25 @@ class StoreEnrollmentRequest extends FormRequest
 
             // 1. Contrôle d'isolation de centre : Étudiant et Formation doivent appartenir au centre cible
             if ($student && $student->center_id !== $targetCenterId) {
-                $validator->errors()->add('student_id', "L'étudiant sélectionné n'appartient pas à ce centre.");
+                $validator->errors()->add('student_id', __('L\'étudiant sélectionné n\'appartient pas à ce centre.'));
             }
 
             if ($formation && $formation->center_id !== $targetCenterId) {
-                $validator->errors()->add('formation_id', "La formation sélectionnée n'appartient pas à ce centre.");
+                $validator->errors()->add('formation_id', __('La formation sélectionnée n\'appartient pas à ce centre.'));
             }
 
             // 2. Contrôle de la classe si renseignée
             if ($class) {
                 if ($class->center_id !== $targetCenterId) {
-                    $validator->errors()->add('class_id', "La classe sélectionnée n'appartient pas à ce centre.");
+                    $validator->errors()->add('class_id', __('La classe sélectionnée n\'appartient pas à ce centre.'));
                 }
 
                 if ($formation && $class->formation_id !== $formation->id) {
-                    $validator->errors()->add('class_id', "La classe sélectionnée ne fait pas partie de la formation choisie.");
+                    $validator->errors()->add('class_id', __('La classe sélectionnée ne fait pas partie de la formation choisie.'));
                 }
 
-                if (!$class->isActive()) {
-                    $validator->errors()->add('class_id', "La classe sélectionnée est inactive.");
+                if (! $class->isActive()) {
+                    $validator->errors()->add('class_id', __('La classe sélectionnée est inactive.'));
                 }
 
                 // Vérification de capacité si classe renseignée
@@ -91,19 +91,19 @@ class StoreEnrollmentRequest extends FormRequest
                     if ($acceptedCount >= $class->capacity) {
                         $validator->errors()->add(
                             'class_id',
-                            "La classe {$class->name} a atteint sa capacité maximale ({$acceptedCount}/{$class->capacity} places)."
+                            __('La classe :name a atteint sa capacité maximale (:acceptedCount/:capacity places).', ['name' => $class->name, 'acceptedCount' => $acceptedCount, 'capacity' => $class->capacity])
                         );
                     }
                 }
             }
 
             // 3. Statuts actifs
-            if ($student && !$student->isActive()) {
-                $validator->errors()->add('student_id', "L'étudiant sélectionné est inactif.");
+            if ($student && ! $student->isActive()) {
+                $validator->errors()->add('student_id', __('L\'étudiant sélectionné est inactif.'));
             }
 
-            if ($formation && !$formation->isActive()) {
-                $validator->errors()->add('formation_id', "La formation sélectionnée est inactive.");
+            if ($formation && ! $formation->isActive()) {
+                $validator->errors()->add('formation_id', __('La formation sélectionnée est inactive.'));
             }
 
             // 4. Détection des doublons d'inscriptions actives
@@ -121,7 +121,7 @@ class StoreEnrollmentRequest extends FormRequest
                 if ($duplicateExists) {
                     $validator->errors()->add(
                         'student_id',
-                        "Cet étudiant possède déjà une inscription active ou en attente pour la formation {$formation->name}."
+                        __('Cet étudiant possède déjà une inscription active ou en attente pour la formation :name.', ['name' => $formation->name])
                     );
                 }
             }

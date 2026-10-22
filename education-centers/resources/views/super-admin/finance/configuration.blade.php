@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Configuration des prix & salaires — Gestion financière')
+@section('title', __('Configuration des prix & salaires') . ' — ' . config('app.name'))
 
 @section('content')
 <div class="space-y-6">
@@ -12,13 +12,13 @@
         <div>
             <div class="inline-flex items-center gap-1.5 rounded-full bg-[#ECFDF5] px-2.5 py-0.5 text-xs font-semibold text-[#0DAD98] border border-[#0DAD98]/20 dark:bg-[#0DAD98]/15 dark:text-[#0DAD98] mb-1.5 shadow-2xs">
                 <span>⚙️</span>
-                <span>Gestion financière · Paramètres tarifaires & conventions</span>
+                <span>{{ __('Gestion financière · Paramètres tarifaires & conventions') }}</span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                Configuration des prix & salaires
+                {{ __('Configuration des prix & salaires') }}
             </h1>
             <p class="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                Tarifs annuels de scolarité par formation et rémunérations mensuelles de base des enseignants.
+                {{ __('Tarifs annuels de scolarité par formation et rémunérations mensuelles de base des enseignants.') }}
             </p>
         </div>
 
@@ -26,7 +26,7 @@
             <a href="{{ route('super-admin.finance.dashboard') }}"
                class="finance-btn-secondary">
                 <x-icon name="arrow-left" class="h-4 w-4 text-slate-500" />
-                <span>Dashboard</span>
+                <span>{{ __('Dashboard') }}</span>
             </a>
         </div>
     </div>
@@ -50,14 +50,14 @@
                 <div>
                     <h2 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <span class="h-2 w-2 rounded-full bg-[#0DAD98]"></span>
-                        Tarifs annuels des formations (MAD / DH)
+                        {{ __('Tarifs annuels des formations (MAD / DH)') }}
                     </h2>
                     <p class="text-[11px] text-slate-500">
-                        Montant de référence attendu par dossier de scolarité
+                        {{ __('Montant de référence attendu par dossier de scolarité') }}
                     </p>
                 </div>
                 <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                    {{ $formations->count() }} formation(s)
+                    {{ $formations->count() }} {{ __('formation(s)') }}
                 </span>
             </div>
 
@@ -72,7 +72,7 @@
                                 {{ $fm->name }}
                             </span>
                             <span class="rounded-md bg-white border border-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
-                                {{ $fm->center->name ?? 'Tous' }}
+                                {{ $fm->center->name ?? __('Tous') }}
                             </span>
                         </div>
 
@@ -83,7 +83,7 @@
                                    required
                                    class="w-full rounded-lg border-slate-200 bg-white py-1.5 pl-3 pr-10 text-xs font-bold text-slate-900 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
                             <span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-slate-400">
-                                DH
+                                {{ currency_symbol('MAD') }}
                             </span>
                         </div>
                     </div>
@@ -97,14 +97,14 @@
                 <div>
                     <h2 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <span class="h-2 w-2 rounded-full bg-[#0DAD98]"></span>
-                        Salaires mensuels contractuels des enseignants
+                        {{ __('Salaires mensuels contractuels des enseignants') }}
                     </h2>
                     <p class="text-[11px] text-slate-500">
-                        Base de calcul des décaissements mensuels par enseignant
+                        {{ __('Base de calcul des décaissements mensuels par enseignant') }}
                     </p>
                 </div>
                 <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                    {{ $teachers->count() }} enseignant(s)
+                    {{ $teachers->count() }} {{ __('enseignant(s)') }}
                 </span>
             </div>
 
@@ -119,7 +119,7 @@
                                 {{ $tc->full_name }}
                             </span>
                             <span class="rounded-md bg-white border border-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
-                                {{ $tc->center->name ?? 'Tous' }}
+                                {{ $tc->center->name ?? __('Tous') }}
                             </span>
                         </div>
 
@@ -130,7 +130,7 @@
                                    required
                                    class="w-full rounded-lg border-slate-200 bg-white py-1.5 pl-3 pr-10 text-xs font-bold text-slate-900 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
                             <span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-slate-400">
-                                DH
+                                {{ currency_symbol('MAD') }}
                             </span>
                         </div>
                     </div>
@@ -142,11 +142,11 @@
         <div class="flex items-center justify-end gap-3 pt-2">
             <a href="{{ route('super-admin.finance.dashboard') }}"
                class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">
-                Annuler
+                {{ __('Annuler') }}
             </a>
             <button type="submit" class="finance-btn-primary py-2.5 px-5">
                 <x-icon name="check" class="h-4 w-4" />
-                <span>Enregistrer la nouvelle tarification</span>
+                <span>{{ __('Enregistrer la nouvelle tarification') }}</span>
             </button>
         </div>
     </form>

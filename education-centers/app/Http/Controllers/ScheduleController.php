@@ -104,25 +104,25 @@ class ScheduleController extends Controller
         $centers = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
 
         // Déterminer le centre de référence pour charger les listes déroulantes
-        $selectedCenterId = $authUser->isCenterAdmin() 
-            ? $authUser->center_id 
+        $selectedCenterId = $authUser->isCenterAdmin()
+            ? $authUser->center_id
             : ($request->input('center_id') ?? $centers->first()?->id);
 
         $classes = ClassRoom::query()
-            ->when($selectedCenterId, fn($q) => $q->where('center_id', $selectedCenterId))
+            ->when($selectedCenterId, fn ($q) => $q->where('center_id', $selectedCenterId))
             ->where('status', 'active')
             ->with('formation', 'teachers')
             ->orderBy('name')
             ->get();
 
         $rooms = Room::query()
-            ->when($selectedCenterId, fn($q) => $q->where('center_id', $selectedCenterId))
+            ->when($selectedCenterId, fn ($q) => $q->where('center_id', $selectedCenterId))
             ->where('status', 'active')
             ->orderBy('name')
             ->get();
 
         $teachers = Teacher::query()
-            ->when($selectedCenterId, fn($q) => $q->where('center_id', $selectedCenterId))
+            ->when($selectedCenterId, fn ($q) => $q->where('center_id', $selectedCenterId))
             ->where('status', 'active')
             ->with('classes')
             ->orderBy('first_name')
@@ -150,7 +150,7 @@ class ScheduleController extends Controller
 
         return redirect()
             ->route('schedules.show', $schedule)
-            ->with('success', 'La séance a été programmée avec succès.');
+            ->with('success', __('La séance a été programmée avec succès.'));
     }
 
     /**
@@ -217,7 +217,7 @@ class ScheduleController extends Controller
 
         return redirect()
             ->route('schedules.show', $schedule)
-            ->with('success', 'La séance a été modifiée avec succès.');
+            ->with('success', __('La séance a été modifiée avec succès.'));
     }
 
     /**
@@ -235,14 +235,14 @@ class ScheduleController extends Controller
         $schedule->update(['status' => $newStatus]);
 
         $statusLabels = [
-            'scheduled' => 'programmée',
-            'cancelled' => 'annulée',
-            'completed' => 'marquée comme terminée',
+            'scheduled' => __('programmée'),
+            'cancelled' => __('annulée'),
+            'completed' => __('marquée comme terminée'),
         ];
 
         return redirect()
             ->back()
-            ->with('success', "La séance est désormais {$statusLabels[$newStatus]}.");
+            ->with('success', __('La séance est désormais :statusLabels.', ['statusLabels' => $statusLabels[$newStatus]]));
     }
 
     /**
@@ -256,6 +256,6 @@ class ScheduleController extends Controller
 
         return redirect()
             ->route('schedules.index')
-            ->with('success', 'La séance a été supprimée avec succès.');
+            ->with('success', __('La séance a été supprimée avec succès.'));
     }
 }
