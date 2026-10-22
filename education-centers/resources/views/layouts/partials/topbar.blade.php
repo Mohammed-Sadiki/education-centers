@@ -61,8 +61,8 @@
                 <p class="truncate text-sm text-slate-500">{{ $centerLabel }}</p>
                 @if($user->isSuperAdmin())
                     @if($isFinance)
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                            <span class="text-xs">💰</span>
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-[#ECFDF5] px-2.5 py-0.5 text-xs font-semibold text-[#0DAD98] border border-[#0DAD98]/25 dark:bg-[#0DAD98]/20 dark:text-[#0DAD98]">
+                            <span>📊</span>
                             <span>Gestion financière · Vue globale</span>
                         </span>
                     @elseif($isStagiaires)

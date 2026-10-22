@@ -3,148 +3,658 @@
 @section('title', 'Paiements étudiants — Gestion financière')
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6" x-data="{
+    paymentModalOpen: false,
+    selectedStudentId: '',
+    selectedFormationId: '',
+    paymentAmount: '',
+    studentFinancialData: {{ Js::from($studentFinancialMap ?? []) }},
 
-    {{-- En-tête --}}
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-800">
+    onStudentChange() {
+        const student = this.studentFinancialData[this.selectedStudentId];
+        if (student) {
+            this.selectedFormationId = student.formation_id || '';
+            this.paymentAmount = student.remaining_amount > 0 ? student.remaining_amount : '';
+        } else {
+            this.paymentAmount = '';
+        }
+    },
+
+    openQuickPayment(studentId, formationId, remainingAmount) {
+        if (studentId) {
+            this.selectedStudentId = String(studentId);
+            this.selectedFormationId = formationId ? String(formationId) : '';
+            this.paymentAmount = remainingAmount > 0 ? remainingAmount : '';
+        } else {
+            this.selectedStudentId = '';
+            this.selectedFormationId = '';
+            this.paymentAmount = '';
+        }
+        this.paymentModalOpen = true;
+    }
+}">
+
+    {{-- ────────────────────────────────────────────────────────────
+         EN-TÊTE DE LA PAGE (STYLE CAD SYNDIC)
+    ──────────────────────────────────────────────────────────── --}}
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-slate-200/90 pb-5 dark:border-slate-800">
         <div>
-            <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-200/70 px-3.5 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-800/70 dark:text-emerald-300 mb-2">
-                <span>💰</span>
-                <span>Gestion financière · Scolarités</span>
+            <div class="inline-flex items-center gap-1.5 rounded-full bg-[#ECFDF5] px-2.5 py-0.5 text-xs font-semibold text-[#0DAD98] border border-[#0DAD98]/20 dark:bg-[#0DAD98]/15 dark:text-[#0DAD98] mb-1.5 shadow-2xs">
+                <span>🎓</span>
+                <span>Gestion financière · Scolarités & Versements</span>
             </div>
-            <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                Paiements des étudiants
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                Paiements étudiants
             </h1>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                Tableau de suivi des montants attendus, payés, restant dus et statuts d'encaissement.
+            <p class="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                Suivi des versements, échéances réelles et recouvrement par centre et filière.
             </p>
         </div>
 
-        <div class="flex items-center gap-2">
-            <a href="{{ route('super-admin.finance.dashboard') }}"
-               class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition-colors">
-                <x-icon name="arrow-uturn-left" class="h-4 w-4" />
-                <span>Retour Dashboard financier</span>
-            </a>
+        <div class="flex items-center gap-2.5">
+            <button type="button"
+                    x-on:click="openQuickPayment('', '', '')"
+                    class="finance-btn-primary">
+                <x-icon name="plus" class="h-4 w-4" />
+                <span>Encaisser un versement</span>
+            </button>
         </div>
     </div>
 
-    {{-- Filtres --}}
-    <form method="GET" action="{{ route('super-admin.finance.students') }}" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-                <label for="filter-domain" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
-                    Domaine
+    {{-- ────────────────────────────────────────────────────────────
+         KPI SYNTHÉTIQUES (4 CARTES ÉPURÉES CAD SYNDIC)
+    ──────────────────────────────────────────────────────────── --}}
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {{-- Total Attendu --}}
+        <div class="finance-card p-4.5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Total attendu</span>
+                    <div class="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
+                        {{ format_price($stats['total_attendu'] ?? 0, 'MAD') }}
+                    </div>
+                </div>
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    <x-icon name="clipboard-document-list" class="h-5 w-5" />
+                </div>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
+                <span>Étudiants inscrits</span>
+                <span class="font-bold text-slate-800 dark:text-slate-200">{{ $stats['count_total'] ?? 0 }}</span>
+            </div>
+        </div>
+
+        {{-- Total Encaissé --}}
+        <div class="finance-card p-4.5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Total encaissé</span>
+                    <div class="mt-2 text-2xl font-extrabold text-[#0DAD98] whitespace-nowrap">
+                        {{ format_price($stats['total_encaisse'] ?? 0, 'MAD') }}
+                    </div>
+                </div>
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#ECFDF5] text-[#0DAD98] dark:bg-[#0DAD98]/20">
+                    <x-icon name="check-circle" class="h-5 w-5" />
+                </div>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
+                <span>Taux de recouvrement</span>
+                <span class="font-bold text-[#0DAD98]">{{ $stats['taux_recouvrement'] ?? 0 }}%</span>
+            </div>
+        </div>
+
+        {{-- Reste à Encaisser --}}
+        <div class="finance-card p-4.5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Reste à encaisser</span>
+                    <div class="mt-2 text-2xl font-extrabold text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                        {{ format_price($stats['total_restant'] ?? 0, 'MAD') }}
+                    </div>
+                </div>
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40">
+                    <x-icon name="clock" class="h-5 w-5" />
+                </div>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
+                <span>Partiellement payés</span>
+                <span class="font-bold text-amber-600">{{ $stats['count_partial'] ?? 0 }}</span>
+            </div>
+        </div>
+
+        {{-- Impayés Totaux --}}
+        <div class="finance-card p-4.5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Non payés</span>
+                    <div class="mt-2 text-2xl font-extrabold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                        {{ $stats['count_unpaid'] ?? 0 }} <span class="text-xs font-normal text-slate-400">étudiants</span>
+                    </div>
+                </div>
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40">
+                    <x-icon name="exclamation-circle" class="h-5 w-5" />
+                </div>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
+                <span>Soldés intégralement</span>
+                <span class="font-bold text-emerald-600">{{ $stats['count_paid'] ?? 0 }}</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- ────────────────────────────────────────────────────────────
+         NAVIGATION PAR ONGLETS EN PILULES (STYLE CAD SYNDIC)
+    ──────────────────────────────────────────────────────────── --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="inline-flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+            <a href="{{ request()->fullUrlWithQuery(['view' => 'monthly']) }}"
+               class="rounded-lg px-4 py-2 text-xs font-semibold transition-all {{ ($viewMode ?? 'monthly') === 'monthly' ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white' }}">
+                <span>Versements par mois</span>
+            </a>
+            <a href="{{ request()->fullUrlWithQuery(['view' => 'students']) }}"
+               class="rounded-lg px-4 py-2 text-xs font-semibold transition-all {{ ($viewMode ?? '') === 'students' ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white' }}">
+                <span>Vue par étudiant</span>
+            </a>
+            <a href="{{ request()->fullUrlWithQuery(['view' => 'unpaid']) }}"
+               class="rounded-lg px-4 py-2 text-xs font-semibold transition-all {{ ($viewMode ?? '') === 'unpaid' ? 'bg-white text-rose-600 shadow-xs dark:bg-slate-900 dark:text-rose-400' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white' }}">
+                <span>Recouvrement & Impayés</span>
+            </a>
+        </div>
+
+        <span class="text-xs text-slate-500">
+            Affichage : <strong class="text-slate-800 dark:text-slate-200">{{ $studentRows->count() }}</strong> inscription(s)
+        </span>
+    </div>
+
+    {{-- ────────────────────────────────────────────────────────────
+         BARRE DE FILTRES COMPACTE ALIGNÉE
+    ──────────────────────────────────────────────────────────── --}}
+    <form method="GET" action="{{ route('super-admin.finance.students') }}"
+          class="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] dark:border-slate-800 dark:bg-slate-900">
+        <input type="hidden" name="view" value="{{ $viewMode ?? 'monthly' }}">
+
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 items-center">
+            {{-- Recherche --}}
+            <div class="col-span-2 sm:col-span-1">
+                <label for="filter-search" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    Recherche
                 </label>
-                <select name="domain" id="filter-domain" onchange="this.form.submit()"
-                        class="w-full rounded-xl border-slate-300 bg-white text-sm font-medium text-slate-800 focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                    <option value="all" {{ $domain === 'all' ? 'selected' : '' }}>Tous les domaines</option>
-                    @foreach($domains as $slug => $label)
-                        <option value="{{ $slug }}" {{ $domain === $slug ? 'selected' : '' }}>{{ $label }}</option>
-                    @endforeach
-                </select>
+                <input type="text" name="search" id="filter-search" value="{{ $search ?? '' }}"
+                       placeholder="Nom, matricule, réf..."
+                       class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
             </div>
 
+            {{-- Année scolaire --}}
             <div>
-                <label for="filter-school-year" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
-                    Année scolaire
+                <label for="filter-sy" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    Année
                 </label>
-                <select name="school_year" id="filter-school-year" onchange="this.form.submit()"
-                        class="w-full rounded-xl border-slate-300 bg-white text-sm font-medium text-slate-800 focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                <select name="school_year" id="filter-sy" onchange="this.form.submit()"
+                        class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
                     @foreach($schoolYears as $sy)
                         <option value="{{ $sy }}" {{ $schoolYear === $sy ? 'selected' : '' }}>{{ $sy }}</option>
                     @endforeach
                 </select>
             </div>
 
+            {{-- Centre --}}
             <div>
-                <label for="filter-status" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
-                    Statut de paiement
+                <label for="filter-cnt" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    Centre
                 </label>
-                <select name="status" id="filter-status" onchange="this.form.submit()"
-                        class="w-full rounded-xl border-slate-300 bg-white text-sm font-medium text-slate-800 focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                    <option value="all" {{ $status === 'all' ? 'selected' : '' }}>Tous les statuts</option>
-                    <option value="paid" {{ $status === 'paid' ? 'selected' : '' }}>Payé</option>
-                    <option value="partial" {{ $status === 'partial' ? 'selected' : '' }}>Partiel</option>
-                    <option value="unpaid" {{ $status === 'unpaid' ? 'selected' : '' }}>Non payé</option>
+                <select name="center_id" id="filter-cnt" onchange="this.form.submit()"
+                        class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                    <option value="" {{ empty($centerId) ? 'selected' : '' }}>Tous centres</option>
+                    @foreach($centers as $c)
+                        <option value="{{ $c->id }}" {{ $centerId === $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                    @endforeach
                 </select>
             </div>
 
+            {{-- Domaine --}}
             <div>
-                <label for="filter-center" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
-                    Centre
+                <label for="filter-dom" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    Domaine
                 </label>
-                <select name="center_id" id="filter-center" onchange="this.form.submit()"
-                        class="w-full rounded-xl border-slate-300 bg-white text-sm font-medium text-slate-800 focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                    <option value="">Tous les centres</option>
-                    @foreach($centers as $c)
-                        <option value="{{ $c->id }}" {{ $centerId === $c->id ? 'selected' : '' }}>{{ $c->name }} ({{ $c->code }})</option>
+                <select name="domain" id="filter-dom" onchange="this.form.submit()"
+                        class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                    <option value="all" {{ $domain === 'all' ? 'selected' : '' }}>Tous domaines</option>
+                    @foreach($domains as $slug => $d)
+                        <option value="{{ $slug }}" {{ $domain === $slug ? 'selected' : '' }}>{{ is_array($d) ? ($d['name'] ?? $slug) : $d }}</option>
                     @endforeach
+                </select>
+            </div>
+
+            {{-- Formation --}}
+            <div>
+                <label for="filter-form" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    Formation
+                </label>
+                <select name="formation_id" id="filter-form" onchange="this.form.submit()"
+                        class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                    <option value="" {{ empty($formationId) ? 'selected' : '' }}>Toutes formations</option>
+                    @foreach(($formationsList ?? $formations ?? []) as $f)
+                        <option value="{{ $f->id }}" {{ $formationId === $f->id ? 'selected' : '' }}>{{ $f->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Statut --}}
+            <div>
+                <label for="filter-st" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    Statut
+                </label>
+                <select name="status" id="filter-st" onchange="this.form.submit()"
+                        class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                    <option value="all" {{ $status === 'all' ? 'selected' : '' }}>Tous statuts</option>
+                    <option value="paid" {{ $status === 'paid' ? 'selected' : '' }}>Soldé</option>
+                    <option value="partial" {{ $status === 'partial' ? 'selected' : '' }}>Partiel</option>
+                    <option value="unpaid" {{ $status === 'unpaid' ? 'selected' : '' }}>Non payé</option>
                 </select>
             </div>
         </div>
     </form>
 
-    {{-- Tableau des étudiants --}}
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-sm">
-                <thead class="bg-slate-50/80 text-xs font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
-                    <tr>
-                        <th class="px-5 py-3.5">Étudiant</th>
-                        <th class="px-5 py-3.5">Centre</th>
-                        <th class="px-5 py-3.5">Domaine</th>
-                        <th class="px-5 py-3.5">Formation</th>
-                        <th class="px-5 py-3.5 text-right">Prix annuel</th>
-                        <th class="px-5 py-3.5 text-right">Payé</th>
-                        <th class="px-5 py-3.5 text-right">Reste</th>
-                        <th class="px-5 py-3.5 text-center">Statut</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80">
-                    @forelse($studentRows as $row)
-                        <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
-                            <td class="px-5 py-4 font-semibold text-slate-900 dark:text-white">
-                                <div class="font-bold">{{ $row->student->full_name }}</div>
-                                <div class="text-xs text-slate-400">{{ $row->student->student_number }}</div>
-                            </td>
-                            <td class="px-5 py-4 text-xs text-slate-600 dark:text-slate-300">
-                                <span class="rounded-md bg-slate-100 px-2 py-0.5 font-medium dark:bg-slate-800">
-                                    {{ $row->center?->name ?? 'N/A' }}
+    {{-- ────────────────────────────────────────────────────────────
+         VUE 1 : ACCORDÉONS MENSUELS (CAD SYNDIC PAIEMENTS)
+    ──────────────────────────────────────────────────────────── --}}
+    @if(($viewMode ?? 'monthly') === 'monthly')
+        <div class="space-y-3.5">
+            @forelse($monthlyGroups as $group)
+                <div x-data="{ expanded: {{ $loop->first ? 'true' : 'false' }} }"
+                     class="finance-card overflow-hidden transition-shadow hover:shadow-sm">
+
+                    {{-- En-tête de l'accordéon --}}
+                    <button type="button"
+                            x-on:click="expanded = !expanded"
+                            class="w-full p-4.5 flex items-center justify-between text-left hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            {{-- Badge du mois --}}
+                            <div class="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-[#ECFDF5] text-[#0DAD98] dark:bg-[#0DAD98]/15 dark:text-[#0DAD98]">
+                                <span class="text-[10px] font-extrabold uppercase leading-none">{{ Str::substr($group['label'], 0, 4) }}</span>
+                                <span class="text-xs font-black leading-none mt-1">{{ Str::after($group['label'], ' ') }}</span>
+                            </div>
+
+                            <div class="min-w-0">
+                                <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                                    {{ $group['label'] }}
+                                </h3>
+                                <div class="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
+                                    <span>{{ $group['payments_count'] }} versement(s)</span>
+                                    <span>·</span>
+                                    <span>{{ $group['students_count'] }} étudiant(s)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-5">
+                            <div class="text-right">
+                                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Encaissé ce mois</span>
+                                <span class="text-base sm:text-lg font-extrabold text-[#0DAD98] whitespace-nowrap">
+                                    {{ format_price($group['total_collected'], 'MAD') }}
                                 </span>
-                            </td>
-                            <td class="px-5 py-4">
-                                <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                    {{ $row->domain_label }}
-                                </span>
-                            </td>
-                            <td class="px-5 py-4 text-xs font-medium text-slate-700 dark:text-slate-300">
-                                {{ $row->formation->name }}
-                            </td>
-                            <td class="px-5 py-4 text-right font-bold text-slate-900 dark:text-white">
-                                {{ format_price($row->annual_price, 'MAD') }}
-                            </td>
-                            <td class="px-5 py-4 text-right font-black text-emerald-600 dark:text-emerald-400">
-                                {{ format_price($row->paid_amount, 'MAD') }}
-                            </td>
-                            <td class="px-5 py-4 text-right font-black {{ $row->remaining_amount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400' }}">
-                                {{ format_price($row->remaining_amount, 'MAD') }}
-                            </td>
-                            <td class="px-5 py-4 text-center">
-                                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold {{ $row->status_badge }}">
-                                    {{ $row->status_label }}
-                                </span>
-                            </td>
-                        </tr>
-                    @empty
+                            </div>
+                            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 transition-transform duration-200"
+                                 :class="{ 'rotate-180': expanded }">
+                                <x-icon name="chevron-down" class="h-4 w-4" />
+                            </div>
+                        </div>
+                    </button>
+
+                    {{-- Corps de l'accordéon : Tableau des versements du mois --}}
+                    <div x-show="expanded" x-collapse>
+                        <div class="border-t border-slate-100 dark:border-slate-800 overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50/70 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-800/40">
+                                    <tr>
+                                        <th class="py-2.5 px-4">Date</th>
+                                        <th class="py-2.5 px-4">Réf Versement</th>
+                                        <th class="py-2.5 px-4">Étudiant</th>
+                                        <th class="py-2.5 px-4">Formation & Centre</th>
+                                        <th class="py-2.5 px-4">Règlement</th>
+                                        <th class="py-2.5 px-4 text-right">Montant</th>
+                                        <th class="py-2.5 px-4 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                    @foreach($group['payments'] as $pay)
+                                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                                            <td class="py-3 px-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                                                {{ $pay->payment_date ? $pay->payment_date->format('d/m/Y') : '—' }}
+                                            </td>
+                                            <td class="py-3 px-4 font-mono text-[11px] font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                                                {{ $pay->reference ?? ('ENC-'.str_pad($pay->id, 5, '0', STR_PAD_LEFT)) }}
+                                            </td>
+                                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white whitespace-nowrap">
+                                                {{ $pay->enrollment->student->full_name ?? '—' }}
+                                            </td>
+                                            <td class="py-3 px-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                                                {{ $pay->enrollment->formation->name ?? '—' }}
+                                                <span class="text-slate-400 text-[11px]">({{ $pay->enrollment->formation->center->name ?? '' }})</span>
+                                            </td>
+                                            <td class="py-3 px-4 whitespace-nowrap">
+                                                <span class="inline-flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-300">
+                                                    @if($pay->payment_method === 'cash') 💵 Espèces
+                                                    @elseif($pay->payment_method === 'bank_transfer') 🏦 Virement
+                                                    @elseif($pay->payment_method === 'credit_card') 💳 Carte
+                                                    @else 📄 {{ ucfirst($pay->payment_method) }}
+                                                    @endif
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-4 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                                                {{ format_price($pay->amount, 'MAD') }}
+                                            </td>
+                                            <td class="py-3 px-4 text-center whitespace-nowrap">
+                                                @if($pay->receipt_number)
+                                                    <a href="{{ route('super-admin.finance.receipt.pdf', $pay->id) }}"
+                                                       target="_blank"
+                                                       class="inline-flex items-center gap-1 rounded-md bg-slate-100 hover:bg-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                                        <span>Reçu #{{ $pay->receipt_number }}</span>
+                                                    </a>
+                                                @else
+                                                    <span class="text-slate-400 text-[11px]">Validé</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="finance-card p-12 text-center text-slate-400">
+                    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-xl text-slate-400 dark:bg-slate-800">
+                        📁
+                    </div>
+                    <p class="mt-3 text-xs font-semibold text-slate-600 dark:text-slate-300">Aucun versement enregistré pour cette sélection.</p>
+                </div>
+            @endforelse
+        </div>
+
+    {{-- ────────────────────────────────────────────────────────────
+         VUE 2 : TABLEAU PAR ÉTUDIANT (AVEC HISTORIQUE DÉPLIABLE)
+    ──────────────────────────────────────────────────────────── --}}
+    @elseif(($viewMode ?? '') === 'students')
+        <div class="finance-card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50/80 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-800/50 dark:border-slate-800">
                         <tr>
-                            <td colspan="8" class="px-5 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                                Aucun étudiant trouvé pour ces critères.
-                            </td>
+                            <th class="py-3 px-4">Étudiant</th>
+                            <th class="py-3 px-4">Formation & Centre</th>
+                            <th class="py-3 px-4 text-right">Prix annuel</th>
+                            <th class="py-3 px-4 text-right">Total payé</th>
+                            <th class="py-3 px-4 text-right">Reste à payer</th>
+                            <th class="py-3 px-4 text-center">Progression</th>
+                            <th class="py-3 px-4 text-center">Statut</th>
+                            <th class="py-3 px-4 text-right">Action</th>
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @forelse($studentRows as $row)
+                            <tr x-data="{ openHistory: false }" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                                <td class="py-3 px-4">
+                                    <div class="font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                                        {{ $row->student->full_name }}
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 font-mono">
+                                        {{ $row->student->student_number ?? ('ID: '.$row->student->id) }}
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4 whitespace-nowrap">
+                                    <div class="font-medium text-slate-800 dark:text-slate-200">
+                                        {{ $row->formation->name }}
+                                    </div>
+                                    <div class="text-[10px] text-slate-400">
+                                        {{ $row->formation->center->name ?? '' }} · {{ $row->enrollment->school_year }}
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4 text-right font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                                    {{ format_price($row->annual_price, 'MAD') }}
+                                </td>
+                                <td class="py-3 px-4 text-right font-bold text-[#0DAD98] whitespace-nowrap">
+                                    {{ format_price($row->total_paid, 'MAD') }}
+                                </td>
+                                <td class="py-3 px-4 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                                    {{ format_price($row->remaining_amount, 'MAD') }}
+                                </td>
+                                <td class="py-3 px-4 text-center whitespace-nowrap">
+                                    <div class="w-20 mx-auto">
+                                        <div class="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                                            <span>{{ $row->payment_percentage ?? 0 }}%</span>
+                                        </div>
+                                        <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden dark:bg-slate-800">
+                                            <div class="h-full bg-[#0DAD98] rounded-full" style="width: {{ min(100, $row->payment_percentage ?? 0) }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4 text-center whitespace-nowrap">
+                                    @if($row->status === 'paid')
+                                        <span class="finance-badge-paid">Payé</span>
+                                    @elseif($row->status === 'partial')
+                                        <span class="finance-badge-partial">Partiel</span>
+                                    @else
+                                        <span class="finance-badge-unpaid">Non payé</span>
+                                    @endif
+                                </td>
+                                <td class="py-3 px-4 text-right whitespace-nowrap">
+                                    @if($row->remaining_amount > 0)
+                                        <button type="button"
+                                                x-on:click="openQuickPayment('{{ $row->student->id }}', '{{ $row->formation->id }}', '{{ $row->remaining_amount }}')"
+                                                class="finance-btn-primary py-1 px-2.5 text-[11px]">
+                                            <span>Encaisser</span>
+                                        </button>
+                                    @else
+                                        <span class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Soldé ✓</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="py-10 text-center text-xs text-slate-400">
+                                    Aucun dossier d'étudiant trouvé avec ces critères.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    {{-- ────────────────────────────────────────────────────────────
+         VUE 3 : RECOUVREMENT & IMPAYÉS (STYLE RECOUVREMENT CAD SYNDIC)
+    ──────────────────────────────────────────────────────────── --}}
+    @elseif(($viewMode ?? '') === 'unpaid')
+        <div class="finance-card overflow-hidden">
+            <div class="p-4 bg-rose-50/50 dark:bg-rose-950/20 border-b border-rose-100 dark:border-rose-900/40 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xs font-bold text-rose-900 dark:text-rose-200">
+                        Priorité de recouvrement des créances scolarité
+                    </h3>
+                    <p class="text-[11px] text-rose-700/80 dark:text-rose-300/80">
+                        Liste ordonnée des étudiants ayant un reliquat supérieur à 0 DH.
+                    </p>
+                </div>
+                <span class="text-xs font-extrabold text-rose-700 dark:text-rose-300">
+                    Total créances : {{ format_price($studentRows->where('remaining_amount', '>', 0)->sum('remaining_amount'), 'MAD') }}
+                </span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-800">
+                        <tr>
+                            <th class="py-3 px-4">Étudiant débiteur</th>
+                            <th class="py-3 px-4">Formation & Centre</th>
+                            <th class="py-3 px-4 text-right">Total attendu</th>
+                            <th class="py-3 px-4 text-right">Total encaissé</th>
+                            <th class="py-3 px-4 text-right">Reste à payer</th>
+                            <th class="py-3 px-4 text-center">Dernier versement</th>
+                            <th class="py-3 px-4 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @forelse($studentRows->where('remaining_amount', '>', 0)->sortByDesc('remaining_amount') as $debtor)
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                                <td class="py-3 px-4">
+                                    <div class="font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                                        {{ $debtor->student->full_name }}
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 font-mono">
+                                        {{ $debtor->student->student_number ?? ('ID: '.$debtor->student->id) }}
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4 whitespace-nowrap">
+                                    <div class="font-medium text-slate-800 dark:text-slate-200">{{ $debtor->formation->name }}</div>
+                                    <div class="text-[10px] text-slate-400">{{ $debtor->formation->center->name ?? '' }}</div>
+                                </td>
+                                <td class="py-3 px-4 text-right text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                                    {{ format_price($debtor->annual_price, 'MAD') }}
+                                </td>
+                                <td class="py-3 px-4 text-right font-bold text-[#0DAD98] whitespace-nowrap">
+                                    {{ format_price($debtor->total_paid, 'MAD') }}
+                                </td>
+                                <td class="py-3 px-4 text-right font-black text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                                    {{ format_price($debtor->remaining_amount, 'MAD') }}
+                                </td>
+                                <td class="py-3 px-4 text-center text-slate-500 whitespace-nowrap">
+                                    {{ $debtor->last_payment ? $debtor->last_payment->format('d/m/Y') : 'Aucun versement' }}
+                                </td>
+                                <td class="py-3 px-4 text-right whitespace-nowrap">
+                                    <button type="button"
+                                            x-on:click="openQuickPayment('{{ $debtor->student->id }}', '{{ $debtor->formation->id }}', '{{ $debtor->remaining_amount }}')"
+                                            class="finance-btn-primary py-1 px-2.5 text-[11px]">
+                                        <span>Encaisser créance</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="py-10 text-center text-xs text-slate-400">
+                                    Félicitations, aucun impayé enregistré sur cette sélection.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
+    {{-- ────────────────────────────────────────────────────────────
+         MODAL D'ENCAISSEMENT RAPIDE
+    ──────────────────────────────────────────────────────────── --}}
+    <div x-show="paymentModalOpen"
+         x-cloak
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs">
+
+        <div x-on:click.outside="paymentModalOpen = false"
+             class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900 dark:border dark:border-slate-800">
+
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ECFDF5] text-[#0DAD98]">
+                        💰
+                    </span>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Encaisser un versement</h3>
+                        <p class="text-[11px] text-slate-500">Scolarité annuelle · Frais de scolarité</p>
+                    </div>
+                </div>
+                <button type="button" x-on:click="paymentModalOpen = false" class="text-slate-400 hover:text-slate-600">
+                    <x-icon name="x-mark" class="h-5 w-5" />
+                </button>
+            </div>
+
+            <form method="POST" action="{{ route('super-admin.finance.students.payment.store') }}" class="mt-4 space-y-4">
+                @csrf
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        Étudiant <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="student_id" x-model="selectedStudentId" x-on:change="onStudentChange()" required
+                            class="w-full rounded-lg border-slate-200 bg-white text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                        <option value="">-- Sélectionner un étudiant --</option>
+                        @foreach($studentsList as $st)
+                            <option value="{{ $st->id }}">
+                                {{ $st->full_name }} ({{ $st->student_number ?? 'ID: '.$st->id }}) — {{ $st->center->name ?? '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Formation <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="formation_id" x-model="selectedFormationId" required
+                                class="w-full rounded-lg border-slate-200 bg-white text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                            <option value="">-- Formation --</option>
+                            @foreach($formationsList as $fm)
+                                <option value="{{ $fm->id }}">{{ $fm->name }} ({{ $fm->center->name ?? '' }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Montant versé (DH) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" name="amount" step="0.01" min="1" x-model="paymentAmount" required placeholder="Ex: 5000"
+                               class="w-full rounded-lg border-slate-200 bg-white text-xs font-semibold text-slate-900 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Date du versement <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="date" name="payment_date" value="{{ date('Y-m-d') }}" required
+                               class="w-full rounded-lg border-slate-200 bg-white text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Moyen de règlement <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="payment_method" required
+                                class="w-full rounded-lg border-slate-200 bg-white text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                            <option value="cash">Espèces</option>
+                            <option value="bank_transfer">Virement bancaire</option>
+                            <option value="credit_card">Carte bancaire</option>
+                            <option value="check">Chèque</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        Référence / Notes (facultatif)
+                    </label>
+                    <input type="text" name="reference" placeholder="Ex: VIR-2026-OCT-09"
+                           class="w-full rounded-lg border-slate-200 bg-white text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" x-on:click="paymentModalOpen = false"
+                            class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">
+                        Annuler
+                    </button>
+                    <button type="submit" class="finance-btn-primary">
+                        Valider l'encaissement
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

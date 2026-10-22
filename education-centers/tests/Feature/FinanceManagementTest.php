@@ -709,4 +709,54 @@ class FinanceManagementTest extends TestCase
             'monthly_salary' => 9500.00,
         ]);
     }
+
+    /**
+     * 27. Super Admin peut afficher la page des salaires professeurs avec filtres de date.
+     */
+    public function test_super_admin_can_view_teachers_page_with_filters(): void
+    {
+        $this->actingAs($this->superAdmin)
+            ->get('/super-admin/finance/professeurs?domain=all&month=10&year=2026')
+            ->assertOk()
+            ->assertSee('Salaires professeurs')
+            ->assertSee('Salaires attendus')
+            ->assertSee('Octobre 2026');
+    }
+
+    /**
+     * 28. Super Admin peut afficher la page des paiements étudiants avec différents modes.
+     */
+    public function test_super_admin_can_view_students_page_with_filters(): void
+    {
+        $this->actingAs($this->superAdmin)
+            ->get('/super-admin/finance/etudiants?domain=all&view=students')
+            ->assertOk()
+            ->assertSee('Paiements étudiants');
+
+        $this->actingAs($this->superAdmin)
+            ->get('/super-admin/finance/etudiants?view=monthly')
+            ->assertOk()
+            ->assertSee('Paiements étudiants');
+
+        $this->actingAs($this->superAdmin)
+            ->get('/super-admin/finance/etudiants?view=unpaid')
+            ->assertOk()
+            ->assertSee('Paiements étudiants');
+    }
+
+    /**
+     * 29. Super Admin peut afficher l'historique et les rapports financiers.
+     */
+    public function test_super_admin_can_view_history_and_reports(): void
+    {
+        $this->actingAs($this->superAdmin)
+            ->get(route('super-admin.finance.history'))
+            ->assertOk()
+            ->assertSee('Journal des opérations');
+
+        $this->actingAs($this->superAdmin)
+            ->get(route('super-admin.finance.reports'))
+            ->assertOk()
+            ->assertSee('Rapports financiers');
+    }
 }

@@ -20,6 +20,12 @@
     --color-brand-700: #4338ca;
     --color-brand-800: #3730a3;
     --color-brand-900: #312e81;
+
+    --color-turquoise-50: #ecfdf5;
+    --color-turquoise-100: #d1fae5;
+    --color-turquoise-500: #0dad98;
+    --color-turquoise-600: #0b9683;
+    --color-turquoise-700: #087f6e;
 }
 
 @layer base {
@@ -150,6 +156,31 @@
 
     .ec-sidebar-collapsed {
         width: 4.5rem;
+    }
+
+    /* Cad Syndic Finance Design System helpers */
+    .finance-card {
+        @apply rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)] dark:border-slate-800 dark:bg-slate-900;
+    }
+
+    .finance-badge-paid {
+        @apply inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400;
+    }
+
+    .finance-badge-partial {
+        @apply inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-400;
+    }
+
+    .finance-badge-unpaid {
+        @apply inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-700 dark:bg-rose-950/50 dark:text-rose-400;
+    }
+
+    .finance-btn-primary {
+        @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#0DAD98] hover:bg-[#0b9683] text-white px-3.5 py-2 text-xs font-semibold shadow-xs transition-colors;
+    }
+
+    .finance-btn-secondary {
+        @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 text-xs font-semibold shadow-2xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors;
     }
 }
 

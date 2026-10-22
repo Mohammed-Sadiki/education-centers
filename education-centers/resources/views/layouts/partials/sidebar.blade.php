@@ -293,29 +293,29 @@
 
     @if($user->isSuperAdmin())
         @if($isFinance)
-            {{-- BANNER DU CONTEXTE : GESTION FINANCIÈRE GLOBALE --}}
-            <div class="border-b border-slate-200 bg-emerald-50/80 p-3 dark:border-slate-800 dark:bg-emerald-950/30">
-                <div class="flex items-center justify-between gap-2" x-show="!$store.ui.sidebarCollapsed">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-2xs text-sm">
-                            💰
+            {{-- BANNER DU CONTEXTE : GESTION FINANCIÈRE GLOBALE (STYLE CAD SYNDIC) --}}
+            <div class="p-3 border-b border-slate-200/80 dark:border-slate-800">
+                <div class="rounded-xl border border-slate-200/90 bg-white p-2.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900" x-show="!$store.ui.sidebarCollapsed">
+                    <div class="flex items-center gap-2.5 mb-2">
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#ECFDF5] text-[#0DAD98] dark:bg-[#0DAD98]/20 dark:text-[#0DAD98] font-bold text-xs shadow-2xs">
+                            📊
                         </span>
                         <div class="min-w-0">
-                            <span class="block text-[10px] uppercase font-bold tracking-wider text-emerald-800 dark:text-emerald-300">Contexte global</span>
+                            <span class="block text-[9px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Contexte actif</span>
                             <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">Gestion financière</span>
                         </div>
                     </div>
                     <a href="{{ route('super-admin.domaines') }}"
                        id="sidebar-changer-finance"
-                       class="inline-flex items-center gap-1 rounded-lg border border-emerald-300/80 bg-white px-2 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 dark:border-emerald-700/80 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-emerald-900/40 transition-colors shadow-2xs shrink-0"
+                       class="w-full flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 py-1.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
                        title="Changer de contexte">
-                        <x-icon name="arrow-uturn-left" class="h-3 w-3" />
-                        <span>Changer</span>
+                        <x-icon name="arrow-uturn-left" class="h-3 w-3 text-slate-400" />
+                        <span>Changer de contexte</span>
                     </a>
                 </div>
                 <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
                     <a href="{{ route('super-admin.domaines') }}"
-                       class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-2xs"
+                       class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ECFDF5] text-[#0DAD98] hover:bg-[#0DAD98] hover:text-white transition-colors shadow-2xs"
                        title="Gestion financière — Cliquer pour changer de contexte">
                         <x-icon name="banknotes" class="h-4.5 w-4.5" />
                     </a>
@@ -424,9 +424,17 @@
                              class="space-y-0.5">
                             <ul class="space-y-0.5">
                                 @foreach($group['items'] as $item)
+                                    @php
+                                        $linkClass = 'ec-nav-link';
+                                        if ($item['active']) {
+                                            $linkClass = $isFinance
+                                                ? 'flex items-center gap-3 rounded-r-lg border-l-4 border-[#0DAD98] bg-[#ECFDF5] px-2.5 py-2 text-sm font-semibold text-[#0DAD98] dark:border-[#0DAD98] dark:bg-[#0DAD98]/15 dark:text-[#0DAD98]'
+                                                : 'ec-nav-link ec-nav-link-active';
+                                        }
+                                    @endphp
                                     <li>
                                         <a href="{{ $item['url'] }}"
-                                           class="ec-nav-link {{ $item['active'] ? 'ec-nav-link-active' : '' }}"
+                                           class="{{ $linkClass }}"
                                            @if($item['active']) aria-current="page" @endif
                                            title="{{ $item['label'] }}">
                                             <x-icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
@@ -442,9 +450,17 @@
                     <div>
                         <ul class="space-y-0.5">
                             @foreach($group['items'] as $item)
+                                @php
+                                    $linkClass = 'ec-nav-link';
+                                    if ($item['active']) {
+                                        $linkClass = $isFinance
+                                            ? 'flex items-center gap-3 rounded-r-lg border-l-4 border-[#0DAD98] bg-[#ECFDF5] px-2.5 py-2 text-sm font-semibold text-[#0DAD98] dark:border-[#0DAD98] dark:bg-[#0DAD98]/15 dark:text-[#0DAD98]'
+                                            : 'ec-nav-link ec-nav-link-active';
+                                    }
+                                @endphp
                                 <li>
                                     <a href="{{ $item['url'] }}"
-                                       class="ec-nav-link {{ $item['active'] ? 'ec-nav-link-active' : '' }}"
+                                       class="{{ $linkClass }}"
                                        @if($item['active']) aria-current="page" @endif
                                        title="{{ $item['label'] }}">
                                         <x-icon :name="$item['icon']" class="h-5 w-5 shrink-0" />

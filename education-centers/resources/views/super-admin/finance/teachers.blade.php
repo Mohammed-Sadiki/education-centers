@@ -3,163 +3,419 @@
 @section('title', 'Salaires professeurs — Gestion financière')
 
 @section('content')
-<div class="space-y-6">
+@php
+    $monthsNames = $monthsNames ?? [
+        1 => 'Janvier', 2 => 'Février', 3 => 'Mars', 4 => 'Avril',
+        5 => 'Mai', 6 => 'Juin', 7 => 'Juillet', 8 => 'Août',
+        9 => 'Septembre', 10 => 'Octobre', 11 => 'Novembre', 12 => 'Décembre',
+    ];
+@endphp
+<div class="space-y-6" x-data="{
+    salaryModalOpen: false,
+    selectedTeacherId: '',
+    prefilledExpectedSalary: '',
+    prefilledPaidSalary: '',
 
-    {{-- En-tête --}}
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-800">
+    openTeacherSalary(teacherId, expectedSalary, paidSalary) {
+        this.selectedTeacherId = teacherId ? String(teacherId) : '';
+        this.prefilledExpectedSalary = expectedSalary || '';
+        const remaining = Math.max(0, parseFloat(expectedSalary || 0) - parseFloat(paidSalary || 0));
+        this.prefilledPaidSalary = remaining > 0 ? remaining : expectedSalary;
+        this.salaryModalOpen = true;
+    }
+}">
+
+    {{-- ────────────────────────────────────────────────────────────
+         EN-TÊTE DE LA PAGE (STYLE CAD SYNDIC)
+    ──────────────────────────────────────────────────────────── --}}
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-slate-200/90 pb-5 dark:border-slate-800">
         <div>
-            <div class="inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-200/70 px-3.5 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-950/50 dark:border-blue-800/70 dark:text-blue-300 mb-2">
-                <span>👨‍🏫</span>
-                <span>Gestion financière · Corps professoral</span>
+            <div class="inline-flex items-center gap-1.5 rounded-full bg-[#ECFDF5] px-2.5 py-0.5 text-xs font-semibold text-[#0DAD98] border border-[#0DAD98]/20 dark:bg-[#0DAD98]/15 dark:text-[#0DAD98] mb-1.5 shadow-2xs">
+                <span>🧑‍🏫</span>
+                <span>Gestion financière · Équipe pédagogique & Masse salariale</span>
             </div>
-            <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                Salaires des professeurs
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                Salaires professeurs
             </h1>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                Suivi des salaires mensuels fixes de chaque professeur, émargements et restant à payer par mois.
+            <p class="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                Période active : <strong class="text-slate-800 dark:text-slate-200">{{ $monthsNames[$month] ?? $month }} {{ $year }}</strong> · {{ $teacherRows->count() }} enseignant(s)
             </p>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2.5">
+            <button type="button"
+                    x-on:click="openTeacherSalary('', '', '')"
+                    class="finance-btn-primary">
+                <x-icon name="plus" class="h-4 w-4" />
+                <span>Régler un salaire</span>
+            </button>
             <a href="{{ route('super-admin.finance.dashboard') }}"
-               class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition-colors">
-                <x-icon name="arrow-uturn-left" class="h-4 w-4" />
-                <span>Retour Dashboard financier</span>
+               class="finance-btn-secondary">
+                <x-icon name="arrow-left" class="h-4 w-4 text-slate-500" />
+                <span>Dashboard</span>
             </a>
         </div>
     </div>
 
-    {{-- Filtres --}}
-    <form method="GET" action="{{ route('super-admin.finance.teachers') }}" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-                <label for="filter-domain" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
-                    Domaine
-                </label>
-                <select name="domain" id="filter-domain" onchange="this.form.submit()"
-                        class="w-full rounded-xl border-slate-300 bg-white text-sm font-medium text-slate-800 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                    <option value="all" {{ $domain === 'all' ? 'selected' : '' }}>Tous les domaines</option>
-                    @foreach($domains as $slug => $label)
-                        <option value="{{ $slug }}" {{ $domain === $slug ? 'selected' : '' }}>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label for="filter-month" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
-                    Mois & Année
-                </label>
-                <div class="grid grid-cols-2 gap-2">
-                    @php
-                        $monthsNames = [
-                            1 => 'Janvier', 2 => 'Février', 3 => 'Mars', 4 => 'Avril',
-                            5 => 'Mai', 6 => 'Juin', 7 => 'Juillet', 8 => 'Août',
-                            9 => 'Septembre', 10 => 'Octobre', 11 => 'Novembre', 12 => 'Décembre',
-                        ];
-                    @endphp
-                    <select name="month" id="filter-month" onchange="this.form.submit()"
-                            class="w-full rounded-xl border-slate-300 bg-white text-sm font-medium text-slate-800 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                        @foreach($monthsNames as $mNum => $mLabel)
-                            <option value="{{ $mNum }}" {{ $month === $mNum ? 'selected' : '' }}>{{ $mLabel }}</option>
-                        @endforeach
-                    </select>
-                    <select name="year" id="filter-year" onchange="this.form.submit()"
-                            class="w-full rounded-xl border-slate-300 bg-white text-sm font-medium text-slate-800 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                        @foreach([2026, 2027, 2028] as $y)
-                            <option value="{{ $y }}" {{ $year === $y ? 'selected' : '' }}>{{ $y }}</option>
-                        @endforeach
-                    </select>
+    {{-- ────────────────────────────────────────────────────────────
+         4 CARTES KPI COMPACTES (STYLE CAD SYNDIC)
+    ──────────────────────────────────────────────────────────── --}}
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {{-- Salaires Attendus --}}
+        <div class="finance-card p-4.5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Salaires attendus</span>
+                    <div class="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
+                        {{ format_price($stats['total_attendus'] ?? 0, 'MAD') }}
+                    </div>
+                </div>
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    <x-icon name="user-group" class="h-5 w-5" />
                 </div>
             </div>
+            <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
+                <span>Enseignants concernés</span>
+                <span class="font-bold text-slate-800 dark:text-slate-200">{{ $stats['count_teachers'] ?? 0 }}</span>
+            </div>
+        </div>
 
-            <div>
-                <label for="filter-status" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
-                    Statut salaire
+        {{-- Salaires Payés --}}
+        <div class="finance-card p-4.5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Salaires payés</span>
+                    <div class="mt-2 text-2xl font-extrabold text-[#0DAD98] whitespace-nowrap">
+                        {{ format_price($stats['total_payes'] ?? 0, 'MAD') }}
+                    </div>
+                </div>
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#ECFDF5] text-[#0DAD98] dark:bg-[#0DAD98]/20">
+                    <x-icon name="check-circle" class="h-5 w-5" />
+                </div>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
+                <span>Taux de règlement</span>
+                <span class="font-bold text-[#0DAD98]">{{ $stats['rate_paid'] ?? 0 }}%</span>
+            </div>
+        </div>
+
+        {{-- Restant à payer --}}
+        <div class="finance-card p-4.5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Restant à régler</span>
+                    <div class="mt-2 text-2xl font-extrabold text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                        {{ format_price($stats['total_restant'] ?? 0, 'MAD') }}
+                    </div>
+                </div>
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40">
+                    <x-icon name="clock" class="h-5 w-5" />
+                </div>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
+                <span>Reste sur la période</span>
+                <span class="font-bold text-amber-600">{{ $monthsNames[$month] ?? $month }}</span>
+            </div>
+        </div>
+
+        {{-- Acquittement total --}}
+        <div class="finance-card p-4.5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Soldés intégral</span>
+                    <div class="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
+                        {{ $stats['count_paid'] ?? 0 }} <span class="text-xs font-normal text-slate-400">/ {{ $stats['count_teachers'] ?? 0 }}</span>
+                    </div>
+                </div>
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#ECFDF5] text-[#0DAD98] dark:bg-[#0DAD98]/20">
+                    <x-icon name="document-check" class="h-5 w-5" />
+                </div>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
+                <span>Partiel: {{ $stats['count_partial'] ?? 0 }}</span>
+                <span>Non payé: {{ $stats['count_unpaid'] ?? 0 }}</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- ────────────────────────────────────────────────────────────
+         BARRE DE FILTRES COMPACTE (STYLE CAD SYNDIC)
+    ──────────────────────────────────────────────────────────── --}}
+    <form method="GET" action="{{ route('super-admin.finance.teachers') }}"
+          class="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] dark:border-slate-800 dark:bg-slate-900">
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 items-center">
+            {{-- Recherche --}}
+            <div class="col-span-2 sm:col-span-1">
+                <label for="filter-search" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    Recherche
                 </label>
-                <select name="status" id="filter-status" onchange="this.form.submit()"
-                        class="w-full rounded-xl border-slate-300 bg-white text-sm font-medium text-slate-800 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                    <option value="all" {{ $status === 'all' ? 'selected' : '' }}>Tous les statuts</option>
-                    <option value="paid" {{ $status === 'paid' ? 'selected' : '' }}>Payé</option>
-                    <option value="partial" {{ $status === 'partial' ? 'selected' : '' }}>Partiel</option>
-                    <option value="unpaid" {{ $status === 'unpaid' ? 'selected' : '' }}>Non payé</option>
+                <input type="text" name="search" id="filter-search" value="{{ $search ?? '' }}"
+                       placeholder="Nom de l'enseignant..."
+                       class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+            </div>
+
+            {{-- Mois --}}
+            <div>
+                <label for="filter-month" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    Mois
+                </label>
+                <select name="month" id="filter-month" onchange="this.form.submit()"
+                        class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                    @foreach($monthsNames as $mNum => $mLabel)
+                        <option value="{{ $mNum }}" {{ $month === $mNum ? 'selected' : '' }}>{{ $mLabel }}</option>
+                    @endforeach
                 </select>
             </div>
 
+            {{-- Année --}}
             <div>
-                <label for="filter-center" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                <label for="filter-year" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    Année
+                </label>
+                <select name="year" id="filter-year" onchange="this.form.submit()"
+                        class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                    @foreach([2025, 2026, 2027, 2028] as $y)
+                        <option value="{{ $y }}" {{ $year === $y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Centre --}}
+            <div>
+                <label for="filter-cnt" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                     Centre
                 </label>
-                <select name="center_id" id="filter-center" onchange="this.form.submit()"
-                        class="w-full rounded-xl border-slate-300 bg-white text-sm font-medium text-slate-800 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                    <option value="">Tous les centres</option>
+                <select name="center_id" id="filter-cnt" onchange="this.form.submit()"
+                        class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                    <option value="" {{ empty($centerId) ? 'selected' : '' }}>Tous centres</option>
                     @foreach($centers as $c)
-                        <option value="{{ $c->id }}" {{ $centerId === $c->id ? 'selected' : '' }}>{{ $c->name }} ({{ $c->code }})</option>
+                        <option value="{{ $c->id }}" {{ $centerId === $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
                     @endforeach
+                </select>
+            </div>
+
+            {{-- Domaine --}}
+            <div>
+                <label for="filter-dom" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    Domaine
+                </label>
+                <select name="domain" id="filter-dom" onchange="this.form.submit()"
+                        class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                    <option value="all" {{ $domain === 'all' ? 'selected' : '' }}>Tous domaines</option>
+                    @foreach($domains as $slug => $d)
+                        <option value="{{ $slug }}" {{ $domain === $slug ? 'selected' : '' }}>{{ is_array($d) ? ($d['name'] ?? $slug) : $d }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Statut --}}
+            <div>
+                <label for="filter-st" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    Statut
+                </label>
+                <select name="status" id="filter-st" onchange="this.form.submit()"
+                        class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                    <option value="all" {{ $status === 'all' ? 'selected' : '' }}>Tous statuts</option>
+                    <option value="paid" {{ $status === 'paid' ? 'selected' : '' }}>Acquitté</option>
+                    <option value="partial" {{ $status === 'partial' ? 'selected' : '' }}>Partiel</option>
+                    <option value="unpaid" {{ $status === 'unpaid' ? 'selected' : '' }}>Non payé</option>
                 </select>
             </div>
         </div>
     </form>
 
-    {{-- Tableau des professeurs --}}
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+    {{-- ────────────────────────────────────────────────────────────
+         TABLEAU BLANC ÉPURÉ (STYLE CAD SYNDIC)
+    ──────────────────────────────────────────────────────────── --}}
+    <div class="finance-card overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-sm">
-                <thead class="bg-slate-50/80 text-xs font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50/80 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-800/50 dark:border-slate-800">
                     <tr>
-                        <th class="px-5 py-3.5">Professeur</th>
-                        <th class="px-5 py-3.5">Centre</th>
-                        <th class="px-5 py-3.5">Domaine</th>
-                        <th class="px-5 py-3.5">Mois</th>
-                        <th class="px-5 py-3.5 text-right">Salaire mensuel</th>
-                        <th class="px-5 py-3.5 text-right">Payé</th>
-                        <th class="px-5 py-3.5 text-right">Reste</th>
-                        <th class="px-5 py-3.5 text-center">Statut</th>
+                        <th class="py-3 px-4">Professeur</th>
+                        <th class="py-3 px-4">Centre & Filières</th>
+                        <th class="py-3 px-4 text-right">Salaire mensuel</th>
+                        <th class="py-3 px-4 text-right">Montant versé</th>
+                        <th class="py-3 px-4 text-right">Reste à payer</th>
+                        <th class="py-3 px-4 text-center">Période</th>
+                        <th class="py-3 px-4 text-center">Statut</th>
+                        <th class="py-3 px-4 text-right">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($teacherRows as $row)
-                        <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
-                            <td class="px-5 py-4 font-semibold text-slate-900 dark:text-white">
-                                <div class="font-bold">{{ $row->teacher->full_name }}</div>
-                                <div class="text-xs text-slate-400">{{ $row->teacher->teacher_number }}</div>
+                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                            <td class="py-3 px-4">
+                                <div class="font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                                    {{ $row->teacher->full_name }}
+                                </div>
+                                <div class="text-[10px] text-slate-400">
+                                    {{ $row->teacher->email }}
+                                </div>
                             </td>
-                            <td class="px-5 py-4 text-xs text-slate-600 dark:text-slate-300">
-                                <span class="rounded-md bg-slate-100 px-2 py-0.5 font-medium dark:bg-slate-800">
-                                    {{ $row->center?->name ?? 'N/A' }}
-                                </span>
+                            <td class="py-3 px-4 whitespace-nowrap">
+                                <div class="font-medium text-slate-800 dark:text-slate-200">
+                                    {{ ($row->center->name ?? 'N/A') }}
+                                </div>
+                                <div class="text-[10px] text-slate-400 truncate max-w-xs">
+                                    {{ !empty($row->domains) ? implode(', ', $row->domains) : 'Général' }}
+                                </div>
                             </td>
-                            <td class="px-5 py-4">
-                                <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                    {{ $row->domain_label }}
-                                </span>
-                            </td>
-                            <td class="px-5 py-4 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                {{ $monthsNames[$month] ?? $month }} {{ $year }}
-                            </td>
-                            <td class="px-5 py-4 text-right font-bold text-slate-900 dark:text-white">
+                            <td class="py-3 px-4 text-right font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
                                 {{ format_price($row->monthly_salary, 'MAD') }}
                             </td>
-                            <td class="px-5 py-4 text-right font-black text-emerald-600 dark:text-emerald-400">
+                            <td class="py-3 px-4 text-right font-bold text-[#0DAD98] whitespace-nowrap">
                                 {{ format_price($row->paid_amount, 'MAD') }}
                             </td>
-                            <td class="px-5 py-4 text-right font-black {{ $row->remaining_amount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400' }}">
+                            <td class="py-3 px-4 text-right font-bold {{ $row->remaining_amount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400' }} whitespace-nowrap">
                                 {{ format_price($row->remaining_amount, 'MAD') }}
                             </td>
-                            <td class="px-5 py-4 text-center">
-                                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold {{ $row->status_badge }}">
-                                    {{ $row->status_label }}
-                                </span>
+                            <td class="py-3 px-4 text-center text-slate-500 whitespace-nowrap">
+                                {{ $monthsNames[$month] ?? $month }} {{ $year }}
+                            </td>
+                            <td class="py-3 px-4 text-center whitespace-nowrap">
+                                @if($row->status === 'paid')
+                                    <span class="finance-badge-paid">Payé</span>
+                                @elseif($row->status === 'partial')
+                                    <span class="finance-badge-partial">Partiel</span>
+                                @else
+                                    <span class="finance-badge-unpaid">Non payé</span>
+                                @endif
+                            </td>
+                            <td class="py-3 px-4 text-right whitespace-nowrap">
+                                @if($row->remaining_amount > 0)
+                                    <button type="button"
+                                            x-on:click="openTeacherSalary('{{ $row->teacher->id }}', '{{ $row->monthly_salary }}', '{{ $row->paid_amount }}')"
+                                            class="finance-btn-primary py-1 px-2.5 text-[11px]">
+                                        <span>Régler</span>
+                                    </button>
+                                @else
+                                    <span class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Réglé ✓</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-5 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                                Aucun professeur trouvé pour ces critères.
+                            <td colspan="8" class="py-10 text-center text-xs text-slate-400">
+                                Aucun professeur trouvé pour cette période et ce centre.
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    {{-- ────────────────────────────────────────────────────────────
+         MODAL : RÈGLEMENT DU SALAIRE PROFESSEUR (ALPINE.JS)
+    ──────────────────────────────────────────────────────────── --}}
+    <div x-show="salaryModalOpen"
+         x-cloak
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs">
+
+        <div x-on:click.outside="salaryModalOpen = false"
+             class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900 dark:border dark:border-slate-800">
+
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ECFDF5] text-[#0DAD98]">
+                        🧑‍🏫
+                    </span>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Règlement salaire professeur</h3>
+                        <p class="text-[11px] text-slate-500">Mois de {{ $monthsNames[$month] ?? $month }} {{ $year }}</p>
+                    </div>
+                </div>
+                <button type="button" x-on:click="salaryModalOpen = false" class="text-slate-400 hover:text-slate-600">
+                    <x-icon name="x-mark" class="h-5 w-5" />
+                </button>
+            </div>
+
+            <form method="POST" action="{{ route('super-admin.finance.teachers.salary.store') }}" class="mt-4 space-y-4">
+                @csrf
+                <input type="hidden" name="month" value="{{ $month }}">
+                <input type="hidden" name="year" value="{{ $year }}">
+                <input type="hidden" name="school_year" value="{{ $schoolYear }}">
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        Professeur <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="teacher_id" x-model="selectedTeacherId" required
+                            class="w-full rounded-lg border-slate-200 bg-white text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                        <option value="">-- Sélectionner un enseignant --</option>
+                        @foreach($teachersList as $tch)
+                            <option value="{{ $tch->id }}">
+                                {{ $tch->full_name }} ({{ $tch->center->name ?? '' }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Salaire prévu (DH)
+                        </label>
+                        <input type="number" step="0.01" min="0" name="monthly_salary" x-model="prefilledExpectedSalary" placeholder="Ex: 6000"
+                               class="w-full rounded-lg border-slate-200 bg-white text-xs font-medium text-slate-900 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Montant versé (DH) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="number" step="0.01" min="0" name="paid_amount" x-model="prefilledPaidSalary" required placeholder="Ex: 6000"
+                               class="w-full rounded-lg border-slate-200 bg-white text-xs font-semibold text-slate-900 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Date de versement <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="date" name="payment_date" value="{{ date('Y-m-d') }}" required
+                               class="w-full rounded-lg border-slate-200 bg-white text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Mode de paiement
+                        </label>
+                        <select name="payment_method"
+                                class="w-full rounded-lg border-slate-200 bg-white text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                            <option value="bank_transfer">Virement bancaire</option>
+                            <option value="check">Chèque</option>
+                            <option value="cash">Espèces</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        Note / Réf virement
+                    </label>
+                    <input type="text" name="notes" placeholder="Ex: Salaire {{ $monthsNames[$month] ?? $month }} - Virement émis"
+                           class="w-full rounded-lg border-slate-200 bg-white text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" x-on:click="salaryModalOpen = false"
+                            class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">
+                        Annuler
+                    </button>
+                    <button type="submit" class="finance-btn-primary">
+                        Confirmer le règlement
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
