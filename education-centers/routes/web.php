@@ -90,16 +90,36 @@ Route::middleware('auth')->group(function () {
         Route::resource('super-admin/stagiaires', \App\Http\Controllers\StagiaireController::class)
             ->names('stagiaires');
 
-        // ── Gestion financière globale (Contexte indépendant Super Admin) ──
+        // ── Gestion financière globale (Contexte indépendant Super Admin & Multi-Centres Cad Syndic) ──
         Route::prefix('super-admin/finance')->name('super-admin.finance.')->group(function () {
+            // 1. Tableau de bord
             Route::get('/', [\App\Http\Controllers\FinanceDashboardController::class, 'index'])->name('dashboard');
+            // 2. Statistiques
+            Route::get('/statistiques', [\App\Http\Controllers\FinanceDashboardController::class, 'statistics'])->name('statistics');
+            // 3. Gestion financière : Paiements
             Route::get('/etudiants', [\App\Http\Controllers\FinanceDashboardController::class, 'students'])->name('students');
+            Route::post('/paiements-etudiants', [\App\Http\Controllers\FinanceDashboardController::class, 'storeStudentPayment'])->name('students.payment.store');
+            // 3. Gestion financière : Dépenses
+            Route::get('/depenses', [\App\Http\Controllers\FinanceDashboardController::class, 'expenses'])->name('expenses');
+            Route::post('/depenses', [\App\Http\Controllers\FinanceDashboardController::class, 'storeExpense'])->name('expenses.store');
+            Route::patch('/depenses/{expense}/cancel', [\App\Http\Controllers\FinanceDashboardController::class, 'cancelExpense'])->name('expenses.cancel');
+            Route::delete('/depenses/{expense}', [\App\Http\Controllers\FinanceDashboardController::class, 'destroyExpense'])->name('expenses.destroy');
+            Route::get('/depenses/{expense}/justificatif', [\App\Http\Controllers\FinanceDashboardController::class, 'downloadExpenseReceipt'])->name('expenses.receipt');
+            // 3. Gestion financière : Recouvrement
+            Route::get('/recouvrement', [\App\Http\Controllers\FinanceDashboardController::class, 'recovery'])->name('recovery');
+            // 4. Compte bancaire
+            Route::get('/compte-bancaire', [\App\Http\Controllers\FinanceDashboardController::class, 'bank'])->name('bank');
+            Route::post('/compte-bancaire', [\App\Http\Controllers\FinanceDashboardController::class, 'storeBankTransaction'])->name('bank.store');
+            // 5. Comptabilité (Journal, CPC, Bilan, Grand Livre)
+            Route::get('/comptabilite', [\App\Http\Controllers\FinanceDashboardController::class, 'accounting'])->name('accounting');
+            // 6. Salaires des professeurs
             Route::get('/professeurs', [\App\Http\Controllers\FinanceDashboardController::class, 'teachers'])->name('teachers');
-            Route::get('/historique', [\App\Http\Controllers\FinanceDashboardController::class, 'history'])->name('history');
+            Route::post('/salaires-professeurs', [\App\Http\Controllers\FinanceDashboardController::class, 'storeTeacherSalaryPayment'])->name('teachers.salary.store');
+            // 7. Configuration des prix & budgets
             Route::get('/configuration', [\App\Http\Controllers\FinanceDashboardController::class, 'configuration'])->name('configuration');
             Route::put('/configuration', [\App\Http\Controllers\FinanceDashboardController::class, 'updateConfiguration'])->name('configuration.update');
-            Route::post('/paiements-etudiants', [\App\Http\Controllers\FinanceDashboardController::class, 'storeStudentPayment'])->name('students.payment.store');
-            Route::post('/salaires-professeurs', [\App\Http\Controllers\FinanceDashboardController::class, 'storeTeacherSalaryPayment'])->name('teachers.salary.store');
+            // 8. Rapports financiers & Historique
+            Route::get('/historique', [\App\Http\Controllers\FinanceDashboardController::class, 'history'])->name('history');
             Route::get('/rapports', [\App\Http\Controllers\FinanceDashboardController::class, 'reports'])->name('reports');
         });
 

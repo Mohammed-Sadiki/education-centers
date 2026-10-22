@@ -162,18 +162,18 @@
     </form>
 
     {{-- ────────────────────────────────────────────────────────────
-         PREMIÈRE SECTION : LIGNE DE 4 CARTES KPI (STYLE CAD SYNDIC)
+         PREMIÈRE SECTION : LIGNE DE 4 CARTES KPI (EXACTEMENT CAPTURE 2 CAD SYNDIC)
     ──────────────────────────────────────────────────────────── --}}
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-        {{-- Carte 1 : Total Encaissé --}}
+        {{-- Carte 1 : RECETTES (Total encaissements étudiants) --}}
         <div class="finance-card p-4.5">
             <div class="flex items-start justify-between">
                 <div>
                     <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        Total encaissé
+                        Recettes · Total encaissé
                     </span>
-                    <div class="mt-2 text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
+                    <div class="mt-2 text-2xl lg:text-3xl font-extrabold text-[#0DAD98] whitespace-nowrap">
                         {{ format_price($kpis['total_encaisse'] ?? 0, 'MAD') }}
                     </div>
                 </div>
@@ -187,14 +187,64 @@
             </div>
         </div>
 
-        {{-- Carte 2 : Total Restant à Encaisser --}}
+        {{-- Carte 2 : DÉPENSES (Dépenses réelles + Salaires versés) --}}
+        @php
+            $depensesReelles = (float) \App\Models\Expense::when($centerId, fn($q) => $q->where('center_id', $centerId))->where('status', 'paid')->sum('amount');
+            $salairesVerses  = (float) ($kpis['salaires_payes'] ?? 0);
+            $totalDepensesEngagees = $depensesReelles + $salairesVerses;
+        @endphp
         <div class="finance-card p-4.5">
             <div class="flex items-start justify-between">
                 <div>
                     <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        Restant à encaisser
+                        Dépenses
                     </span>
-                    <div class="mt-2 text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
+                    <div class="mt-2 text-2xl lg:text-3xl font-extrabold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                        {{ format_price($totalDepensesEngagees, 'MAD') }}
+                    </div>
+                </div>
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
+                    <x-icon name="banknotes" class="h-5 w-5" />
+                </div>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-2.5">
+                <span>Salaires payés</span>
+                <span class="font-bold text-slate-700 dark:text-slate-300">{{ format_price($salairesVerses, 'MAD') }}</span>
+            </div>
+        </div>
+
+        {{-- Carte 3 : TRÉSORERIE (Solde net de trésorerie réel) --}}
+        @php
+            $soldeTresorerie = (float) ($kpis['total_encaisse'] ?? 0) - $totalDepensesEngagees;
+        @endphp
+        <div class="finance-card p-4.5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        Trésorerie
+                    </span>
+                    <div class="mt-2 text-2xl lg:text-3xl font-extrabold {{ $soldeTresorerie >= 0 ? 'text-[#0DAD98]' : 'text-rose-600' }} whitespace-nowrap">
+                        {{ format_price($soldeTresorerie, 'MAD') }}
+                    </div>
+                </div>
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ECFDF5] text-[#0DAD98] dark:bg-[#0DAD98]/20 dark:text-[#0DAD98]">
+                    <x-icon name="building" class="h-5 w-5" />
+                </div>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-2.5">
+                <span>Salaires restant à payer</span>
+                <span class="font-bold text-amber-600">{{ format_price($kpis['salaires_restant'] ?? 0, 'MAD') }}</span>
+            </div>
+        </div>
+
+        {{-- Carte 4 : IMPAYÉS (Total des scolarités restant à encaisser) --}}
+        <div class="finance-card p-4.5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        Impayés · Restant à encaisser
+                    </span>
+                    <div class="mt-2 text-2xl lg:text-3xl font-extrabold text-amber-600 dark:text-amber-400 whitespace-nowrap">
                         {{ format_price($kpis['total_restant_etudiants'] ?? 0, 'MAD') }}
                     </div>
                 </div>
@@ -203,65 +253,21 @@
                 </div>
             </div>
             <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-2.5">
-                <span>Reste sur scolarités</span>
-                <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $schoolYear }}</span>
-            </div>
-        </div>
-
-        {{-- Carte 3 : Salaires Payés --}}
-        <div class="finance-card p-4.5">
-            <div class="flex items-start justify-between">
-                <div>
-                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        Salaires payés
-                    </span>
-                    <div class="mt-2 text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
-                        {{ format_price($kpis['salaires_payes'] ?? 0, 'MAD') }}
-                    </div>
-                </div>
-                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                    <x-icon name="user-group" class="h-5 w-5" />
-                </div>
-            </div>
-            <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-2.5">
-                <span>Salaires restant à payer</span>
-                <span class="font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">
-                    {{ format_price($kpis['salaires_restant'] ?? 0, 'MAD') }}
-                </span>
-            </div>
-        </div>
-
-        {{-- Carte 4 : Solde Net de Trésorerie --}}
-        <div class="finance-card p-4.5">
-            <div class="flex items-start justify-between">
-                <div>
-                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        Solde net de trésorerie
-                    </span>
-                    <div class="mt-2 text-2xl lg:text-3xl font-extrabold {{ ($kpis['solde_net'] ?? 0) >= 0 ? 'text-[#0DAD98]' : 'text-rose-600' }} whitespace-nowrap">
-                        {{ format_price($kpis['solde_net'] ?? 0, 'MAD') }}
-                    </div>
-                </div>
-                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ECFDF5] text-[#0DAD98] dark:bg-[#0DAD98]/20 dark:text-[#0DAD98]">
-                    <x-icon name="banknotes" class="h-5 w-5" />
-                </div>
-            </div>
-            <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-2.5">
-                <span>Encaissements - Salaires</span>
-                <span class="font-semibold text-slate-700 dark:text-slate-300">Activité réelle</span>
+                <span>Non payés : {{ $kpis['etudiants_impayes'] ?? 0 }}</span>
+                <span class="font-bold text-amber-600">Partiels : {{ $kpis['etudiants_partiels'] ?? 0 }}</span>
             </div>
         </div>
     </div>
 
     {{-- ────────────────────────────────────────────────────────────
-         DEUXIÈME SECTION : RÉCAPITULATIF (STYLE BLOC BUDGET 2026 CAD SYNDIC)
+         DEUXIÈME SECTION : RÉCAPITULATIF (STYLE BLOC BUDGET CAD SYNDIC)
     ──────────────────────────────────────────────────────────── --}}
     <div class="finance-card p-5 sm:p-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div>
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Synthèse budgétaire</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Recouvrement des scolarités</span>
                 <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                    Budget & Recouvrement Annuel · {{ $schoolYear }}
+                    Recouvrement des scolarités · {{ $schoolYear }}
                 </h2>
             </div>
             <div class="flex items-center gap-4 text-xs font-semibold">
@@ -273,18 +279,22 @@
                 </div>
                 <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
                 <div>
-                    <span class="text-slate-400">Encaissé :</span>
+                    <span class="text-slate-400">Total encaissé :</span>
                     <span class="text-[#0DAD98] font-bold ml-1 whitespace-nowrap">
                         {{ format_price($kpis['total_encaisse'] ?? 0, 'MAD') }}
                     </span>
                 </div>
+                <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
+                <a href="{{ route('super-admin.finance.students') }}" class="text-[#0DAD98] hover:underline font-bold">
+                    Voir les détails &rarr;
+                </a>
             </div>
         </div>
 
         {{-- Barre de progression fine style Cad Syndic --}}
         <div class="mt-5 space-y-2">
             <div class="flex items-center justify-between text-xs">
-                <span class="font-medium text-slate-600 dark:text-slate-300">Progression globale des encaissements</span>
+                <span class="font-medium text-slate-600 dark:text-slate-300">Progression globale de l'encaissement</span>
                 <span class="font-bold text-[#0DAD98]">{{ $kpis['taux_recouvrement'] ?? 0 }}% recouvré</span>
             </div>
             <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
@@ -300,195 +310,111 @@
     </div>
 
     {{-- ────────────────────────────────────────────────────────────
-         TROISIÈME SECTION : DEUX GRAPHIQUES ÉPURÉS CÔTE À CÔTE
+         TROISIÈME SECTION : ALERTES FINANCIÈRES (STYLE CAD SYNDIC)
     ──────────────────────────────────────────────────────────── --}}
-    <div class="grid gap-6 lg:grid-cols-2">
-
-        {{-- Graphique 1 : Évolution Encaissements vs Salaires --}}
-        <div class="finance-card p-5">
-            <div class="flex items-center justify-between mb-4">
+    @php
+        $activeAlertsCount = 0;
+        $unpaidStudentsCount = $kpis['etudiants_impayes'] ?? 0;
+        if ($unpaidStudentsCount > 0) $activeAlertsCount++;
+        $unpaidSalariesAmount = (float) ($kpis['salaires_restant'] ?? 0);
+        if ($unpaidSalariesAmount > 0) $activeAlertsCount++;
+    @endphp
+    <div class="finance-card p-5">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2.5">
+                <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 text-sm">
+                    ⚠️
+                </span>
                 <div>
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white">
-                        Évolution des flux mensuels
+                        Alertes financières
                     </h3>
-                    <p class="text-[11px] text-slate-500">Comparatif encaissements et salaires décaissés</p>
-                </div>
-                <div class="flex items-center gap-3 text-[11px] font-semibold">
-                    <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-                        <span class="h-2 w-2 rounded-full bg-[#0DAD98]"></span>
-                        Encaissements
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-                        <span class="h-2 w-2 rounded-full bg-slate-400"></span>
-                        Salaires
-                    </span>
+                    <p class="text-[11px] text-slate-500">Points d'attention nécessitant une action prioritaire</p>
                 </div>
             </div>
-
-            @php
-                $monthlyEvo = $kpis['monthly_evolution'] ?? [];
-                $evolution  = $monthlyEvo['items'] ?? [];
-                $maxVal     = max(1, $monthlyEvo['max_amount'] ?? 1);
-            @endphp
-
-            @if(!empty($evolution))
-                <div class="h-44 w-full flex items-end justify-between gap-3 pt-6 pb-2 border-b border-slate-100 dark:border-slate-800">
-                    @foreach($evolution as $ev)
-                        @php
-                            $hEnc = $maxVal > 0 ? round((($ev['collected'] ?? 0) / $maxVal) * 100) : 0;
-                            $hSal = $maxVal > 0 ? round((($ev['salaries'] ?? 0) / $maxVal) * 100) : 0;
-                        @endphp
-                        <div class="flex-1 flex flex-col items-center h-full justify-end group relative">
-                            {{-- Tooltip au hover --}}
-                            <div class="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-10 bg-slate-800 text-white text-[10px] py-1 px-2 rounded-md pointer-events-none whitespace-nowrap shadow-md z-10">
-                                Encaissé: {{ number_format($ev['collected'] ?? 0, 0, ',', ' ') }} DH<br>
-                                Salaires: {{ number_format($ev['salaries'] ?? 0, 0, ',', ' ') }} DH
-                            </div>
-
-                            <div class="w-full flex items-end justify-center gap-1 h-full">
-                                {{-- Barre Encaissement --}}
-                                <div class="w-2.5 sm:w-3.5 bg-[#0DAD98] rounded-t-sm transition-all duration-300 group-hover:brightness-110"
-                                     style="height: {{ max(4, $hEnc) }}%"></div>
-                                {{-- Barre Salaires --}}
-                                <div class="w-2.5 sm:w-3.5 bg-slate-300 dark:bg-slate-700 rounded-t-sm transition-all duration-300 group-hover:brightness-110"
-                                     style="height: {{ max(4, $hSal) }}%"></div>
-                            </div>
-                            <span class="mt-2 text-[10px] font-semibold text-slate-400 truncate w-full text-center">
-                                {{ $ev['label'] ?? '' }}
-                            </span>
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="h-44 flex items-center justify-center text-xs text-slate-400">
-                    Aucune donnée historique sur la période.
-                </div>
-            @endif
+            <span class="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-950/50 dark:text-amber-400">
+                {{ $activeAlertsCount }} alerte(s) active(s)
+            </span>
         </div>
 
-        {{-- Graphique 2 : Répartition des statuts étudiants --}}
-        <div class="finance-card p-5">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">
-                        Répartition des paiements étudiants
-                    </h3>
-                    <p class="text-[11px] text-slate-500">Statuts d'acquittement sur la scolarité</p>
+        <div class="grid gap-3 sm:grid-cols-2">
+            {{-- Alerte 1 : Impayés scolarité --}}
+            <div class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-rose-600 dark:bg-rose-900/40">
+                    <x-icon name="exclamation-circle" class="h-4 w-4" />
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-slate-900 dark:text-white">Scolarités en retard</h4>
+                        <a href="{{ route('super-admin.finance.recovery') }}" class="text-[11px] font-semibold text-[#0DAD98] hover:underline">Relancer &rarr;</a>
+                    </div>
+                    <p class="mt-0.5 text-[11px] text-slate-500">
+                        {{ $kpis['etudiants_impayes'] ?? 0 }} étudiant(s) avec scolarité non réglée (créance : {{ format_price($kpis['total_restant_etudiants'] ?? 0, 'MAD') }}).
+                    </p>
                 </div>
-                <a href="{{ route('super-admin.finance.students') }}" class="text-[11px] font-semibold text-[#0DAD98] hover:underline">
-                    Détails &rarr;
-                </a>
             </div>
 
-            @php
-                $cntPaid = $kpis['etudiants_payes'] ?? 0;
-                $cntPart = $kpis['etudiants_partiels'] ?? 0;
-                $cntUnp  = $kpis['etudiants_impayes'] ?? 0;
-                $totalSt = max(1, $cntPaid + $cntPart + $cntUnp);
-                $pctPaid = round(($cntPaid / $totalSt) * 100);
-                $pctPart = round(($cntPart / $totalSt) * 100);
-                $pctUnp  = max(0, 100 - $pctPaid - $pctPart);
-            @endphp
-
-            <div class="space-y-4 pt-3">
-                {{-- Barre segmentée épurée --}}
-                <div class="h-3 w-full flex rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
-                    <div style="width: {{ $pctPaid }}%" class="bg-[#0DAD98]" title="Payé : {{ $cntPaid }}"></div>
-                    <div style="width: {{ $pctPart }}%" class="bg-amber-400" title="Partiel : {{ $cntPart }}"></div>
-                    <div style="width: {{ $pctUnp }}%" class="bg-rose-400" title="Non payé : {{ $cntUnp }}"></div>
-                </div>
-
-                {{-- Légendes épurées avec compteurs --}}
-                <div class="grid grid-cols-3 gap-3 pt-2">
-                    <div class="rounded-lg bg-slate-50/80 p-2.5 dark:bg-slate-800/40">
-                        <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                            <span class="h-2 w-2 rounded-full bg-[#0DAD98]"></span>
-                            Payé intégral
-                        </div>
-                        <div class="mt-1 text-base font-bold text-slate-900 dark:text-white">
-                            {{ $cntPaid }} <span class="text-[11px] font-normal text-slate-400">({{ $pctPaid }}%)</span>
-                        </div>
+            {{-- Alerte 2 : Salaires restant à régler --}}
+            <div class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-900/40">
+                    <x-icon name="clock" class="h-4 w-4" />
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-slate-900 dark:text-white">Salaires professeurs en attente</h4>
+                        <a href="{{ route('super-admin.finance.teachers') }}" class="text-[11px] font-semibold text-[#0DAD98] hover:underline">Régler &rarr;</a>
                     </div>
-
-                    <div class="rounded-lg bg-slate-50/80 p-2.5 dark:bg-slate-800/40">
-                        <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                            <span class="h-2 w-2 rounded-full bg-amber-500"></span>
-                            Partiel
-                        </div>
-                        <div class="mt-1 text-base font-bold text-slate-900 dark:text-white">
-                            {{ $cntPart }} <span class="text-[11px] font-normal text-slate-400">({{ $pctPart }}%)</span>
-                        </div>
-                    </div>
-
-                    <div class="rounded-lg bg-slate-50/80 p-2.5 dark:bg-slate-800/40">
-                        <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                            <span class="h-2 w-2 rounded-full bg-rose-500"></span>
-                            Non payé
-                        </div>
-                        <div class="mt-1 text-base font-bold text-slate-900 dark:text-white">
-                            {{ $cntUnp }} <span class="text-[11px] font-normal text-slate-400">({{ $pctUnp }}%)</span>
-                        </div>
-                    </div>
+                    <p class="mt-0.5 text-[11px] text-slate-500">
+                        Reste à verser sur le mois : <strong class="text-slate-800 dark:text-slate-200">{{ format_price($kpis['salaires_restant'] ?? 0, 'MAD') }}</strong>.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 
     {{-- ────────────────────────────────────────────────────────────
-         QUATRIÈME SECTION : SYNTHÈSE PAR DOMAINE (CARTES COMPACTES)
+         QUATRIÈME SECTION : GRILLE DES 12 CARTES MENSUELLES (CAPTURE 2 CAD SYNDIC)
     ──────────────────────────────────────────────────────────── --}}
     <div>
         <div class="flex items-center justify-between mb-3.5">
             <div>
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">
-                    Performance par domaine de formation
+                    Périodes mensuelles · Année {{ $year }}
                 </h3>
-                <p class="text-[11px] text-slate-500">Avancement des encaissements par filière</p>
+                <p class="text-[11px] text-slate-500">Solde net par mois (vert si positif, rouge si négatif)</p>
             </div>
-            <a href="{{ route('super-admin.finance.students') }}"
-               class="text-xs font-semibold text-[#0DAD98] hover:underline flex items-center gap-1">
-                <span>Voir la liste des étudiants</span>
-                <x-icon name="arrow-right" class="h-3 w-3" />
-            </a>
+            <span class="text-xs text-slate-400">12 mois civils</span>
         </div>
 
-        @php
-            $domainBreakdown = $kpis['domain_breakdown'] ?? [];
-        @endphp
-
-        <div class="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-            @forelse($domainBreakdown as $slug => $db)
-                <div class="finance-card p-4 hover:border-slate-300 transition-colors">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <span class="text-base">📁</span>
-                            <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">
-                                {{ $db->label ?? $slug }}
-                            </h4>
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            @for($m = 1; $m <= 12; $m++)
+                @php
+                    $mName = $monthsNames[$m] ?? $m;
+                    // Évolution ou données du mois
+                    $matchingEvo = collect($kpis['monthly_evolution']['items'] ?? [])->firstWhere('label', substr($mName, 0, 3));
+                    $mCollected = (float) ($matchingEvo['collected'] ?? 0);
+                    $mSalaries  = (float) ($matchingEvo['salaries'] ?? 0);
+                    $mNet = $mCollected - $mSalaries;
+                    $isPos = $mNet >= 0;
+                @endphp
+                <div class="finance-card p-3.5 hover:border-slate-300 transition-all flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ $mName }}</span>
+                            <span class="rounded-md {{ $isPos ? 'bg-[#ECFDF5] text-[#0DAD98]' : 'bg-rose-50 text-rose-600' }} px-1.5 py-0.5 text-[10px] font-bold">
+                                {{ $isPos ? '+' : '-' }}
+                            </span>
                         </div>
-                        <span class="text-xs font-bold text-[#0DAD98]">
-                            {{ $db->rate ?? 0 }}%
-                        </span>
+                        <div class="text-sm font-extrabold {{ $isPos ? 'text-[#0DAD98]' : 'text-rose-600' }} whitespace-nowrap">
+                            {{ format_price($mNet, 'MAD') }}
+                        </div>
                     </div>
-
-                    {{-- Jauge fine --}}
-                    <div class="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mb-3">
-                        <div class="h-full rounded-full bg-[#0DAD98]" style="width: {{ min(100, $db->rate ?? 0) }}%"></div>
-                    </div>
-
-                    <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-2.5">
-                        <span>Encaissé: <strong class="text-slate-800 dark:text-slate-200">{{ format_price($db->collected ?? 0, 'MAD') }}</strong></span>
-                        <a href="{{ route('super-admin.finance.students', ['domain' => $slug]) }}"
-                           class="text-[#0DAD98] hover:underline font-semibold">
-                            Filtrer
-                        </a>
+                    <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400">
+                        <span>Enc: {{ number_format($mCollected, 0, ',', ' ') }}</span>
+                        <span>Sal: {{ number_format($mSalaries, 0, ',', ' ') }}</span>
                     </div>
                 </div>
-            @empty
-                <div class="col-span-3 text-center py-6 text-xs text-slate-400">
-                    Aucun domaine configuré.
-                </div>
-            @endforelse
+            @endfor
         </div>
     </div>
 

@@ -71,7 +71,7 @@
                 <div>
                     <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Total attendu</span>
                     <div class="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
-                        {{ format_price($stats['total_attendu'] ?? 0, 'MAD') }}
+                        {{ format_price($stats['total_expected'] ?? 0, 'MAD') }}
                     </div>
                 </div>
                 <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -80,7 +80,7 @@
             </div>
             <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
                 <span>Étudiants inscrits</span>
-                <span class="font-bold text-slate-800 dark:text-slate-200">{{ $stats['count_total'] ?? 0 }}</span>
+                <span class="font-bold text-slate-800 dark:text-slate-200">{{ $stats['total_students'] ?? 0 }}</span>
             </div>
         </div>
 
@@ -90,7 +90,7 @@
                 <div>
                     <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Total encaissé</span>
                     <div class="mt-2 text-2xl font-extrabold text-[#0DAD98] whitespace-nowrap">
-                        {{ format_price($stats['total_encaisse'] ?? 0, 'MAD') }}
+                        {{ format_price($stats['total_paid'] ?? 0, 'MAD') }}
                     </div>
                 </div>
                 <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#ECFDF5] text-[#0DAD98] dark:bg-[#0DAD98]/20">
@@ -99,7 +99,7 @@
             </div>
             <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 dark:border-slate-800/80 pt-2">
                 <span>Taux de recouvrement</span>
-                <span class="font-bold text-[#0DAD98]">{{ $stats['taux_recouvrement'] ?? 0 }}%</span>
+                <span class="font-bold text-[#0DAD98]">{{ $stats['recovery_rate'] ?? 0 }}%</span>
             </div>
         </div>
 
@@ -109,7 +109,7 @@
                 <div>
                     <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Reste à encaisser</span>
                     <div class="mt-2 text-2xl font-extrabold text-amber-600 dark:text-amber-400 whitespace-nowrap">
-                        {{ format_price($stats['total_restant'] ?? 0, 'MAD') }}
+                        {{ format_price($stats['total_remaining'] ?? 0, 'MAD') }}
                     </div>
                 </div>
                 <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40">
@@ -326,18 +326,18 @@
                                                 {{ $pay->reference ?? ('ENC-'.str_pad($pay->id, 5, '0', STR_PAD_LEFT)) }}
                                             </td>
                                             <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white whitespace-nowrap">
-                                                {{ $pay->enrollment->student->full_name ?? '—' }}
+                                                {{ $pay->student->full_name }}
                                             </td>
                                             <td class="py-3 px-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                                                {{ $pay->enrollment->formation->name ?? '—' }}
-                                                <span class="text-slate-400 text-[11px]">({{ $pay->enrollment->formation->center->name ?? '' }})</span>
+                                                {{ $pay->formation->name }}
+                                                <span class="text-slate-400 text-[11px]">({{ $pay->formation->center->name ?? '' }})</span>
                                             </td>
                                             <td class="py-3 px-4 whitespace-nowrap">
                                                 <span class="inline-flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-300">
-                                                    @if($pay->payment_method === 'cash') 💵 Espèces
-                                                    @elseif($pay->payment_method === 'bank_transfer') 🏦 Virement
-                                                    @elseif($pay->payment_method === 'credit_card') 💳 Carte
-                                                    @else 📄 {{ ucfirst($pay->payment_method) }}
+                                                    @if($pay->method === 'cash') 💵 Espèces
+                                                    @elseif($pay->method === 'bank_transfer') 🏦 Virement
+                                                    @elseif($pay->method === 'credit_card') 💳 Carte
+                                                    @else 📄 {{ ucfirst($pay->method) }}
                                                     @endif
                                                 </span>
                                             </td>
@@ -414,7 +414,7 @@
                                     {{ format_price($row->annual_price, 'MAD') }}
                                 </td>
                                 <td class="py-3 px-4 text-right font-bold text-[#0DAD98] whitespace-nowrap">
-                                    {{ format_price($row->total_paid, 'MAD') }}
+                                    {{ format_price($row->paid_amount, 'MAD') }}
                                 </td>
                                 <td class="py-3 px-4 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap">
                                     {{ format_price($row->remaining_amount, 'MAD') }}
@@ -513,13 +513,13 @@
                                     {{ format_price($debtor->annual_price, 'MAD') }}
                                 </td>
                                 <td class="py-3 px-4 text-right font-bold text-[#0DAD98] whitespace-nowrap">
-                                    {{ format_price($debtor->total_paid, 'MAD') }}
+                                    {{ format_price($debtor->paid_amount, 'MAD') }}
                                 </td>
                                 <td class="py-3 px-4 text-right font-black text-rose-600 dark:text-rose-400 whitespace-nowrap">
                                     {{ format_price($debtor->remaining_amount, 'MAD') }}
                                 </td>
                                 <td class="py-3 px-4 text-center text-slate-500 whitespace-nowrap">
-                                    {{ $debtor->last_payment ? $debtor->last_payment->format('d/m/Y') : 'Aucun versement' }}
+                                    {{ $debtor->last_payment?->payment_date ? $debtor->last_payment->payment_date->format('d/m/Y') : 'Aucun versement' }}
                                 </td>
                                 <td class="py-3 px-4 text-right whitespace-nowrap">
                                     <button type="button"

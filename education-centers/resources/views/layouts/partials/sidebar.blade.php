@@ -107,26 +107,36 @@
 
     if ($user->isSuperAdmin() && $isFinance) {
         // ────────────────────────────────────────────────────────────
-        // CONTEXTE DÉDIÉ : GESTION FINANCIÈRE GLOBALE
+        // CONTEXTE DÉDIÉ : GESTION FINANCIÈRE GLOBALE (CAD SYNDIC)
         // ────────────────────────────────────────────────────────────
         $groups[] = [
             'title' => null,
             'items' => array_filter([
                 $link('Tableau de bord', 'super-admin.finance.dashboard', 'chart', 'super-admin.finance.dashboard'),
+                $link('Statistiques', 'super-admin.finance.statistics', 'arrow-trending-up', 'super-admin.finance.statistics'),
             ])
         ];
 
         $groups[] = [
             'title' => 'Gestion financière',
             'items' => array_filter([
-                $link('Paiements étudiants', 'super-admin.finance.students', 'academic', 'super-admin.finance.students'),
-                $link('Salaires professeurs', 'super-admin.finance.teachers', 'user', 'super-admin.finance.teachers'),
-                $link('Historique des paiements', 'super-admin.finance.history', 'banknotes', 'super-admin.finance.history'),
+                $link('Paiements', 'super-admin.finance.students', 'academic', 'super-admin.finance.students'),
+                $link('Dépenses', 'super-admin.finance.expenses', 'banknotes', 'super-admin.finance.expenses'),
+                $link('Recouvrement', 'super-admin.finance.recovery', 'clock', 'super-admin.finance.recovery'),
             ])
         ];
 
         $groups[] = [
-            'title' => 'Paramètres & Rapports',
+            'title' => 'Trésorerie & Comptabilité',
+            'items' => array_filter([
+                $link('Compte bancaire', 'super-admin.finance.bank', 'building', 'super-admin.finance.bank'),
+                $link('Comptabilité', 'super-admin.finance.accounting', 'document-text', 'super-admin.finance.accounting'),
+                $link('Salaires des professeurs', 'super-admin.finance.teachers', 'user', 'super-admin.finance.teachers'),
+            ])
+        ];
+
+        $groups[] = [
+            'title' => 'Configuration & Rapports',
             'items' => array_filter([
                 $link('Configuration des prix', 'super-admin.finance.configuration', 'wrench', 'super-admin.finance.configuration'),
                 $link('Rapports financiers', 'super-admin.finance.reports', 'document', 'super-admin.finance.reports'),

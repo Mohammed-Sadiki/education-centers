@@ -759,4 +759,151 @@ class FinanceManagementTest extends TestCase
             ->assertOk()
             ->assertSee('Rapports financiers');
     }
+
+    /**
+     * 30. Super Admin peut afficher la page Statistiques avec graphiques Cad Syndic.
+     */
+    public function test_super_admin_can_view_statistics_page(): void
+    {
+        $this->actingAs($this->superAdmin)
+            ->get(route('super-admin.finance.statistics'))
+            ->assertOk()
+            ->assertSee('Statistiques financières')
+            ->assertSee('Total attendu')
+            ->assertSee('Reste impayé')
+            ->assertSee('Encaissements par mois');
+    }
+
+    /**
+     * 31. Super Admin peut afficher la page Dépenses et enregistrer une charge.
+     */
+    public function test_super_admin_can_view_expenses_and_store_expense(): void
+    {
+        $response = $this->actingAs($this->superAdmin)
+            ->get(route('super-admin.finance.expenses'))
+            ->assertOk()
+            ->assertSee('Dépenses')
+            ->assertSee('Budget alloué')
+            ->assertSee('Dépenses engagées');
+
+        // Test de l'enregistrement avec articles multiples et calcul automatique
+        $postResponse = $this->actingAs($this->superAdmin)
+            ->post(route('super-admin.finance.expenses.store'), [
+                'center_id'      => $this->centerBerlin->id,
+                'title'          => 'Achat de fournitures scolaires',
+                'supplier'       => 'Librairie Centrale',
+                'expense_date'   => now()->toDateString(),
+                'payment_method' => 'bank_transfer',
+                'reference'      => 'DEP-TEST-001',
+                'school_year'    => '2026/2027',
+                'items'          => [
+                    ['name' => 'Feutres', 'quantity' => 5, 'unit_price' => 20.00],
+                    ['name' => 'Papier A4', 'quantity' => 2, 'unit_price' => 50.00],
+                    ['name' => 'Stylos', 'quantity' => 10, 'unit_price' => 3.00],
+                ],
+            ]);
+
+        $postResponse->assertRedirect();
+        // Le montant total calculé doit être 100 + 100 + 30 = 230 DH
+        $this->assertDatabaseHas('expenses', [
+            'title'     => 'Achat de fournitures scolaires',
+            'amount'    => 230.00,
+            'supplier'  => 'Librairie Centrale',
+            'center_id' => $this->centerBerlin->id,
+        ]);
+        $this->assertDatabaseHas('expense_items', [
+            'name'       => 'Feutres',
+            'quantity'   => 5,
+            'unit_price' => 20.00,
+        ]);
+        $this->assertDatabaseHas('bank_transactions', [
+            'type'      => 'withdrawal',
+            'amount'    => 230.00,
+            'center_id' => $this->centerBerlin->id,
+        ]);
+
+        // Test d'annulation de dépense
+        $createdExpense = \App\Models\Expense::where('reference', 'DEP-TEST-001')->first();
+        $cancelResponse = $this->actingAs($this->superAdmin)
+            ->patch(route('super-admin.finance.expenses.cancel', $createdExpense->id));
+        $cancelResponse->assertRedirect();
+        $this->assertEquals('cancelled', $createdExpense->fresh()->status);
+    }
+
+    /**
+     * 32. Super Admin peut afficher la page Recouvrement avec relances WhatsApp.
+     */
+    public function test_super_admin_can_view_recovery_page(): void
+    {
+        $this->actingAs($this->superAdmin)
+            ->get(route('super-admin.finance.recovery'))
+            ->assertOk()
+            ->assertSee('Recouvrement & Impayés')
+            ->assertSee('Créance totale')
+            ->assertSee('Dossiers débiteurs')
+            ->assertSee('WhatsApp');
+    }
+
+    /**
+     * 33. Super Admin peut afficher le Compte bancaire et enregistrer une écriture.
+     */
+    public function test_super_admin_can_view_bank_and_store_transaction(): void
+    {
+        $this->actingAs($this->superAdmin)
+            ->get(route('super-admin.finance.bank'))
+            ->assertOk()
+            ->assertSee('Compte bancaire & Trésorerie')
+            ->assertSee('Total Déposé')
+            ->assertSee('Total Retiré')
+            ->assertSee('Solde Banque');
+
+        $postResponse = $this->actingAs($this->superAdmin)
+            ->post(route('super-admin.finance.bank.store'), [
+                'center_id'        => $this->centerBerlin->id,
+                'transaction_date' => now()->toDateString(),
+                'label'            => 'Dépôt espèces scolarités',
+                'origin'           => 'Caisse',
+                'method'           => 'cash',
+                'type'             => 'deposit',
+                'amount'           => 12000.00,
+                'reference'        => 'DEPOT-ESPECES-01',
+            ]);
+
+        $postResponse->assertRedirect();
+        $this->assertDatabaseHas('bank_transactions', [
+            'label'     => 'Dépôt espèces scolarités',
+            'type'      => 'deposit',
+            'amount'    => 12000.00,
+            'center_id' => $this->centerBerlin->id,
+        ]);
+    }
+
+    /**
+     * 34. Super Admin peut afficher la Comptabilité avec onglets Journal, CPC, Bilan et Grand Livre.
+     */
+    public function test_super_admin_can_view_accounting_tabs(): void
+    {
+        $this->actingAs($this->superAdmin)
+            ->get(route('super-admin.finance.accounting', ['tab' => 'journal']))
+            ->assertOk()
+            ->assertSee('Comptabilité')
+            ->assertSee('Livre-Journal général');
+
+        $this->actingAs($this->superAdmin)
+            ->get(route('super-admin.finance.accounting', ['tab' => 'cpc']))
+            ->assertOk()
+            ->assertSee('PRODUITS')
+            ->assertSee('CHARGES');
+
+        $this->actingAs($this->superAdmin)
+            ->get(route('super-admin.finance.accounting', ['tab' => 'bilan']))
+            ->assertOk()
+            ->assertSee('ACTIF')
+            ->assertSee('PASSIF');
+
+        $this->actingAs($this->superAdmin)
+            ->get(route('super-admin.finance.accounting', ['tab' => 'grand_livre']))
+            ->assertOk()
+            ->assertSee('Grand Livre des Comptes');
+    }
 }
