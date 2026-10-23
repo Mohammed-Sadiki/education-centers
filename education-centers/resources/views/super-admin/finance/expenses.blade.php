@@ -276,6 +276,11 @@
                                            class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:underline">
                                             <span>{{ __('🧾 Reçu PDF') }}</span>
                                         </a>
+                                        <a href="{{ route('super-admin.finance.expenses.receipt-pdf', ['expense' => $exp->id, 'mode' => 'inline']) }}"
+                                           target="_blank" rel="noopener"
+                                           class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:underline">
+                                            <span>{{ __('🖨️ Imprimer') }}</span>
+                                        </a>
                                     </td>
                                     <td class="py-3 px-4 text-right whitespace-nowrap">
                                         <div class="flex items-center justify-end gap-1.5">

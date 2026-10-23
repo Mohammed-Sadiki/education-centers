@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Concerns\HasDomainScope;
 use App\Concerns\HasTranslations;
+use App\Models\Concerns\HasContextScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +14,8 @@ class Formation extends Model
 {
     use HasFactory;
     use HasTranslations;
+    use HasDomainScope;
+    use HasContextScope;
 
     /**
      * Fields whose displayed value can be localized.
@@ -60,6 +64,16 @@ class Formation extends Model
     public function center(): BelongsTo
     {
         return $this->belongsTo(Center::class);
+    }
+
+    /**
+     * Relation : domaine de rattachement (clé personnalisée slug <-> colonne domain).
+     * Nommée domainModel() car un attribut `domain` (colonne string) existe déjà :
+     * $formation->domain renvoie le slug, $formation->domainModel renvoie le Domain.
+     */
+    public function domainModel(): BelongsTo
+    {
+        return $this->belongsTo(Domain::class, 'domain', 'slug');
     }
 
     /**

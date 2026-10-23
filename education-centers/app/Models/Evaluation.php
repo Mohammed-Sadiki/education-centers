@@ -10,6 +10,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Evaluation extends Model
 {
     use HasFactory;
+    use \App\Concerns\HasDomainScope;
+    use \App\Models\Concerns\HasContextScope;
+
+    /**
+     * Le domaine d'une évaluation est hérité de sa formation.
+     */
+    protected function domainPaths(): array
+    {
+        return ['formation'];
+    }
 
     protected $fillable = [
         'center_id', 'class_id', 'formation_id', 'teacher_id', 'schedule_id',

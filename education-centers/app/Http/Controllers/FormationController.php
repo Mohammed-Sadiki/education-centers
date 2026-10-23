@@ -29,6 +29,9 @@ class FormationController extends Controller
             $query->where('center_id', $authUser->center_id);
         }
 
+        // Filtrage par domaine actif
+        $query = $this->applyDomainScope($query);
+
         // Filtre : recherche par nom
         if ($search = $request->input('search')) {
             $query->where('name', 'like', "%{$search}%");

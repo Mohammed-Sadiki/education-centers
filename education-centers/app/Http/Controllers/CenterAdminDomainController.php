@@ -1,0 +1,79 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Services\DomainDashboardData;
+use App\Support\DomainRegistry;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+/**
+ * Espace Admin Centre piloté par domaine — réutilise intégralement la logique
+ * du Super Admin (DomainDashboardData + vue partagée) en la restreignant au
+ * centre courant de l'utilisateur.
+ *
+ * Isolation stricte :
+ *  - le périmètre est toujours limité au centre de l'Admin Centre (jamais celui
+ *    fourni par l'URL) ;
+ *  - un domaine étranger (aucune formation dans le centre) renvoie un 404.
+ */
+class CenterAdminDomainController extends SuperAdminDomainController
+{
+    /**
+     * Portail de sélection des domaines proposés par le centre.
+     * (Nom distinct de l'index() du parent, sans conflit de signature.)
+     */
+    public function domainPicker(Request $request): View
+    {
+        session()->forget('active_domain');
+
+        $domains = DomainRegistry::visibleForCenter($this->centerId($request));
+
+        return view('center-admin.domaines', compact('domains'));
+    }
+
+    /**
+     * Tableau de bord d'un domaine, restreint au centre de l'Admin Centre.
+     */
+    public function domainDashboard(Request $request, string $domain, DomainDashboardData $dashboard): View
+    {
+        $this->assertDomainAllowed($domain);
+
+        session(['active_domain' => $domain]);
+
+        // Périmètre forcé : le centre de l'Admin Centre, jamais un ?center_id externe.
+        $centerId = $this->centerId($request);
+
+        $data = $dashboard->build($domain, $centerId);
+
+        return view('super-admin.domain.dashboard', array_merge($data, [
+            'domain'   => $domain,
+            'centers'  => collect(),
+            'centerId' => $centerId,
+        ]));
+    }
+
+    /**
+     * Un Admin Centre n'accède qu'aux domaines réellement proposés par son centre.
+     */
+    protected function assertDomainAllowed(string $domain): void
+    {
+        abort_unless(
+            DomainRegistry::isValid($domain)
+            && DomainRegistry::existsForCenter($domain, (int) $this->centerId(request())),
+            404
+        );
+    }
+
+    /**
+     * Centre courant de l'Admin Centre connecté.
+     */
+    private function centerId(Request $request): int
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return (int) $user->center_id;
+    }
+}

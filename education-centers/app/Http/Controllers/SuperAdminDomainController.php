@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Attendance;
-use App\Models\Certificate;
-use App\Models\ClassRoom;
-use App\Models\Enrollment;
-use App\Models\Formation;
-use App\Models\Payment;
-use App\Models\Schedule;
-use App\Models\Student;
-use App\Models\Teacher;
+use App\Models\Center;
+use App\Services\DomainDashboardData;
+use App\Support\DomainRegistry;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class SuperAdminDomainController extends Controller
 {
     /**
-     * Domaines de formation disponibles.
-     * Clé = slug de route/session, Valeur = libellé affiché.
+     * Domaines canoniques de repli (source de vérité principale = table `domains`).
+     * Conservé pour la compatibilité (tests, FinanceService) ; la résolution
+     * effective passe par {@see DomainRegistry} qui privilégie la base.
+     *
+     * Clé = slug, Valeur = libellé.
      */
     public const DOMAINS = [
         'sante'            => 'Santé',
@@ -36,64 +35,66 @@ class SuperAdminDomainController extends Controller
     {
         session()->forget('active_domain');
 
-        return view('super-admin.domaines');
+        $domains = DomainRegistry::visible();
+
+        return view('super-admin.domaines', compact('domains'));
     }
 
     /**
-     * Dashboard générique d'un domaine de formation.
+     * Dashboard d'un domaine de formation, réellement filtré.
      *
      * Route paramétrée : GET /super-admin/domaines/{domain}
-     * Le slug {domain} est validé contre la liste DOMAINS (404 si inconnu).
+     * Le slug est validé contre la source de vérité (base ou repli canonique).
      *
-     * Les statistiques reflètent l'ensemble de la plateforme (tous centres)
-     * car aucune colonne `domain` n'existe encore dans le schéma.
-     * Un bandeau d'avertissement est affiché dans la vue.
+     * KPI et graphiques partagent exactement le même périmètre : le domaine
+     * actif (tous centres par défaut) + un filtre centre secondaire optionnel
+     * (?center_id) réservé au Super Admin.
      */
-    public function domainDashboard(string $domain): View
+    public function domainDashboard(Request $request, string $domain, DomainDashboardData $dashboard): View
     {
-        abort_unless(array_key_exists($domain, self::DOMAINS), 404);
+        $this->assertDomainAllowed($domain);
 
         session(['active_domain' => $domain]);
 
-        $stats = [
-            'students'            => Student::count(),
-            'teachers'            => Teacher::count(),
-            'formations'          => Formation::count(),
-            'classes'             => ClassRoom::count(),
-            'enrollments'         => Enrollment::count(),
-            'pending_enrollments' => Enrollment::where('status', 'pending')->count(),
-            'attendances_today'   => Attendance::whereDate('date', now()->toDateString())->count(),
-            'payments_total'      => Payment::where('status', 'paid')->sum('amount'),
-            'certificates_issued' => Certificate::where('status', 'issued')->count(),
-        ];
+        // Filtre centre secondaire (Super Admin uniquement).
+        $centerId = $request->query('center_id') ? (int) $request->query('center_id') : null;
 
-        $recentEnrollments = Enrollment::with(['student', 'formation', 'center'])
-            ->latest()
-            ->take(8)
-            ->get();
+        $data = $dashboard->build($domain, $centerId);
 
-        $upcomingSchedules = Schedule::where('date', '>=', now()->toDateString())
-            ->where('status', 'scheduled')
-            ->with(['classRoom', 'teacher.user', 'room'])
-            ->orderBy('date')
-            ->orderBy('start_time')
-            ->take(5)
-            ->get();
+        $centers = Center::orderBy('name')->get();
 
-        return view('super-admin.domain.dashboard', compact(
-            'domain',
-            'stats',
-            'recentEnrollments',
-            'upcomingSchedules'
-        ));
+        return view('super-admin.domain.dashboard', array_merge($data, [
+            'domain'    => $domain,
+            'centers'   => $centers,
+            'centerId'  => $centerId,
+        ]));
     }
 
     /**
-     * Alias conservé pour compatibilité : redirige vers le dashboard Santé générique.
-     * Les anciens liens et tests utilisant super-admin.sante.dashboard continuent de fonctionner.
+     * Alias conservé pour compatibilité : redirige vers le dashboard Santé.
      */
-    public function santeDashboard(): View
+    public function santeDashboard(Request $request, DomainDashboardData $dashboard): View
     {
-        return $this->domainDashboard('sante');
+        return $this->domainDashboard($request, 'sante', $dashboard);
+    }
+
+    /**
+     * Quitte le contexte domaine actif : la liste des domaines redevient la
+     * source de tous les périmètres. Utilisé par le bandeau de sidebar.
+     */
+    public function clearDomain(): RedirectResponse
+    {
+        session()->forget('active_domain');
+
+        return redirect()->route('dashboard');
+    }
+
+    /**
+     * Vérifie que le domaine demandé est valide. Le Super Admin voit tous les
+     * domaines ; une sous-classe (Admin Centre) peut restreindre à son centre.
+     */
+    protected function assertDomainAllowed(string $domain): void
+    {
+        abort_unless(DomainRegistry::isValid($domain), 404);
     }
 }

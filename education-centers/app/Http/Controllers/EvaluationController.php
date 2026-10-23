@@ -26,6 +26,8 @@ class EvaluationController extends Controller
             $classIds = Enrollment::where('student_id', $user->student?->id)->where('status', 'accepted')->pluck('class_id');
             $query->whereIn('class_id', $classIds)->where('center_id', $user->center_id);
         }
+        // Filtrage par domaine actif
+        $query = $this->applyDomainScope($query);
         if ($classId = $request->input('class_id')) {
             $query->where('class_id', $classId);
         }

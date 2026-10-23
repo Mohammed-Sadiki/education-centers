@@ -9,6 +9,7 @@ use App\Models\ClassRoom;
 use App\Models\Room;
 use App\Models\Schedule;
 use App\Models\Teacher;
+use App\Services\ScheduleConflictService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -17,9 +18,23 @@ use Illuminate\View\View;
 class ScheduleController extends Controller
 {
     /**
-     * Liste des séances du planning (avec filtres).
+     * Palette de couleurs par type de séance (fond pastel + bordure colorée).
      */
-    public function index(Request $request): View
+    public const TYPE_COLORS = [
+        'course'   => '#3b82f6', // bleu
+        'workshop' => '#10b981', // vert
+        'exam'     => '#f59e0b', // ambre
+        'other'    => '#ef4444', // rouge
+    ];
+
+    /**
+     * Liste des séances du planning, affichée dans un calendrier interactif.
+     *
+     * Les séances proviennent toutes de la base de données (aucune donnée
+     * factice) et sont filtrées selon le rôle, le centre, la classe, le
+     * professeur, le type et le statut sélectionnés.
+     */
+    public function index(Request $request, ScheduleConflictService $conflictService): View
     {
         Gate::authorize('viewAny', Schedule::class);
 
@@ -36,6 +51,9 @@ class ScheduleController extends Controller
         if ($authUser->isCenterAdmin()) {
             $query->where('center_id', $authUser->center_id);
         }
+
+        // Filtrage par domaine actif
+        $query = $this->applyDomainScope($query);
 
         // Filtre : centre (Super Admin seulement)
         if ($authUser->isSuperAdmin() && ($centerId = $request->input('center_id'))) {
@@ -62,15 +80,71 @@ class ScheduleController extends Controller
             $query->where('teacher_id', $teacherId);
         }
 
+        // Filtre : type de séance
+        if ($type = $request->input('type')) {
+            $query->where('type', $type);
+        }
+
         // Filtre : salle
         if ($roomId = $request->input('room_id')) {
             $query->where('room_id', $roomId);
         }
 
-        $schedules = $query->orderBy('date', 'desc')
+        $filtered = $query->orderBy('date', 'asc')
             ->orderBy('start_time', 'asc')
-            ->paginate(15)
-            ->withQueryString();
+            ->get();
+
+        // Séances en conflit (même prof / salle / classe qui se chevauchent).
+        $conflictIds = array_flip($conflictService->overlappingIds($filtered));
+
+        $events = $filtered->map(function (Schedule $s) use ($authUser, $conflictIds): array {
+            $type = array_key_exists($s->type, self::TYPE_COLORS) ? $s->type : 'other';
+
+            $classes = ['ec-fc-event', 'ec-fc-event--'.$type];
+            if ($s->isCancelled()) {
+                $classes[] = 'ec-fc-event--cancelled';
+            }
+            if (isset($conflictIds[$s->id])) {
+                $classes[] = 'ec-fc-event--conflict';
+            }
+
+            return [
+                'id'    => (string) $s->id,
+                'title' => $s->title ?: ($s->classRoom?->name ?: __('Séance')),
+                'start' => $s->date?->format('Y-m-d').'T'.substr((string) $s->start_time, 0, 5),
+                'end'   => $s->date?->format('Y-m-d').'T'.substr((string) $s->end_time, 0, 5),
+                'allDay' => false,
+                'classNames' => $classes,
+                'extendedProps' => [
+                    'type'         => $type,
+                    'typeLabel'    => $s->type_label,
+                    'color'        => self::TYPE_COLORS[$type],
+                    'status'       => $s->status,
+                    'statusLabel'  => match ($s->status) {
+                        'completed' => __('Terminé'),
+                        'cancelled' => __('Annulé'),
+                        default => __('Planifié'),
+                    },
+                    'time'         => substr((string) $s->start_time, 0, 5).' – '.substr((string) $s->end_time, 0, 5),
+                    'date'         => $s->formatted_date,
+                    'className'    => $s->classRoom?->name,
+                    'classCode'    => $s->classRoom?->code,
+                    'teacherName'  => $s->teacher?->full_name,
+                    'roomName'     => $s->room?->name,
+                    'roomCode'     => $s->room?->code,
+                    'centerName'   => $s->center?->name,
+                    'description'  => $s->description,
+                    'conflict'     => isset($conflictIds[$s->id]),
+                    'showUrl'      => route('schedules.show', $s),
+                    'editUrl'      => route('schedules.edit', $s),
+                    'statusUrl'    => route('schedules.toggle-status', $s),
+                    'canEdit'      => $authUser->can('update', $s),
+                    'canCancel'    => $authUser->can('toggleStatus', $s) && ! $s->isCancelled(),
+                    'canComplete'  => $authUser->can('toggleStatus', $s) && $s->isScheduled(),
+                    'canReactivate'=> $authUser->can('toggleStatus', $s) && $s->isCancelled(),
+                ],
+            ];
+        })->values();
 
         // Données pour les filtres
         $targetCenterId = $authUser->isCenterAdmin() ? $authUser->center_id : $request->input('center_id');
@@ -90,7 +164,19 @@ class ScheduleController extends Controller
         $rooms = $roomsQuery->get();
         $centers = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
 
-        return view('schedules.index', compact('schedules', 'classes', 'teachers', 'rooms', 'centers'));
+        $typeOptions = [
+            'course'   => __('Cours'),
+            'workshop' => __('Atelier / TP'),
+            'exam'     => __('Examen'),
+            'other'    => __('Autre'),
+        ];
+
+        $initialDate = $request->input('date') ?: now()->format('Y-m-d');
+
+        return view('schedules.index', compact(
+            'events', 'classes', 'teachers', 'rooms', 'centers',
+            'typeOptions', 'initialDate'
+        ));
     }
 
     /**

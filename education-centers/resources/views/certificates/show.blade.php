@@ -4,7 +4,7 @@
 @section('content')
 <x-ui.page-header title="{{ $certificate->certificate_number }}" :description="$certificate->type_label">
     <a href="{{ route('certificates.download', $certificate) }}" class="ec-btn-primary"><x-icon name="download" class="h-4 w-4" /> {{ __('Télécharger') }}</a>
-    <button type="button" class="ec-btn-secondary" onclick="window.print()"><x-icon name="printer" class="h-4 w-4" /> {{ __('Imprimer') }}</button>
+    <a href="{{ route('certificates.print', $certificate) }}" target="_blank" rel="noopener" class="ec-btn-secondary"><x-icon name="printer" class="h-4 w-4" /> {{ __('Imprimer') }}</a>
 </x-ui.page-header>
 <x-ui.card>
     <dl class="grid gap-3 text-sm sm:grid-cols-2">

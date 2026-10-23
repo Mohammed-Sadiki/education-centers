@@ -9,6 +9,7 @@ use App\Models\Student;
 use App\Services\CertificateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -89,6 +90,30 @@ class CertificateController extends Controller
         $filename = $certificate->certificate_number.'.pdf';
 
         return Storage::disk('private')->download($certificate->file_path, $filename);
+    }
+
+    /**
+     * Open the exact same stored PDF inline (viewer / print). Content is
+     * byte-identical to download(); only the disposition differs.
+     */
+    public function printPdf(Certificate $certificate): Response
+    {
+        Gate::authorize('view', $certificate);
+        $this->certificateService->generate($certificate);
+        $certificate->refresh();
+
+        abort_unless(
+            $certificate->file_path && Storage::disk('private')->exists($certificate->file_path),
+            404
+        );
+
+        $content = Storage::disk('private')->get($certificate->file_path);
+
+        return response($content, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$certificate->certificate_number.'.pdf"',
+            'Cache-Control' => 'private, max-age=0, must-revalidate',
+        ]);
     }
 
     public function destroy(Certificate $certificate): RedirectResponse

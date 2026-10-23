@@ -34,11 +34,46 @@ class FinanceDashboardController extends Controller
     ) {}
 
     /**
+     * Domaine actif du module financier : priorité au filtre explicite `?domain`
+     * (y compris « all »), sinon le domaine sélectionné dans le contexte global
+     * (session active_domain). C'est ce qui « unifie » la finance avec le reste
+     * de l'application : un Super Admin qui a choisi un domaine voit ses KPI et
+     * listes financiers filtrés sur ce domaine sans action supplémentaire.
+     */
+    private function resolveDomain(Request $request): string
+    {
+        $domain = $request->query('domain');
+
+        if ($domain !== null && $domain !== '') {
+            return $domain;
+        }
+
+        $ctx = user_context();
+
+        return $ctx->hasDomain() ? $ctx->domainSlug() : 'all';
+    }
+
+    /**
+     * Centre de travail : filtre explicite `?center_id` pour le Super Admin,
+     * sinon le centre forcé par le contexte (Admin Centre).
+     */
+    private function resolveCenterScope(Request $request): ?int
+    {
+        if ($centerId = $request->query('center_id')) {
+            return (int) $centerId;
+        }
+
+        $ctx = user_context();
+
+        return $ctx->hasCenter() ? $ctx->centerId() : null;
+    }
+
+    /**
      * Dashboard financier GLOBAL du Super Admin.
      */
     public function index(Request $request): View
     {
-        $domain = $request->query('domain', 'all');
+        $domain = $this->resolveDomain($request);
         $schoolYear = $request->query('school_year', '2026/2027');
         $month = (int) $request->query('month', (int) now()->format('n'));
         if ($month < 1 || $month > 12) {
@@ -48,7 +83,7 @@ class FinanceDashboardController extends Controller
         if ($year < 2020 || $year > 2035) {
             $year = 2026;
         }
-        $centerId = $request->query('center_id') ? (int) $request->query('center_id') : null;
+        $centerId = $this->resolveCenterScope($request);
 
         $kpis = $this->financeService->getOverviewKpis($domain, $schoolYear, $month, $year, $centerId);
         $studentRows = $this->financeService->getStudentFinancialRows($domain, $schoolYear, $centerId);
@@ -106,10 +141,10 @@ class FinanceDashboardController extends Controller
      */
     public function students(Request $request): View
     {
-        $domain = $request->query('domain', 'all');
+        $domain = $this->resolveDomain($request);
         $schoolYear = $request->query('school_year', '2026/2027');
         $status = $request->query('status', 'all');
-        $centerId = $request->query('center_id') ? (int) $request->query('center_id') : null;
+        $centerId = $this->resolveCenterScope($request);
         $formationId = $request->query('formation_id') ? (int) $request->query('formation_id') : null;
         $search = trim((string) $request->query('search', ''));
         $viewMode = $request->query('view', 'students'); // 'students' | 'monthly' | 'unpaid'
@@ -216,7 +251,7 @@ class FinanceDashboardController extends Controller
      */
     public function teachers(Request $request): View
     {
-        $domain = $request->query('domain', 'all');
+        $domain = $this->resolveDomain($request);
         $schoolYear = $request->query('school_year', '2026/2027');
         $month = (int) $request->query('month', (int) now()->format('n'));
         if ($month < 1 || $month > 12) {
@@ -224,7 +259,7 @@ class FinanceDashboardController extends Controller
         }
         $year = (int) $request->query('year', 2026);
         $status = $request->query('status', 'all');
-        $centerId = $request->query('center_id') ? (int) $request->query('center_id') : null;
+        $centerId = $this->resolveCenterScope($request);
         $search = trim((string) $request->query('search', ''));
 
         $allTeacherRows = $this->financeService->getTeacherSalaryRows($domain, $month, $year, $schoolYear, $centerId);
@@ -286,11 +321,11 @@ class FinanceDashboardController extends Controller
      */
     public function history(Request $request): View
     {
-        $domain = $request->query('domain', 'all');
+        $domain = $this->resolveDomain($request);
         $schoolYear = $request->query('school_year', 'all');
         $paymentMethod = $request->query('payment_method', $request->query('method', 'all'));
         $method = $paymentMethod;
-        $centerId = $request->query('center_id') ? (int) $request->query('center_id') : null;
+        $centerId = $this->resolveCenterScope($request);
         $search = trim((string) $request->query('search', ''));
 
         $paymentsQuery = Payment::with(['student.user', 'formation.center', 'center', 'recorder'])
@@ -514,11 +549,11 @@ class FinanceDashboardController extends Controller
      */
     public function statistics(Request $request): View
     {
-        $domain = $request->query('domain', 'all');
+        $domain = $this->resolveDomain($request);
         $schoolYear = $request->query('school_year', '2026/2027');
         $month = (int) $request->query('month', (int) now()->format('n'));
         $year = (int) $request->query('year', (int) now()->format('Y'));
-        $centerId = $request->query('center_id') ? (int) $request->query('center_id') : null;
+        $centerId = $this->resolveCenterScope($request);
 
         $kpis = $this->financeService->getOverviewKpis($domain, $schoolYear, $month, $year, $centerId);
         $domains = FinanceService::getDomains();
@@ -552,7 +587,7 @@ class FinanceDashboardController extends Controller
     public function expenses(Request $request): View
     {
         $schoolYear = $request->query('school_year', '2026/2027');
-        $centerId = $request->query('center_id') ? (int) $request->query('center_id') : null;
+        $centerId = $this->resolveCenterScope($request);
         $categoryId = $request->query('category_id') ? (int) $request->query('category_id') : null;
         $search = $request->query('search');
 
@@ -813,18 +848,20 @@ class FinanceDashboardController extends Controller
 
     /**
      * Generate a localized PDF receipt for an expense (Arabic-safe).
+     * Supports mode=inline (print viewer) and attachment (download) with the
+     * exact same document content.
      */
-    public function expenseReceiptPdf(Expense $expense, PdfService $pdf): Response
+    public function expenseReceiptPdf(Request $request, Expense $expense, PdfService $pdf): Response
     {
         $expense->load(['center', 'category', 'items', 'recorder']);
 
         $filename = 'recu-'.($expense->reference ?: $expense->id).'.pdf';
+        $view = 'super-admin.finance.pdf.expense-receipt';
+        $data = ['expense' => $expense];
 
-        return $pdf->download(
-            'super-admin.finance.pdf.expense-receipt',
-            ['expense' => $expense],
-            $filename,
-        );
+        return $request->query('mode') === 'inline'
+            ? $pdf->inline($view, $data, $filename)
+            : $pdf->download($view, $data, $filename);
     }
 
     /**
@@ -832,9 +869,9 @@ class FinanceDashboardController extends Controller
      */
     public function recovery(Request $request): View
     {
-        $domain = $request->query('domain', 'all');
+        $domain = $this->resolveDomain($request);
         $schoolYear = $request->query('school_year', '2026/2027');
-        $centerId = $request->query('center_id') ? (int) $request->query('center_id') : null;
+        $centerId = $this->resolveCenterScope($request);
         $search = $request->query('search');
 
         $rows = $this->financeService->getStudentFinancialRows($domain, $schoolYear, $centerId);
@@ -880,7 +917,7 @@ class FinanceDashboardController extends Controller
      */
     public function bank(Request $request): View
     {
-        $centerId = $request->query('center_id') ? (int) $request->query('center_id') : null;
+        $centerId = $this->resolveCenterScope($request);
         $type = $request->query('type', 'all');
         $search = $request->query('search');
 
@@ -954,7 +991,7 @@ class FinanceDashboardController extends Controller
     public function accounting(Request $request): View
     {
         $tab = $request->query('tab', 'journal'); // journal, cpc, bilan, grand_livre
-        $centerId = $request->query('center_id') ? (int) $request->query('center_id') : null;
+        $centerId = $this->resolveCenterScope($request);
         $year = (int) $request->query('year', (int) now()->format('Y'));
 
         // Données consolidées réelles

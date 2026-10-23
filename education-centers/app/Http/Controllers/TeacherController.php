@@ -30,6 +30,9 @@ class TeacherController extends Controller
             $query->where('center_id', $authUser->center_id);
         }
 
+        // Filtrage par domaine actif
+        $query = $this->applyDomainScope($query);
+
         // Filtre : recherche par numéro professeur
         if ($teacherNumber = $request->input('teacher_number')) {
             $query->where('teacher_number', 'like', "%{$teacherNumber}%");

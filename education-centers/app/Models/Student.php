@@ -9,6 +9,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Student extends Model
 {
     use HasFactory;
+    use \App\Concerns\HasDomainScope;
+    use \App\Models\Concerns\HasContextScope;
+
+    /**
+     * Un étudiant peut suivre plusieurs domaines via ses inscriptions.
+     */
+    protected function domainPaths(): array
+    {
+        return ['enrollments.formation'];
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -71,6 +81,30 @@ class Student extends Model
     public function enrollments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Enrollment::class);
+    }
+
+    /**
+     * Slugs des domaines suivis par l'étudiant (via ses inscriptions).
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function domainSlugs(): \Illuminate\Support\Collection
+    {
+        return $this->enrollments()
+            ->with('formation:id,domain')
+            ->get()
+            ->pluck('formation.domain')
+            ->filter()
+            ->unique()
+            ->values();
+    }
+
+    /**
+     * Domaines (modèles) suivis par l'étudiant.
+     */
+    public function domains(): \Illuminate\Support\Collection
+    {
+        return Domain::whereIn('slug', $this->domainSlugs())->ordered()->get();
     }
 
     public function attendances(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Attendance::class); }

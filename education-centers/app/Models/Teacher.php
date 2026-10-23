@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Teacher extends Model
 {
     use HasFactory;
+    use \App\Concerns\HasDomainScope;
+    use \App\Models\Concerns\HasContextScope;
 
     /**
      * The attributes that are mass assignable.
@@ -84,6 +86,50 @@ class Teacher extends Model
     public function schedules(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Schedule::class);
+    }
+
+    /**
+     * Un professeur peut enseigner dans plusieurs domaines :
+     * son domaine principal (colonne `domain`) OU tout domaine de classe
+     * auquel il est affecté via le pivot `class_teacher`.
+     */
+    public function scopeForDomain(\Illuminate\Database\Eloquent\Builder $query, ?string $slug): \Illuminate\Database\Eloquent\Builder
+    {
+        if (! $slug || $slug === 'all') {
+            return $query;
+        }
+
+        return $query->where(function (\Illuminate\Database\Eloquent\Builder $q) use ($slug) {
+            $q->where('domain', $slug)
+                ->orWhereHas('classes.formation', fn (\Illuminate\Database\Eloquent\Builder $f) => $f->where('domain', $slug));
+        });
+    }
+
+    /**
+     * Slugs des domaines d'un professeur (domaine principal + classes affectées).
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function domainSlugs(): \Illuminate\Support\Collection
+    {
+        $fromClasses = $this->classes()
+            ->with('formation:id,domain')
+            ->get()
+            ->pluck('formation.domain');
+
+        return $fromClasses
+            ->push($this->domain)
+            ->filter()
+            ->unique()
+            ->values();
+    }
+
+    /**
+     * Domaines (modèles) d'un professeur.
+     */
+    public function domains(): \Illuminate\Support\Collection
+    {
+        return Domain::whereIn('slug', $this->domainSlugs())->ordered()->get();
     }
 
     /**

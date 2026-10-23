@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\Attendance;
 use App\Models\Center;
 use App\Models\Certificate;
 use App\Models\Enrollment;
+use App\Models\Grade;
+use App\Models\Payment;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
@@ -30,7 +33,7 @@ class CertificateService
             $view = 'certificates.pdf.generic';
         }
 
-        $content = $this->pdf->render($view, ['certificate' => $certificate]);
+        $content = $this->pdf->render($view, $this->viewData($certificate));
         $locale = app()->getLocale();
         $dir = "certificates/{$certificate->center_id}/{$certificate->student_id}";
         $file = $dir.'/'.$certificate->certificate_number.'-'.$locale.'.pdf';
@@ -38,6 +41,49 @@ class CertificateService
         $certificate->update(['file_path' => $file, 'status' => 'issued']);
 
         return $certificate;
+    }
+
+    /**
+     * Assemble the real data a given certificate type needs. Extra keys are
+     * harmless for templates that ignore them; no field is ever faked.
+     *
+     * @return array<string, mixed>
+     */
+    private function viewData(Certificate $certificate): array
+    {
+        $data = [
+            'certificate' => $certificate,
+            'center' => $certificate->center,
+            'docNumber' => $certificate->certificate_number,
+            'docDate' => format_date($certificate->issued_date, 'd M Y'),
+        ];
+
+        switch ($certificate->type) {
+            case 'grades_report':
+                $data['grades'] = Grade::with('evaluation')
+                    ->where('student_id', $certificate->student_id)
+                    ->when($certificate->enrollment_id, fn ($q) => $q->where('enrollment_id', $certificate->enrollment_id))
+                    ->orderBy('graded_at')
+                    ->get();
+                break;
+
+            case 'attendance':
+                $data['attendances'] = Attendance::where('student_id', $certificate->student_id)
+                    ->when($certificate->enrollment_id, fn ($q) => $q->where('enrollment_id', $certificate->enrollment_id))
+                    ->orderBy('date')
+                    ->get();
+                break;
+
+            case 'receipt':
+                $data['payments'] = Payment::with('invoice')
+                    ->where('student_id', $certificate->student_id)
+                    ->where('center_id', $certificate->center_id)
+                    ->orderBy('payment_date')
+                    ->get();
+                break;
+        }
+
+        return $data;
     }
 
     public function createAndGenerate(

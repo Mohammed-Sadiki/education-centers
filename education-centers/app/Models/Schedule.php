@@ -10,6 +10,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Schedule extends Model
 {
     use HasFactory;
+    use \App\Concerns\HasDomainScope;
+    use \App\Models\Concerns\HasContextScope;
+
+    /**
+     * Le domaine d'une séance est hérité de la classe puis de sa formation.
+     */
+    protected function domainPaths(): array
+    {
+        return ['classRoom.formation'];
+    }
 
     protected $table = 'schedules';
 

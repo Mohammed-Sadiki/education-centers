@@ -9,6 +9,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Attendance extends Model
 {
     use HasFactory;
+    use \App\Concerns\HasDomainScope;
+    use \App\Models\Concerns\HasContextScope;
+
+    /**
+     * Le domaine d'une présence dérive de la classe (ou de l'inscription) puis de la formation.
+     */
+    protected function domainPaths(): array
+    {
+        return ['classRoom.formation', 'enrollment.formation'];
+    }
 
     protected $fillable = [
         'center_id', 'student_id', 'class_id', 'schedule_id', 'enrollment_id',

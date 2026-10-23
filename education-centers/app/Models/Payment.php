@@ -10,6 +10,22 @@ class Payment extends Model
 {
     use HasFactory;
 
+    /**
+     * Domaine d'un paiement : colonne propre `domain` OU formation rattachée.
+     * `null` / `all` = aucun filtre.
+     */
+    public function scopeForDomain(\Illuminate\Database\Eloquent\Builder $query, ?string $slug): \Illuminate\Database\Eloquent\Builder
+    {
+        if (! $slug || $slug === 'all') {
+            return $query;
+        }
+
+        return $query->where(function (\Illuminate\Database\Eloquent\Builder $q) use ($slug) {
+            $q->where('domain', $slug)
+                ->orWhereHas('formation', fn (\Illuminate\Database\Eloquent\Builder $f) => $f->where('domain', $slug));
+        });
+    }
+
     protected $fillable = [
         'center_id', 'student_id', 'enrollment_id', 'formation_id', 'invoice_id',
         'school_year', 'domain',

@@ -482,3 +482,199 @@ html[dir='rtl'] .translate-x-full {
 html[dir='rtl'] .-translate-x-full {
     translate: 100%;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADMIN DESIGN SYSTEM — scoped to .ec-admin (internal dashboards only).
+   Public + auth pages do NOT carry this class and are therefore unaffected.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Base typography enlargement for the internal app (content ~16px). */
+.ec-admin {
+    font-size: 16px;
+    color: #0f172a;
+}
+.dark .ec-admin {
+    color: #e2e8f0;
+}
+
+/* Larger table text inside the admin shell only. */
+.ec-admin .ec-table td {
+    font-size: 0.95rem;
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
+}
+.ec-admin .ec-table th {
+    font-size: 0.75rem;
+}
+
+/* Soft, modern scrollbars for the admin shell. */
+.ec-admin ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.ec-admin ::-webkit-scrollbar-thumb {
+    background: rgb(148 163 184 / 0.5);
+    border-radius: 9999px;
+}
+.ec-admin ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* ── KPI card ─────────────────────────────────────────────────────────── */
+.ec-kpi {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.15rem;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    padding: 1.25rem 1.35rem;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.ec-kpi:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px -12px rgb(15 23 42 / 0.18);
+}
+.dark .ec-kpi {
+    border-color: rgb(30 41 59);
+    background: rgb(15 23 42);
+}
+.ec-kpi__chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 3rem;
+    width: 3rem;
+    border-radius: 0.9rem;
+    flex-shrink: 0;
+}
+.ec-kpi__label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #334155;
+}
+.dark .ec-kpi__label {
+    color: #cbd5e1;
+}
+.ec-kpi__value {
+    font-size: 1.9rem;
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+}
+.dark .ec-kpi__value {
+    color: #fff;
+}
+.ec-kpi__delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+.ec-kpi__spark {
+    position: absolute;
+    inset-inline-end: 1rem;
+    bottom: 1rem;
+    height: 2.5rem;
+    width: 5.5rem;
+    opacity: 0.9;
+}
+
+/* ── Dashboard panel / chart card ─────────────────────────────────────── */
+.ec-panel {
+    border-radius: 1.15rem;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+}
+.dark .ec-panel {
+    border-color: rgb(30 41 59);
+    background: rgb(15 23 42);
+}
+.ec-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+.dark .ec-panel__head {
+    border-bottom-color: rgb(30 41 59);
+}
+.ec-panel__title {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+.dark .ec-panel__title {
+    color: #fff;
+}
+
+/* ── Sidebar (admin) refinements ──────────────────────────────────────── */
+.ec-admin .ec-nav-link {
+    font-size: 0.95rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.75rem;
+}
+.ec-admin .ec-nav-link-active {
+    background: #eef2ff;
+    color: #4f46e5;
+    font-weight: 700;
+}
+.dark .ec-admin .ec-nav-link-active {
+    background: rgb(99 102 241 / 0.16);
+    color: #a5b4fc;
+}
+.ec-admin .ec-nav-section {
+    font-size: 0.7rem;
+    letter-spacing: 0.09em;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #94a3b8;
+}
+
+/* ── FR/AR pill toggle (admin topbar) ─────────────────────────────────── */
+.ec-lang-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 0.7rem;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    padding: 0.15rem;
+}
+.dark .ec-lang-pill {
+    border-color: rgb(51 65 85);
+    background: rgb(15 23 42);
+}
+.ec-lang-pill a {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    color: #64748b;
+    transition: all 0.15s ease;
+}
+.dark .ec-lang-pill a {
+    color: #94a3b8;
+}
+.ec-lang-pill a[aria-current='true'] {
+    background: #4f46e5;
+    color: #fff;
+}
+
+/* ── Icon chip helper (topbar / panel headers) ────────────────────────── */
+.ec-icon-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.7rem;
+    height: 2.25rem;
+    width: 2.25rem;
+    flex-shrink: 0;
+}

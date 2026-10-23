@@ -6,8 +6,10 @@ use App\Models\Center;
 use App\Models\Formation;
 use App\Models\Invoice;
 use App\Models\Student;
+use App\Services\PdfService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
@@ -77,6 +79,29 @@ class InvoiceController extends Controller
         $invoice->load(['student.user', 'enrollment.formation', 'payments', 'creator']);
 
         return view('invoices.show', compact('invoice'));
+    }
+
+    /**
+     * Generate the invoice PDF. Same content for both modes:
+     *  - mode=inline   → viewer/print (never window.print on the dashboard)
+     *  - default       → downloadable attachment
+     */
+    public function pdf(Request $request, Invoice $invoice, PdfService $pdf): Response
+    {
+        Gate::authorize('view', $invoice);
+        $invoice->load(['center', 'student.user', 'enrollment.formation', 'formation', 'payments']);
+
+        $data = [
+            'invoice' => $invoice,
+            'center' => $invoice->center,
+            'docNumber' => $invoice->invoice_number,
+            'docDate' => format_date($invoice->invoice_date, 'd M Y'),
+        ];
+        $filename = $invoice->invoice_number.'.pdf';
+
+        return $request->query('mode') === 'inline'
+            ? $pdf->inline('pdf.invoice', $data, $filename)
+            : $pdf->download('pdf.invoice', $data, $filename);
     }
 
     public function edit(Invoice $invoice): View

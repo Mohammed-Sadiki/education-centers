@@ -10,6 +10,16 @@ use Illuminate\Support\Str;
 class Certificate extends Model
 {
     use HasFactory;
+    use \App\Concerns\HasDomainScope;
+    use \App\Models\Concerns\HasContextScope;
+
+    /**
+     * Le domaine d'un certificat dérive de sa formation.
+     */
+    protected function domainPaths(): array
+    {
+        return ['formation'];
+    }
 
     protected $fillable = [
         'center_id', 'student_id', 'enrollment_id', 'formation_id',

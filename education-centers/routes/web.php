@@ -5,6 +5,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CenterController;
+use App\Http\Controllers\CenterAdminDomainController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\ClassTeacherController;
@@ -87,11 +88,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/super-admin/domaines/sante', [SuperAdminDomainController::class, 'santeDashboard'])
             ->name('super-admin.sante.dashboard');
 
-        // ── Dashboards des 5 autres domaines (route paramétrée générique) ──
-        // Slugs acceptés : informatique | hotellerie | maconnerie | design-interieur | design-graphique
+        // ── Dashboards des domaines (route paramétrée générique, pilotée par la base) ──
+        // Le slug est validé côté contrôleur contre la source de vérité `domains`
+        // (404 si inconnu). La route « sante » ci-dessus reste prioritaire (alias).
+        // Quitter le contexte domaine pour revenir à « tous les domaines » (avant le générique).
+        Route::get('/super-admin/domaines/all', [SuperAdminDomainController::class, 'clearDomain'])
+            ->name('super-admin.domain.clear');
+
         Route::get('/super-admin/domaines/{domain}', [SuperAdminDomainController::class, 'domainDashboard'])
             ->name('super-admin.domain.dashboard')
-            ->where('domain', 'informatique|hotellerie|maconnerie|design-interieur|design-graphique');
+            ->where('domain', '[a-zA-Z0-9\-]+');
 
         Route::get('/super-admin/stagiaires/dashboard', [StagiaireController::class, 'dashboard'])
             ->name('stagiaires.dashboard');
@@ -171,6 +177,16 @@ Route::middleware('auth')->group(function () {
     // ──────────────────────────────────────────────────────────────────────────
     Route::middleware('role:super_admin,center_admin')->group(function () {
 
+        // ── Espace Admin Centre piloté par domaine (portail + dashboard) ──
+        Route::get('/center-admin/domaines', [CenterAdminDomainController::class, 'domainPicker'])
+            ->name('center-admin.domaines');
+        // Revenir à « tous les domaines » (avant le générique {domain}).
+        Route::get('/center-admin/domaines/all', [CenterAdminDomainController::class, 'clearDomain'])
+            ->name('center-admin.domain.clear');
+        Route::get('/center-admin/domaines/{domain}', [CenterAdminDomainController::class, 'domainDashboard'])
+            ->name('center-admin.domain.dashboard')
+            ->where('domain', '[a-zA-Z0-9\-]+');
+
         // Utilisateurs
         Route::resource('users', UserController::class);
         Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
@@ -222,6 +238,7 @@ Route::middleware('auth')->group(function () {
 
         // 4L — Factures
         Route::resource('invoices', InvoiceController::class);
+        Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
 
         // 4M — Documents étudiants
         Route::resource('documents', DocumentController::class, ['except' => ['edit', 'update']]);
@@ -232,6 +249,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('certificates', CertificateController::class, ['except' => ['edit', 'update']]);
         Route::get('certificates/{certificate}/download', [CertificateController::class, 'download'])
             ->name('certificates.download');
+        Route::get('certificates/{certificate}/print', [CertificateController::class, 'printPdf'])
+            ->name('certificates.print');
 
         // 4O — Annonces
         Route::resource('announcements', AnnouncementController::class);

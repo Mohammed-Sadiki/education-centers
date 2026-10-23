@@ -16,7 +16,7 @@
     </script>
     @stack('styles')
 </head>
-<body class="min-h-screen">
+<body class="ec-admin min-h-screen bg-slate-50 text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-100">
     <div class="app-shell flex min-h-screen">
         @include('layouts.partials.sidebar')
 
@@ -37,6 +37,7 @@
     ></div>
 
     @include('layouts.partials.toasts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     @stack('scripts')
 </body>
 </html>

@@ -16,7 +16,7 @@
     </script>
     @stack('styles')
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100 flex flex-col">
+<body class="ec-admin min-h-screen bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100 flex flex-col">
     @php
         $user = auth()->user();
         $roleLabel = match ($user?->role) {
@@ -43,7 +43,7 @@
                     {{ __('Education Centers') }}
                 </span>
                 <span class="hidden sm:inline-block ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                    {{ __('Portail Super Admin') }}
+                    {{ $user?->isCenterAdmin() ? __('Portail Admin Centre') : __('Portail Super Admin') }}
                 </span>
             </div>
         </div>

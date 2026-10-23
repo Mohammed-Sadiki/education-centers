@@ -9,6 +9,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Enrollment extends Model
 {
     use HasFactory;
+    use \App\Concerns\HasDomainScope;
+    use \App\Models\Concerns\HasContextScope;
+
+    /**
+     * Le domaine d'une inscription est hérité de sa formation.
+     */
+    protected function domainPaths(): array
+    {
+        return ['formation'];
+    }
 
     protected $table = 'enrollments';
 

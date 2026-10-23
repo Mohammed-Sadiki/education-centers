@@ -30,6 +30,9 @@ class StudentController extends Controller
             $query->where('center_id', $authUser->center_id);
         }
 
+        // Filtrage par domaine actif (Super Admin / Admin Centre en contexte domaine)
+        $query = $this->applyDomainScope($query);
+
         // Filtre : recherche par numéro étudiant
         if ($studentNumber = $request->input('student_number')) {
             $query->where('student_number', 'like', "%{$studentNumber}%");

@@ -16,6 +16,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // 0. Domaines de formation (portail Super Admin) — lus dynamiquement depuis la base
+        $this->call(DomainSeeder::class);
+
         // 1. Créer les centres de démonstration
         $this->call(CenterSeeder::class);
 

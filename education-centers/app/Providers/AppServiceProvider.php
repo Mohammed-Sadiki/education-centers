@@ -9,6 +9,7 @@ use App\Services\Translation\DeepLTranslationProvider;
 use App\Services\Translation\GoogleTranslationProvider;
 use App\Services\Translation\NullTranslationProvider;
 use App\Services\Translation\TranslationProvider;
+use App\Support\UserContext;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -20,6 +21,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Contexte par défaut : vide (ni centre ni domaine restrictifs).
+        // Le middleware ResolveDomainContext le remplace par instance liée
+        // à la requête via app()->instance() dès qu'un utilisateur est connecté.
+        $this->app->bind(UserContext::class, fn (): UserContext => new UserContext);
+
         $this->app->singleton(TranslationProvider::class, function (): TranslationProvider {
             $provider = (string) config('translation.provider', 'google');
 

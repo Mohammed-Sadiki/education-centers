@@ -11,6 +11,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ClassRoom extends Model
 {
     use HasFactory;
+    use \App\Concerns\HasDomainScope;
+    use \App\Models\Concerns\HasContextScope;
+
+    /**
+     * Le domaine d'une classe est hérité de sa formation.
+     */
+    protected function domainPaths(): array
+    {
+        return ['formation'];
+    }
 
     /**
      * Nom de la table associée dans la base de données.

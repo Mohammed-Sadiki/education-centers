@@ -27,6 +27,8 @@ class AttendanceController extends Controller
             $studentId = $user->student?->id;
             $query->where('student_id', $studentId)->where('center_id', $user->center_id);
         }
+        // Filtrage par domaine actif
+        $query = $this->applyDomainScope($query);
         if ($classId = $request->input('class_id')) {
             $query->where('class_id', $classId);
         }

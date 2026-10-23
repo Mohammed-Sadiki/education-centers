@@ -222,6 +222,7 @@
     } elseif ($user->isCenterAdmin()) {
         $groups[] = ['title' => null, 'items' => array_filter([
             $link(__('Dashboard'), 'dashboard', 'home', 'dashboard'),
+            $link(__('Domaines'), 'center-admin.domaines', 'book', 'center-admin.domaines'),
         ])];
 
         $adminItems = array_filter([
@@ -394,6 +395,45 @@
                 </div>
             </div>
         @endif
+    @elseif($user->isCenterAdmin() && !empty($activeDomain))
+        {{-- BANNER DU CONTEXTE : DOMAINE ACTIF (ADMIN CENTRE, périmètre = son centre) --}}
+        <div class="border-b border-slate-200 {{ $pal['banner_bg'] }} p-3 dark:border-slate-800"
+             data-domain="{{ $activeDomain }}"
+             id="sidebar-domain-banner-center">
+            <div class="flex items-center justify-between gap-2" x-show="!$store.ui.sidebarCollapsed">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg {{ $pal['icon_bg'] }} text-white shadow-2xs">
+                        <x-icon name="{{ $domainIcon }}" class="h-4 w-4" />
+                    </span>
+                    <div class="min-w-0">
+                        <span class="block text-[10px] uppercase font-bold tracking-wider {{ $pal['label_text'] }}">{{ __('Domaine') }}</span>
+                        <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">{{ $domainLabel }}</span>
+                    </div>
+                </div>
+                <a href="{{ route('center-admin.domaines') }}"
+                   class="inline-flex items-center gap-1 rounded-lg border {{ $pal['btn_border'] }} bg-white px-2 py-1 text-[11px] font-semibold {{ $pal['btn_text'] }} {{ $pal['btn_hover'] }} dark:bg-slate-900 transition-colors shadow-2xs shrink-0"
+                   title="{{ __('Changer de domaine') }}"
+                   id="sidebar-changer-domaine-center">
+                    <x-icon name="arrow-uturn-left" class="h-3 w-3" />
+                    <span>{{ __('Changer') }}</span>
+                </a>
+            </div>
+            <div class="mt-2 flex items-center gap-2" x-show="!$store.ui.sidebarCollapsed">
+                <a href="{{ route('center-admin.domain.clear') }}"
+                   class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border {{ $pal['btn_border'] }} bg-white/70 px-2 py-1 text-[11px] font-semibold {{ $pal['btn_text'] }} {{ $pal['btn_hover'] }} dark:bg-slate-900/60 transition-colors"
+                   id="sidebar-tous-domaines-center">
+                    <x-icon name="building" class="h-3 w-3" />
+                    <span>{{ __('Tous les domaines') }}</span>
+                </a>
+            </div>
+            <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
+                <a href="{{ route('center-admin.domaines') }}"
+                   class="flex h-8 w-8 items-center justify-center rounded-lg {{ $pal['icon_bg'] }} text-white {{ $pal['icon_hover'] }} transition-colors shadow-2xs"
+                   title="{{ $domainLabel }} — {{ __('Cliquer pour changer de domaine') }}">
+                    <x-icon name="{{ $domainIcon }}" class="h-4.5 w-4.5" />
+                </a>
+            </div>
+        </div>
     @endif
 
     <nav class="flex-1 space-y-4 overflow-y-auto p-3">
@@ -517,4 +557,40 @@
             @endif
         @endforeach
     </nav>
+
+    {{-- ── User card footer ────────────────────────────────────────────── --}}
+    @php
+        $sbRoleLabel = match ($user->role) {
+            'super_admin' => __('Super Admin'),
+            'center_admin' => __('Admin Centre'),
+            'teacher' => __('Professeur'),
+            'student' => __('Élève'),
+            default => $user->role,
+        };
+        $sbCenterLabel = $user->isSuperAdmin() ? __('Tous les centres') : ($user->center?->name ?? __('N/A'));
+    @endphp
+    <div class="border-t border-slate-200 p-3 dark:border-slate-800">
+        <div x-show="!$store.ui.sidebarCollapsed"
+             class="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-800 dark:bg-slate-800/50">
+            <x-ui.avatar :name="$user->name" size="sm" />
+            <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{{ $user->name }}</p>
+                <p class="truncate text-xs text-slate-500 dark:text-slate-400">{{ $sbRoleLabel }} · {{ $sbCenterLabel }}</p>
+            </div>
+            <form action="{{ route('logout') }}" method="POST" class="shrink-0">
+                @csrf
+                <button type="submit" class="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40" title="{{ __('Déconnexion') }}" aria-label="{{ __('Déconnexion') }}">
+                    <x-icon name="logout" class="h-4 w-4" />
+                </button>
+            </form>
+        </div>
+        <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40" title="{{ __('Déconnexion') }}" aria-label="{{ __('Déconnexion') }}">
+                    <x-icon name="logout" class="h-5 w-5" />
+                </button>
+            </form>
+        </div>
+    </div>
 </aside>

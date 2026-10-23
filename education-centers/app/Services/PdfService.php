@@ -48,17 +48,45 @@ class PdfService
     }
 
     /**
-     * Build an HTTP response containing a generated PDF.
+     * Build an HTTP response that downloads a generated PDF (attachment).
      *
      * @param  array<string, mixed>  $data
      */
     public function download(string $view, array $data, string $filename, string $paper = 'A4', string $orientation = 'portrait'): Response
     {
-        $content = $this->render($view, $data, $paper, $orientation);
+        return $this->respond(
+            $this->render($view, $data, $paper, $orientation),
+            $filename,
+            'attachment'
+        );
+    }
 
+    /**
+     * Build an HTTP response that opens the same PDF inline (viewer / print).
+     *
+     * The PDF bytes are identical to download(); only the disposition differs,
+     * which is what the "Imprimer" button relies on (never window.print on the
+     * dashboard).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function inline(string $view, array $data, string $filename, string $paper = 'A4', string $orientation = 'portrait'): Response
+    {
+        return $this->respond(
+            $this->render($view, $data, $paper, $orientation),
+            $filename,
+            'inline'
+        );
+    }
+
+    /**
+     * Wrap raw PDF bytes in a proper HTTP response.
+     */
+    public function respond(string $content, string $filename, string $disposition = 'attachment'): Response
+    {
         return response($content, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Content-Disposition' => $disposition.'; filename="'.$filename.'"',
             'Cache-Control' => 'private, max-age=0, must-revalidate',
         ]);
     }

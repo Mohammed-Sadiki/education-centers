@@ -42,6 +42,9 @@ class EnrollmentController extends Controller
             $query->where('center_id', $authUser->center_id);
         }
 
+        // Filtrage par domaine actif
+        $query = $this->applyDomainScope($query);
+
         // Filtre : centre pour Super Admin
         if ($authUser->isSuperAdmin() && ($centerId = $request->input('center_id'))) {
             $query->where('center_id', $centerId);

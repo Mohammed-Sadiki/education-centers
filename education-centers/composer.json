@@ -31,7 +31,8 @@
         "files": [
             "app/Helpers/currency.php",
             "app/Helpers/locale.php",
-            "app/Helpers/labels.php"
+            "app/Helpers/labels.php",
+            "app/Helpers/context.php"
         ]
     },
     "autoload-dev": {
