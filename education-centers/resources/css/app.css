@@ -188,6 +188,34 @@
     display: none !important;
 }
 
+/* ──────────────────────────────────────────────────────────────
+   Landing page decorative animations
+   ────────────────────────────────────────────────────────────── */
+@keyframes ec-float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.animate-ec-float {
+    animation: ec-float 6s ease-in-out infinite;
+}
+
+.animate-ec-float-slow {
+    animation: ec-float 8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-ec-float,
+    .animate-ec-float-slow {
+        animation: none;
+    }
+}
+
 /* Laravel pagination */
 nav[role='navigation'] span,
 nav[role='navigation'] a {

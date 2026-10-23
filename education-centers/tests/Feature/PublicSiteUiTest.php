@@ -16,7 +16,10 @@ class PublicSiteUiTest extends TestCase
         $response = $this->get(route('home'));
 
         $response->assertOk();
-        $response->assertSee('Votre avenir commence ici.');
+        // The hero heading highlights the word «ici.» with nested markup,
+        // so the two visible parts are asserted separately.
+        $response->assertSee('Votre avenir commence');
+        $response->assertSee('ici.');
         $response->assertSee('Découvrir nos formations');
         $response->assertSee('S’inscrire');
     }

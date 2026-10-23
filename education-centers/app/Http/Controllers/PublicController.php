@@ -17,7 +17,7 @@ class PublicController extends Controller
 {
     public function home(): View
     {
-        $centers = Center::where('status', 'active')->withCount(['formations', 'classes'])->get();
+        $centers = Center::where('status', 'active')->withCount(['formations', 'classes', 'students'])->get();
         $formations = Formation::where('status', 'active')->with('center')->take(6)->get();
         $stats = [
             'centers' => Center::where('status', 'active')->count(),

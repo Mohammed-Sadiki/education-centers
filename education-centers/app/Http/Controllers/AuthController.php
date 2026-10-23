@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Center;
+use App\Models\Formation;
+use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +25,13 @@ class AuthController extends Controller
             return redirect()->route('dashboard');
         }
 
-        return view('auth.login');
+        $stats = [
+            'centers'    => Center::where('status', 'active')->count(),
+            'students'   => Student::where('status', 'active')->count(),
+            'formations' => Formation::where('status', 'active')->count(),
+        ];
+
+        return view('auth.login', compact('stats'));
     }
 
     /**
