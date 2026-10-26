@@ -1,57 +1,144 @@
-# 🎓 Education Centers — Plateforme de Gestion Multi-Centres
+# 🎓 Education Centers — Plateforme de Gestion Multi-Centres d'Éducation & de Formation
 
-Application web moderne développée avec **Laravel 11** et **Tailwind CSS** pour la gestion administrative, pédagogique et financière de centres d'éducation et de formation multi-villes (Berlin, Munich, etc.).
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel-13.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 13" />
+  <img src="https://img.shields.io/badge/PHP-8.3%2B-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.3+" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS v4" />
+  <img src="https://img.shields.io/badge/Alpine.js-v3.x-8BC0D0?style=for-the-badge&logo=alpinedotjs&logoColor=white" alt="Alpine.js" />
+  <img src="https://img.shields.io/badge/Tests-490%20Passed%20(100%25)-success?style=for-the-badge&logo=phpunit&logoColor=white" alt="Tests" />
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" />
+</p>
+
+---
+
+## 📌 Présentation Générale
+
+**Education Centers** est une solution web complète, moderne et évolutive conçue pour la gestion administrative, pédagogique, logistique et financière d'établissements d'enseignement, d'écoles privées, d'instituts de langues et d'organismes de formation opérant sur **un ou plusieurs centres** (ex: Berlin, Munich, etc.).
+
+L'application offre une séparation stricte des rôles et des données, un tableau de bord financier de haut niveau, des portails dédiés pour chaque acteur, une génération automatisée de documents officiels PDF (bulletins, certificats, factures) et une interface soignée avec support bilingue/trilingue (Français, Anglais, Arabe avec affichage RTL) ainsi qu'un mode sombre/clair instantané.
+
+---
+
+## ✨ Fonctionnalités Principales
+
+### 🌐 1. Site Vitrine & Authentification Premium
+- **Site public immersif** : Présentation des formations, catalogue des centres et formulaire de contact.
+- **Background Aurora 3D & Mouse Follow Waves** :
+  - Décor géométrique de fond haute fidélité (anneaux 3D, sphères de verre et particules) parfaitement stable et fixe.
+  - Couche interactive fluide suivant les mouvements de la souris avec rémanence d'ondes lumineuses et déformations organiques sans aucun blocage d'interactions (`pointer-events: none`).
+- **Page de Connexion Redesignée** :
+  - Carte 2 colonnes en verre acrylique (*glassmorphism*), illustration académique 3D.
+  - Bascule instantanée **Light Mode / Dark Mode**.
+  - Sélecteur de langue dynamique (Français, Anglais, Arabe).
+  - Affichage/masquage sécurisé du mot de passe et option "Se souvenir de moi".
+
+---
+
+### 👥 2. Espaces Utilisateurs par Rôle
+
+#### 👑 Super Administrateur (Global)
+- **Vision multi-centres consolidée** : Accès global à tous les centres avec sélecteur de contexte rapide.
+- **Gestion des centres** : Création et configuration des centres (adresses, devises, fuseaux horaires, directeurs).
+- **Domaines de formation** : Définition des filières, programmes et cursus transversaux.
+- **Gestion des stagiaires & conventions** : Suivi avancé des parcours de stage et conventions d'entreprises.
+- **Pilotage financier global** : Synthèse du chiffre d'affaires, taux de recouvrement, encaissements et impayés consolidés.
+- **Journal d'audit de sécurité** : Traçabilité des actions sensibles et connexions.
+
+#### 🏢 Administrateur de Centre
+- **Gestion pédagogique locale** : Formations, classes, salles (capacités et équipements), sessions et affectation des professeurs.
+- **Inscriptions & Apprenants** : Traitement des dossiers d'inscription, validation des statuts et pièces justificatives.
+- **Emplois du temps & Planning** : Création et visualisation des plannings hebdomadaires avec détection des conflits de salles.
+- **Suivi des présences** : Feuilles d'émargement quotidiennes, statistiques d'assiduité et alertes d'absentéisme.
+- **Gestion financière du centre** :
+  - Facturation automatique et manuelle des frais de scolarité.
+  - Enregistrement des règlements multi-modes (Espèces, Virement bancaire, Carte bancaire, Chèque).
+  - Émission de reçus et factures au format PDF.
+  - Gestion des salaires des professeurs et calcul des rémunérations horaires.
+
+#### 👨‍🏫 Portail Professeur
+- **Tableau de bord enseignant** : Prochains cours, cours du jour et alertes pédagogiques.
+- **Appel & Présences en direct** : Saisie rapide de l'appel pour chaque séance (Présent, Absent justifié, Absent injustifié, Retard).
+- **Carnet de notes & Évaluations** : Création d'évaluations (contrôles continus, partiels), saisie des notes avec calcul automatique des moyennes.
+- **Emploi du temps personnalisé** : Vue calendrier filtrée sur les cours assignés.
+- **Fiches de rémunération** : Consultation de l'historique des heures effectuées et des salaires validés.
+- **Messagerie interne** : Échanges directs avec les étudiants et l'administration.
+
+#### 🎓 Portail Étudiant / Stagiaire
+- **Espace apprenant complet** : Vue d'ensemble de la scolarité, progression des cours et événements à venir.
+- **Planning & Assiduité** : Emploi du temps hebdomadaire, historique des présences et justificatifs d'absence.
+- **Résultats & Bulletins** : Consultation des notes obtenues, moyennes par matière et téléchargement du bulletin scolaire officiel.
+- **Certificats & Attestations** : Génération et téléchargement en 1 clic d'attestations de scolarité et certificats de fin d'études avec code de vérification.
+- **Factures & Paiements** : Consultation du solde, détail des échéances, historique des paiements et reçus PDF.
+- **Espace documentaire & Messagerie** : Supports de cours partagés et communication avec les enseignants.
+
+---
+
+### 🌍 3. Internationalisation & Accessibilité (i18n & a11y)
+- **Support multilingue natif** :
+  - 🇫🇷 Français (`fr`)
+  - 🇬🇧 Anglais (`en`)
+  - 🇸🇦 Arabe (`ar` avec bascule automatique du sens de lecture en **RTL** — *Right-to-Left*).
+- **Sélecteur de langue instantané** mémorisant la préférence en session et profil utilisateur.
+- **Thème Sombre / Clair persistant** via LocalStorage et classe `.dark`.
+- Respect des normes d'accessibilité : support de `prefers-reduced-motion` et navigation clavier.
+
+---
+
+## 🛠️ Stack Technique
+
+| Domaine | Technologies |
+|---|---|
+| **Backend** | **PHP 8.3+**, **Laravel 13.x**, Eloquent ORM, Seeders & Factories |
+| **Frontend** | **Blade Templates**, **Tailwind CSS v4**, **Alpine.js 3**, Vanilla JS Canvas |
+| **Build Tools** | **Vite 8**, PostCSS |
+| **Base de Données** | **MySQL 8.0+** / **MariaDB** (Production & Dév) / **SQLite** (In-Memory Tests) |
+| **Génération PDF** | `barryvdh/laravel-dompdf`, `mpdf/mpdf` |
+| **Qualité & Tests** | **PHPUnit 12**, **490 tests automatisés** (Feature & Unit) |
 
 ---
 
 ## 📋 Prérequis
 
-Avant de commencer, assurez-vous d'avoir installé sur votre machine :
+Avant de configurer le projet, vérifiez les prérequis suivants :
 
-- **PHP 8.3** ou version supérieure
+- **PHP 8.3 ou supérieur**
   - Extensions PHP requises : `pdo_mysql`, `pdo_sqlite`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `curl`, `fileinfo`
-- **Composer** (v2.x)
-- **Node.js** (v18.x ou supérieur, recommandé v20+) & **NPM**
-- **MySQL** (v8.0+) ou **MariaDB** (ou SQLite)
+- **Composer (v2.x)**
+- **Node.js (v18.x+, recommandé v20+) & NPM**
+- **MySQL (v8.0+)** ou **MariaDB** (ou SQLite)
 - **Git**
-
-> 💡 **Utilisateurs Windows :** Si PHP est installé dans un répertoire spécifique (ex: `C:\php83`), assurez-vous d'ajouter ce chemin à votre variable d'environnement système `PATH`, ou utilisez le script `serve.bat` fourni à la racine.
 
 ---
 
-## 🚀 Guide d'Installation Rapide
+## 🚀 Guide d'Installation Pas à Pas
 
-Suivez ces étapes pour installer et lancer le projet après avoir cloné le dépôt :
-
-### 1. Cloner le projet et accéder au dossier
+### 1. Cloner le dépôt et entrer dans le dossier
 
 ```bash
 git clone https://github.com/Mohammed-Sadiki/education-centers.git
 cd education-centers
 ```
 
-*(Si vous avez cloné le dépôt complet contenant le sous-dossier, placez-vous dans `education-centers`)*
-
-### 2. Installer les dépendances PHP (Composer)
+### 2. Installer les dépendances PHP
 
 ```bash
 composer install
 ```
 
-### 3. Configurer l'environnement (.env)
+### 3. Configurer les variables d'environnement (`.env`)
 
-Copiez le fichier d'exemple pour créer votre fichier `.env` :
+Copiez le fichier d'exemple :
 
-- **Sous Windows (PowerShell / CMD) :**
+- **Windows (PowerShell) :**
   ```powershell
   copy .env.example .env
   ```
-- **Sous Linux / macOS :**
+- **Linux / macOS :**
   ```bash
   cp .env.example .env
   ```
 
-Générez la clé de chiffrement applicative :
+Générez la clé applicative Laravel :
 
 ```bash
 php artisan key:generate
@@ -59,13 +146,13 @@ php artisan key:generate
 
 ### 4. Configurer la Base de Données
 
-Créez une base de données vide nommée `education_centers` dans votre serveur MySQL / MariaDB (ex: via phpMyAdmin ou MySQL Workbench) :
+Créez une base de données vide (ex: `education_centers`) dans votre serveur MySQL :
 
 ```sql
 CREATE DATABASE education_centers CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-Vérifiez ensuite les paramètres de connexion dans votre fichier `.env` :
+Ajustez ensuite les paramètres de connexion dans votre fichier `.env` :
 
 ```env
 DB_CONNECTION=mysql
@@ -76,105 +163,158 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-*(Optionnel) Si vous préférez utiliser SQLite sans serveur de base de données :*
-```env
-DB_CONNECTION=sqlite
-DB_DATABASE=database/database.sqlite
-```
-*(Créez un fichier vide `database/database.sqlite` le cas échéant).*
+*(Si vous préférez exécuter en mode autonome avec SQLite sans serveur MySQL, spécifiez `DB_CONNECTION=sqlite` et créez le fichier `database/database.sqlite`).*
 
 ### 5. Exécuter les migrations et les seeders
 
-Exécutez les migrations pour créer les tables et chargez les données de démonstration :
+Cette commande va créer toutes les tables et injecter les centres, filières, utilisateurs et données de démonstration :
 
 ```bash
 php artisan migrate --seed
 ```
 
-### 6. Créer le lien symbolique pour le stockage de fichiers
+### 6. Créer le lien symbolique pour les uploads
 
-Nécessaire pour le téléchargement et l'affichage des documents, avatars et pièces jointes :
+Indispensable pour l'affichage des avatars, des documents administratifs et des justificatifs d'absence :
 
 ```bash
 php artisan storage:link
 ```
 
-### 7. Installer et compiler les dépendances Front-end (NPM)
+### 7. Installer les dépendances Front-end et compiler
 
 ```bash
 npm install
 npm run build
 ```
 
-Pour travailler en direct sur le CSS et le JavaScript avec rechargement à chaud (Hot Module Replacement) :
+Pour activer le serveur de développement Vite avec rechargement instantané (HMR) :
 ```bash
 npm run dev
 ```
 
-### 8. Lancer le serveur local
+### 8. Lancer le serveur local Laravel
 
 ```bash
 php artisan serve
 ```
 
-> **Sous Windows :** Vous pouvez également double-cliquer sur `serve.bat` ou exécuter `.\serve.bat`.
+> 💡 **Raccourci Windows :** Vous pouvez lancer le serveur en double-cliquant sur le script [`serve.bat`](file:///c:/Users/MSI/Desktop/projet%20final/education-centers/serve.bat) situé à la racine du projet.
 
-L'application est maintenant accessible sur : **http://localhost:8000** (ou http://127.0.0.1:8000).
+Accédez ensuite à l'application dans votre navigateur : **`http://localhost:8000`** ou **`http://127.0.0.1:8000`**.
 
 ---
 
-## 👥 Comptes de Démonstration (Seeders)
+## 🔑 Comptes de Démonstration (Seeders)
 
-Tous les comptes créés par les seeders utilisent le mot de passe suivant :
+Tous les comptes de démonstration pré-configurés utilisent le mot de passe unique suivant :
 👉 **`EducationAdmin2026!`**
 
-| Rôle | Email | Centre | Accès |
+| Rôle | Adresse E-mail | Centre Associé | Périmètre & Droits |
 |---|---|---|---|
-| **Super Admin** | `admin@education-centers.de` | Global (tous) | Accès complet, gestion multi-centres |
-| **Admin Centre** | `admin.berlin@education-centers.de` | Berlin | Gestion administrative du centre Berlin |
-| **Admin Centre** | `admin.munich@education-centers.de` | Munich | Gestion administrative du centre Munich |
-| **Professeur** | `prof.berlin@education-centers.de` | Berlin | Emploi du temps, présences, notes |
-| **Professeur** | `prof.munich@education-centers.de` | Munich | Emploi du temps, présences, notes |
-| **Élève** | `eleve.berlin@education-centers.de` | Berlin | Espace apprenant, formations, documents |
-| **Élève** | `eleve.munich@education-centers.de` | Munich | Espace apprenant, formations, documents |
+| 👑 **Super Admin** | `admin@education-centers.de` | *Tous (Global)* | Accès complet, paramétrage multi-centres, finances globales |
+| 🏢 **Admin Centre Berlin** | `admin.berlin@education-centers.de` | Berlin | Gestion complète du centre de Berlin |
+| 🏢 **Admin Centre Munich** | `admin.munich@education-centers.de` | Munich | Gestion complète du centre de Munich |
+| 👨‍🏫 **Professeur Berlin (1)** | `prof.berlin@education-centers.de` | Berlin | Classes, cours, présences et notes à Berlin |
+| 👨‍🏫 **Professeur Berlin (2)** | `prof.berlin2@education-centers.de` | Berlin | Classes distinctes à Berlin (isolation des cours) |
+| 👨‍🏫 **Professeur Munich** | `prof.munich@education-centers.de` | Munich | Classes, cours, présences et notes à Munich |
+| 🎓 **Élève Berlin** | `eleve.berlin@education-centers.de` | Berlin | Portail apprenant (Hiba Berlin), cours, notes, bulletins |
+| 🎓 **Élève Munich** | `eleve.munich@education-centers.de` | Munich | Portail apprenant, cours, notes, attestations |
 
 ---
 
-## 🧪 Tests Automatisés
+## 🧪 Tests Automatisés & Assurance Qualité
 
-Le projet intègre une suite complète de **217 tests unitaires et fonctionnels** exécutés sur une base SQLite en mémoire (aucun risque pour votre base de données locale).
+Le projet intègre une suite de tests rigoureuse exécutée automatiquement sur une base SQLite en mémoire pour garantir une isolation totale et une vitesse d'exécution optimale.
 
-Pour exécuter tous les tests :
+### Exécuter l'ensemble des tests
 
 ```bash
 php artisan test
 ```
 
+**Résultat :**
+```text
+Tests:    490 passed (1741 assertions)
+Duration: ~20s
+Status:   100% GREEN
+```
+
+### Exécuter des suites ciblées
+
+- **Authentification & Rôles :**
+  ```bash
+  php artisan test --filter=Auth
+  ```
+- **Module Financier & Facturation :**
+  ```bash
+  php artisan test --filter=Finance
+  ```
+- **Gestion des Stagiaires :**
+  ```bash
+  php artisan test --filter=Stagiaire
+  ```
+- **Portails Enseignants & Étudiants :**
+  ```bash
+  php artisan test --filter=Portal
+  ```
+
 ---
 
-## 🛠️ Dépannage & Problèmes Fréquents
+## 📂 Architecture & Organisation du Code
 
-### 1. `php : Le terme «php» n'est pas reconnu...`
-Ce message indique que PHP n'est pas déclaré dans les variables d'environnement de votre système Windows.
-- **Solution rapide :** Dans PowerShell, exécutez temporairement :
-  ```powershell
-  $env:Path = "C:\php83;" + $env:Path
-  ```
-  *(remplacez `C:\php83` par le dossier réel où vous avez extrait PHP)*.
-- **Solution permanente :** Ouvrez le menu Démarrer > *Modifier les variables d'environnement système* > *Variables d'environnement* > Modifier `Path` (dans Variables utilisateur ou système) > Ajouter le chemin vers votre dossier PHP (ex: `C:\php83`).
+```text
+education-centers/
+├── app/
+│   ├── Helpers/                 # Fonctions utilitaires (devise, locale, labels, contexte)
+│   ├── Http/
+│   │   ├── Controllers/         # Contrôleurs métiers (32 contrôleurs spécialisés)
+│   │   ├── Middleware/          # Contrôle d'accès RBAC, sélection de centre, locale
+│   │   └── Requests/            # Form Requests validant les données entrantes
+│   ├── Models/                  # Modèles Eloquent (User, Center, Student, Teacher, etc.)
+│   └── Policies/                # Autorisations et politiques d'accès
+├── database/
+│   ├── factories/               # Générateurs de données factices pour les tests
+│   ├── migrations/              # Schémas et structures des tables
+│   └── seeders/                 # Données de démonstration réalistes
+├── lang/                        # Dictionnaires de traduction (fr, en, ar - RTL)
+├── public/                      # Assets compilés, point d'entrée HTTP (index.php)
+├── resources/
+│   ├── css/                     # Tailwind CSS v4 et règles personnalisées
+│   ├── js/                      # Alpine.js, composants canvas (Aurora Waves 3D)
+│   └── views/                   # Vues Blade (auth, public, admin, teacher, student)
+├── routes/
+│   ├── web.php                  # Déclaration des routes publiques et applicatives
+│   └── console.php              # Commandes console Artisan
+├── storage/                     # Fichiers générés, logs, uploads utilisateurs
+└── tests/
+    ├── Feature/                 # Tests fonctionnels des parcours utilisateurs
+    └── Unit/                    # Tests unitaires des helpers et modèles
+```
 
-### 2. `composer : Le terme «composer» n'est pas reconnu...`
-Si Composer n'est pas installé globalement :
-- Téléchargez `composer-setup.exe` depuis [getcomposer.org](https://getcomposer.org/)
-- Ou exécutez directement via PHP : `php composer.phar install`
+---
 
-### 3. Erreur de permissions sur `storage/` et `bootstrap/cache/` (Linux / macOS)
+## 🔧 Commandes Utiles au Quotidien
+
 ```bash
-chmod -R 775 storage bootstrap/cache
+# Lancer les workers / dev server combiné
+composer run dev
+
+# Recompiler les assets pour la production
+npm run build
+
+# Vider tous les caches applicatifs (vue, config, routes)
+php artisan optimize:clear
+
+# Lister toutes les routes de l'application
+php artisan route:list
+
+# Vérifier le formatage du code avec Laravel Pint
+./vendor/bin/pint --test
 ```
 
 ---
 
 ## 📄 Licence
 
-Projet développé sous licence MIT.
+Ce projet est sous licence **MIT**. Vous êtes libre de l'utiliser, le modifier et le distribuer dans le respect des termes de la licence.
