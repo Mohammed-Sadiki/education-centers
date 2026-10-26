@@ -72,6 +72,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // ── Accueil commun Super Admin + Admin Centre (nouvelle page 4 cartes) ──
+    Route::middleware('role:super_admin,center_admin')->group(function () {
+        Route::get('/admin/accueil', [DashboardController::class, 'adminHome'])->name('admin.home');
+    });
+
     // Notifications (tous les utilisateurs authentifiés)
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');

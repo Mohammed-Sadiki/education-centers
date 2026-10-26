@@ -183,6 +183,7 @@
             : route('super-admin.domain.dashboard', $activeDomain ?? 'sante');
 
         $groups[] = ['title' => null, 'items' => array_filter([
+            $link(__('Accueil'), 'admin.home', 'home', 'admin.home'),
             ['label' => __('Dashboard ') . $domainLabel, 'url' => $dashboardRoute, 'icon' => $domainIcon,
              'active' => request()->routeIs(['super-admin.sante.dashboard', 'super-admin.domain.dashboard'])],
         ])];
@@ -221,7 +222,7 @@
 
     } elseif ($user->isCenterAdmin()) {
         $groups[] = ['title' => null, 'items' => array_filter([
-            $link(__('Dashboard'), 'dashboard', 'home', 'dashboard'),
+            $link(__('Accueil'), 'admin.home', 'home', 'admin.home'),
             $link(__('Domaines'), 'center-admin.domaines', 'book', 'center-admin.domaines'),
         ])];
 
@@ -292,7 +293,7 @@
 >
     <div class="flex h-16 items-center border-b border-slate-200 px-3.5 dark:border-slate-800"
          :class="$store.ui.sidebarCollapsed ? 'justify-center' : 'justify-between'">
-        <a href="{{ $user->isSuperAdmin() ? ($isFinance ? route('super-admin.finance.dashboard') : ($isStagiaires ? route('stagiaires.dashboard') : ($activeDomain && $activeDomain !== 'sante' ? route('super-admin.domain.dashboard', $activeDomain) : route('super-admin.sante.dashboard')))) : route('dashboard') }}"
+        <a href="{{ ($user->isSuperAdmin() || $user->isCenterAdmin()) ? route('admin.home') : route('dashboard') }}"
            class="flex min-w-0 items-center gap-2.5 font-semibold text-slate-900 dark:text-white"
            x-show="!$store.ui.sidebarCollapsed"
            x-transition.opacity.duration.200ms>
@@ -327,18 +328,18 @@
                             <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">{{ __('Gestion financière') }}</span>
                         </div>
                     </div>
-                    <a href="{{ route('super-admin.domaines') }}"
+                    <a href="{{ route('admin.home') }}"
                        id="sidebar-changer-finance"
                        class="w-full flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 py-1.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
-                       title="{{ __('Changer de contexte') }}">
-                        <x-icon name="arrow-uturn-left" class="h-3 w-3 text-slate-400 rtl:rotate-180" />
-                        <span>{{ __('Changer de contexte') }}</span>
+                       title="{{ __('Retour à l\'accueil') }}">
+                        <x-icon name="home" class="h-3 w-3 text-slate-400" />
+                        <span>{{ __('Accueil') }}</span>
                     </a>
                 </div>
                 <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
-                    <a href="{{ route('super-admin.domaines') }}"
+                    <a href="{{ route('admin.home') }}"
                        class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ECFDF5] text-[#0DAD98] hover:bg-[#0DAD98] hover:text-white transition-colors shadow-2xs"
-                       title="{{ __('Gestion financière — Cliquer pour changer de contexte') }}">
+                       title="{{ __('Gestion financière — Retour à l\'accueil') }}">
                         <x-icon name="banknotes" class="h-4.5 w-4.5" />
                     </a>
                 </div>
@@ -356,18 +357,18 @@
                             <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">{{ __('Stagiaires') }}</span>
                         </div>
                     </div>
-                    <a href="{{ route('super-admin.domaines') }}"
+                    <a href="{{ route('admin.home') }}"
                        class="inline-flex items-center gap-1 rounded-lg border border-purple-300/80 bg-white px-2 py-1 text-[11px] font-semibold text-purple-700 hover:bg-purple-100 hover:text-purple-800 dark:border-purple-700/80 dark:bg-slate-900 dark:text-purple-300 dark:hover:bg-purple-900/40 transition-colors shadow-2xs shrink-0"
-                       title="{{ __('Changer de domaine / contexte') }}">
-                        <x-icon name="arrow-uturn-left" class="h-3 w-3 rtl:rotate-180" />
-                        <span>{{ __('Changer') }}</span>
+                       title="{{ __('Retour à l\'accueil') }}">
+                        <x-icon name="home" class="h-3 w-3" />
+                        <span>{{ __('Accueil') }}</span>
                     </a>
                 </div>
                 <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
-                    <a href="{{ route('super-admin.domaines') }}"
+                    <a href="{{ route('admin.home') }}"
                        class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-2xs"
-                       title="{{ __('Espace Stagiaires — Cliquer pour changer de domaine / contexte') }}">
-                        <x-icon name="briefcase" class="h-4.5 w-4.5" />
+                       title="{{ __('Stagiaires — Retour à l\'accueil') }}">
+                        <x-icon name="home" class="h-4.5 w-4.5" />
                     </a>
                 </div>
             </div>
@@ -386,19 +387,19 @@
                             <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">{{ $domainLabel }}</span>
                         </div>
                     </div>
-                    <a href="{{ route('super-admin.domaines') }}"
+                    <a href="{{ route('admin.home') }}"
                        class="inline-flex items-center gap-1 rounded-lg border {{ $pal['btn_border'] }} bg-white px-2 py-1 text-[11px] font-semibold {{ $pal['btn_text'] }} {{ $pal['btn_hover'] }} dark:bg-slate-900 transition-colors shadow-2xs shrink-0"
-                       title="{{ __('Changer de domaine') }}"
+                       title="{{ __('Retour à l\'accueil') }}"
                        id="sidebar-changer-domaine">
-                        <x-icon name="arrow-uturn-left" class="h-3 w-3 rtl:rotate-180" />
-                        <span>{{ __('Changer') }}</span>
+                        <x-icon name="home" class="h-3 w-3" />
+                        <span>{{ __('Accueil') }}</span>
                     </a>
                 </div>
                 <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
-                    <a href="{{ route('super-admin.domaines') }}"
+                    <a href="{{ route('admin.home') }}"
                        class="flex h-8 w-8 items-center justify-center rounded-lg {{ $pal['icon_bg'] }} text-white {{ $pal['icon_hover'] }} transition-colors shadow-2xs"
-                       title="{{ $domainLabel }} — {{ __('Cliquer pour changer de domaine') }}">
-                        <x-icon name="{{ $domainIcon }}" class="h-4.5 w-4.5" />
+                       title="{{ $domainLabel }} — {{ __('Retour à l\'accueil') }}">
+                        <x-icon name="home" class="h-4.5 w-4.5" />
                     </a>
                 </div>
             </div>
@@ -418,16 +419,16 @@
                         <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">{{ $domainLabel }}</span>
                     </div>
                 </div>
-                <a href="{{ route('center-admin.domaines') }}"
+                <a href="{{ route('admin.home') }}"
                    class="inline-flex items-center gap-1 rounded-lg border {{ $pal['btn_border'] }} bg-white px-2 py-1 text-[11px] font-semibold {{ $pal['btn_text'] }} {{ $pal['btn_hover'] }} dark:bg-slate-900 transition-colors shadow-2xs shrink-0"
-                   title="{{ __('Changer de domaine') }}"
+                   title="{{ __('Retour à l\'accueil') }}"
                    id="sidebar-changer-domaine-center">
-                    <x-icon name="arrow-uturn-left" class="h-3 w-3 rtl:rotate-180" />
-                    <span>{{ __('Changer') }}</span>
+                    <x-icon name="home" class="h-3 w-3" />
+                    <span>{{ __('Accueil') }}</span>
                 </a>
             </div>
             <div class="mt-2 flex items-center gap-2" x-show="!$store.ui.sidebarCollapsed">
-                <a href="{{ route('center-admin.domain.clear') }}"
+                <a href="{{ route('center-admin.domaines') }}"
                    class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border {{ $pal['btn_border'] }} bg-white/70 px-2 py-1 text-[11px] font-semibold {{ $pal['btn_text'] }} {{ $pal['btn_hover'] }} dark:bg-slate-900/60 transition-colors"
                    id="sidebar-tous-domaines-center">
                     <x-icon name="building" class="h-3 w-3" />
@@ -435,10 +436,10 @@
                 </a>
             </div>
             <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
-                <a href="{{ route('center-admin.domaines') }}"
+                <a href="{{ route('admin.home') }}"
                    class="flex h-8 w-8 items-center justify-center rounded-lg {{ $pal['icon_bg'] }} text-white {{ $pal['icon_hover'] }} transition-colors shadow-2xs"
-                   title="{{ $domainLabel }} — {{ __('Cliquer pour changer de domaine') }}">
-                    <x-icon name="{{ $domainIcon }}" class="h-4.5 w-4.5" />
+                   title="{{ $domainLabel }} — {{ __('Retour à l\'accueil') }}">
+                    <x-icon name="home" class="h-4.5 w-4.5" />
                 </a>
             </div>
         </div>

@@ -111,20 +111,25 @@ class FinanceManagementTest extends TestCase
         $this->actingAs($this->superAdmin)
             ->get(route('super-admin.domaines'))
             ->assertOk()
-            ->assertSee('Sélectionnez votre domaine');
+            ->assertSee('Domaines de formation');
     }
 
     /**
-     * 2. La carte Gestion financière est visible sur /super-admin/domaines.
+     * 2. La carte Gestion financière est visible sur /admin/accueil et absente de /super-admin/domaines.
      */
     public function test_gestion_financiere_card_is_visible(): void
     {
         $this->actingAs($this->superAdmin)
-            ->get(route('super-admin.domaines'))
+            ->get(route('admin.home'))
             ->assertOk()
-            ->assertSee('id="card-gestion-financiere"', false)
+            ->assertSee('id="card-home-finance"', false)
             ->assertSee('Gestion financière')
             ->assertSee('Vue globale');
+
+        $this->actingAs($this->superAdmin)
+            ->get(route('super-admin.domaines'))
+            ->assertOk()
+            ->assertDontSee('id="card-gestion-financiere"', false);
     }
 
     /**

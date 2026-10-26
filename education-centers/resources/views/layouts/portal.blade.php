@@ -33,8 +33,8 @@
          TOPBAR MINIMALE DU PORTAIL (AUCUNE SIDEBAR)
     ──────────────────────────────────────────────────────────── --}}
     <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 sm:px-6 lg:px-8 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 shadow-sm">
-        {{-- Logo & Titre --}}
-        <div class="flex items-center gap-3">
+        {{-- Logo & Titre cliquable → Accueil --}}
+        <a href="{{ route('admin.home') }}" class="flex items-center gap-3 transition-opacity hover:opacity-80">
             <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white shadow-sm">
                 <x-icon name="academic" class="h-6 w-6" />
             </div>
@@ -46,11 +46,25 @@
                     {{ $user?->isCenterAdmin() ? __('Portail Admin Centre') : __('Portail Super Admin') }}
                 </span>
             </div>
-        </div>
+        </a>
 
-        {{-- Actions droite : Dark Mode, Profil, Déconnexion --}}
-        <div class="flex items-center gap-2 sm:gap-4">
+        {{-- Actions droite : Accueil, Dark Mode, Profil, Déconnexion --}}
+        <div class="flex items-center gap-2 sm:gap-3">
             @include('layouts.partials.language-switcher')
+
+            {{-- Lien Accueil (retour aux 4 cartes) --}}
+            @if(!request()->routeIs('admin.home'))
+                <a href="{{ route('admin.home') }}"
+                   id="portal-home-button"
+                   class="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-brand-50 hover:border-brand-200 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-brand-950/40 dark:hover:border-brand-800 dark:hover:text-brand-400 transition-all duration-150"
+                   title="{{ __('Retour à l\'accueil') }}"
+                >
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                    </svg>
+                    <span class="hidden md:inline">{{ __('Accueil') }}</span>
+                </a>
+            @endif
 
             {{-- Toggle Mode Sombre / Clair --}}
             <button
@@ -109,7 +123,7 @@
 
     {{-- Pied de page minimal --}}
     <footer class="border-t border-slate-200/80 py-4 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
-        &copy; {{ date('Y') }} {{ __('Education Centers — Espace Super Administrateur') }}
+        &copy; {{ date('Y') }} {{ __('Education Centers') }}
     </footer>
 
     @include('layouts.partials.toasts')

@@ -34,14 +34,8 @@
     ];
     $topbarDomain = $domainTopbarConfig[$activeDomain] ?? null;
 
-    $homeUrl = $user->isSuperAdmin()
-        ? ($isFinance
-            ? route('super-admin.finance.dashboard')
-            : ($isStagiaires
-                ? route('stagiaires.dashboard')
-                : ($activeDomain && $activeDomain !== 'sante'
-                    ? route('super-admin.domain.dashboard', $activeDomain)
-                    : route('super-admin.sante.dashboard'))))
+    $homeUrl = ($user->isSuperAdmin() || $user->isCenterAdmin())
+        ? route('admin.home')
         : route('dashboard');
 @endphp
 
@@ -56,12 +50,12 @@
 
         {{-- Scope chip (centre courant / tous les centres) --}}
         @if($user->isSuperAdmin())
-            <a href="{{ route('super-admin.domaines') }}"
+            <a href="{{ route('admin.home') }}"
                class="hidden shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-2xs transition hover:border-slate-300 hover:bg-slate-50 sm:inline-flex dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-               title="{{ __('Changer de domaine / contexte') }}">
+               title="{{ __('Retour à l\'accueil') }}">
                 <x-icon name="building" class="h-4 w-4 text-brand-600 dark:text-brand-400" />
                 <span class="max-w-[12rem] truncate">{{ $centerLabel }}</span>
-                <x-icon name="chevron-down" class="h-3.5 w-3.5 text-slate-400" />
+                <x-icon name="home" class="h-3.5 w-3.5 text-slate-400" />
             </a>
         @else
             <span class="hidden shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-2xs sm:inline-flex dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">

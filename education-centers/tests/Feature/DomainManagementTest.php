@@ -456,13 +456,18 @@ class DomainManagementTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_domaines_page_still_shows_stagiaires_section(): void
+    public function test_domaines_page_no_longer_shows_administrative_section(): void
     {
         $response = $this->actingAs($this->superAdmin)->get(route('super-admin.domaines'));
 
-        $response->assertSee('Stagiaires');
-        $response->assertSee('Gestion administrative');
-        $response->assertSee(route('stagiaires.dashboard'));
+        $response->assertDontSee('Gestion administrative');
+        $response->assertDontSee('id="card-stagiaires"', false);
+        $response->assertDontSee('id="card-gestion-financiere"', false);
+
+        // Stagiaires est désormais accessible depuis la page d'accueil principale /admin/accueil
+        $homeResponse = $this->actingAs($this->superAdmin)->get(route('admin.home'));
+        $homeResponse->assertSee('Gestion des stagiaires');
+        $homeResponse->assertSee(route('stagiaires.dashboard'));
     }
 
     public function test_stagiaires_is_not_listed_as_a_formation_domain(): void

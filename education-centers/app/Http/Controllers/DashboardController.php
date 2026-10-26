@@ -29,17 +29,25 @@ class DashboardController extends Controller {
 
     public function index(Request $request): View|RedirectResponse {
         $user = $request->user();
-        // Le Super Admin est désormais redirigé vers la sélection des domaines
-        if ($user->isSuperAdmin()) {
-            return redirect()->route('super-admin.domaines');
+        // Super Admin et Admin Centre → nouvelle page d'accueil unifiée (4 cartes)
+        if ($user->isSuperAdmin() || $user->isCenterAdmin()) {
+            return redirect()->route('admin.home');
         }
         if (view()->exists('dashboard.' . $user->role)) {
-            if ($user->isCenterAdmin()) return $this->centerAdminDashboard($user);
             if ($user->isTeacher()) return $this->teacherDashboard($user);
             if ($user->isStudent()) return $this->studentDashboard($user);
         }
         return view('dashboard', compact('user'));
     }
+
+    /**
+     * Page d'accueil commune aux administrateurs (4 grandes cartes).
+     * Accessible aux rôles : super_admin, center_admin.
+     */
+    public function adminHome(Request $request): View {
+        return view('admin.home');
+    }
+
     private function superAdminDashboard(Request $request): View {
         $stats = [
             'centers'     => Center::count(),

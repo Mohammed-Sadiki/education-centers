@@ -77,7 +77,7 @@ class AuthAndRoleTest extends TestCase
         ]);
 
         $this->assertAuthenticatedAs($user);
-        $response->assertRedirect(route('super-admin.domaines'));
+        $response->assertRedirect(route('admin.home'));
     }
 
     public function test_center_admin_is_redirected_to_dashboard_on_login(): void
@@ -93,7 +93,7 @@ class AuthAndRoleTest extends TestCase
         ]);
 
         $this->assertAuthenticatedAs($user);
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('admin.home'));
     }
 
     public function test_user_cannot_login_with_invalid_credentials(): void
@@ -133,11 +133,11 @@ class AuthAndRoleTest extends TestCase
             'name' => 'Jean Super Admin',
         ]);
 
-        // /dashboard redirige désormais vers /super-admin/domaines
+        // /dashboard redirige désormais vers /admin/accueil pour les admins
         $response = $this->actingAs($superAdmin)->get(route('dashboard'));
-        $response->assertRedirect(route('super-admin.domaines'));
+        $response->assertRedirect(route('admin.home'));
 
-        // En suivant la redirection, on vérifie que la page de sélection des domaines
+        // En suivant la redirection, on vérifie que la page d'accueil
         // s'affiche correctement avec les infos de l'utilisateur dans le topbar.
         $followed = $this->actingAs($superAdmin)->followingRedirects()->get(route('dashboard'));
         $followed->assertStatus(200);
@@ -203,11 +203,13 @@ class AuthAndRoleTest extends TestCase
         ]);
 
         $response = $this->actingAs($berlinAdmin)->get(route('dashboard'));
+        $response->assertRedirect(route('admin.home'));
 
-        $response->assertStatus(200);
-        $response->assertSee('Klaus Admin Berlin');
-        $response->assertSee('Admin Centre');
-        $response->assertSee('Centre Berlin');
+        $followed = $this->actingAs($berlinAdmin)->followingRedirects()->get(route('dashboard'));
+        $followed->assertStatus(200);
+        $followed->assertSee('Klaus Admin Berlin');
+        $followed->assertSee('Admin Centre');
+        $followed->assertSee('Centre Berlin');
     }
 
     public function test_teacher_can_access_dashboard_and_sees_their_center(): void
