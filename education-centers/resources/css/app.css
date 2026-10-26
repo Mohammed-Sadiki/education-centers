@@ -730,18 +730,16 @@ html[dir='rtl'] .ltr {
     height: 100vh;
     z-index: 0;
     pointer-events: none;
-    filter: blur(36px);
-    -webkit-filter: blur(36px);
     transform: translate3d(0, 0, 0);
     will-change: transform;
-    opacity: 0.95;
+    opacity: 0.98;
     transition: opacity 0.4s ease;
 }
 
-/* Absent sur tactile et si l'utilisateur réduit les animations. */
-@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+/* Fallback statique ou masquage sur tactile / reduced-motion si nécessaire */
+@media (prefers-reduced-motion: reduce) {
     .ec-aurora {
-        display: none !important;
+        opacity: 0.6;
     }
 }
 

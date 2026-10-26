@@ -14,16 +14,14 @@
         }
     </script>
 </head>
-<body class="min-h-screen bg-slate-100 dark:bg-slate-950">
-    <div class="fixed right-3 top-3 z-50 flex items-center gap-2 rtl:left-3 rtl:right-auto">
-        @include('layouts.partials.language-switcher')
-        <button type="button" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
-                x-on:click="$store.ui.toggleTheme()" aria-label="{{ __('Basculer le thème') }}">
-            <x-icon name="moon" class="h-5 w-5" x-show="!$store.ui.dark" />
-            <x-icon name="sun" class="h-5 w-5" x-show="$store.ui.dark" x-cloak />
-        </button>
-    </div>
+<body class="relative min-h-screen bg-slate-50/50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 overflow-x-hidden antialiased">
+    {{-- Arrière-plan Aurora 3D interactif (anneaux 3D, vagues lumineuses et particules) --}}
+    <canvas id="ec-aurora" class="ec-aurora" aria-hidden="true"></canvas>
+
     @include('layouts.partials.toasts')
-    @yield('content')
+
+    <main class="relative z-10 flex min-h-screen items-center justify-center p-4 sm:p-6 lg:p-8">
+        @yield('content')
+    </main>
 </body>
 </html>

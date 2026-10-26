@@ -1,6 +1,7 @@
 import Alpine from 'alpinejs';
 import collapse from '@alpinejs/collapse';
 import focus from '@alpinejs/focus';
+import { initAuroraBackground } from './components/aurora-background.js';
 
 Alpine.plugin(collapse);
 Alpine.plugin(focus);
@@ -86,6 +87,13 @@ Alpine.store('ui', {
 
 window.Alpine = Alpine;
 Alpine.start();
+
+// Arrière-plan Aurora 3D interactif (site vitrine public uniquement)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAuroraBackground);
+} else {
+    initAuroraBackground();
+}
 
 /* ── Micro-interactions (purement visuelles, jamais de modification de données) ──
 
