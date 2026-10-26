@@ -36,14 +36,11 @@
                     <ul class="mt-1.5 space-y-1 text-sm text-rose-700 dark:text-rose-300">
                         @foreach($situation['overdue_invoices'] as $overdue)
                             <li>
-                                {{ __('Votre échéance') }}
-                                <span class="font-semibold">{{ $overdue->formation }}</span>
-                                @if($overdue->due_date)
-                                    {{ __('du') }} {{ format_date($overdue->due_date, 'd/m/Y') }}
-                                @endif
-                                {{ __('n’a pas encore été réglée. Montant exigible :') }}
-                                <span class="font-semibold">{{ format_price($overdue->amount, $situation['currency']) }}</span>.
-                                {{ __('Veuillez contacter l’administration de votre centre.') }}
+                                {{ __('Votre échéance :formation du :date n’a pas encore été réglée. Montant exigible : :montant. Veuillez contacter l’administration de votre centre.', [
+                                    'formation' => $overdue->formation,
+                                    'date' => $overdue->due_date ? format_date($overdue->due_date, 'd/m/Y') : __('(sans date)'),
+                                    'montant' => format_price($overdue->amount, $situation['currency']),
+                                ]) }}
                             </li>
                         @endforeach
                     </ul>

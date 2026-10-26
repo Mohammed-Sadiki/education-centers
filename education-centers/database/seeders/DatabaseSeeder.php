@@ -847,6 +847,76 @@ class DatabaseSeeder extends Seeder
         }
 
         // ─────────────────────────────────────────────────────────────────
+        // 18b. FACTURES / ÉCHÉANCIERS ÉTUDIANTS — alimente « Mes paiements »
+        //      Trois états visuels : régularisé, dépassé (alerte), à venir.
+        //      Un état « dépassé » n'est posé que si la due_date est passée.
+        // ─────────────────────────────────────────────────────────────────
+        if ($berlinCenter) {
+            $berlinStudentModel = \App\Models\Student::where('center_id', $berlinCenter->id)->first();
+            $berlinDeA1         = \App\Models\Formation::where('center_id', $berlinCenter->id)->where('code', 'DE-A1')->first();
+            $enrollA1           = \App\Models\Enrollment::where('center_id', $berlinCenter->id)
+                                    ->where('student_id', $berlinStudentModel?->id)
+                                    ->where('formation_id', $berlinDeA1?->id)
+                                    ->first();
+
+            if ($berlinStudentModel && $berlinDeA1) {
+                $invoices = [
+                    ['number' => 'INV-BERLIN-000001', 'amount' => 3000.00, 'due' => now()->subDays(45)->toDateString(), 'status' => 'paid'],  // régularisée
+                    ['number' => 'INV-BERLIN-000002', 'amount' => 3000.00, 'due' => now()->subDays(15)->toDateString(), 'status' => 'sent'],  // dépassée → alerte
+                    ['number' => 'INV-BERLIN-000003', 'amount' => 3000.00, 'due' => now()->addDays(20)->toDateString(), 'status' => 'sent'],  // à venir
+                ];
+
+                foreach ($invoices as $inv) {
+                    \App\Models\Invoice::updateOrCreate(
+                        ['invoice_number' => $inv['number']],
+                        [
+                            'center_id'     => $berlinCenter->id,
+                            'student_id'    => $berlinStudentModel->id,
+                            'enrollment_id' => $enrollA1?->id,
+                            'formation_id'  => $berlinDeA1->id,
+                            'total_amount'  => $inv['amount'],
+                            'currency'      => 'MAD',
+                            'invoice_date'  => now()->subDays(60)->toDateString(),
+                            'due_date'      => $inv['due'],
+                            'status'        => $inv['status'],
+                            'notes'         => 'Échéancier formation A1 (démonstration).',
+                            'created_by'    => $superAdmin?->id,
+                        ]
+                    );
+                }
+            }
+        }
+
+        if ($munichCenter) {
+            $munichStudentModel = \App\Models\Student::where('center_id', $munichCenter->id)->first();
+            $munichDeA1         = \App\Models\Formation::where('center_id', $munichCenter->id)->where('code', 'DE-A1')->first();
+            $enrollMunA1        = \App\Models\Enrollment::where('center_id', $munichCenter->id)
+                                    ->where('student_id', $munichStudentModel?->id)
+                                    ->where('formation_id', $munichDeA1?->id)
+                                    ->first();
+
+            if ($munichStudentModel && $munichDeA1) {
+                // Élève entièrement à jour : échéance unique régularisée, sans retard.
+                \App\Models\Invoice::updateOrCreate(
+                    ['invoice_number' => 'INV-MUNICH-000001'],
+                    [
+                        'center_id'     => $munichCenter->id,
+                        'student_id'    => $munichStudentModel->id,
+                        'enrollment_id' => $enrollMunA1?->id,
+                        'formation_id'  => $munichDeA1->id,
+                        'total_amount'  => 4900.00,
+                        'currency'      => 'MAD',
+                        'invoice_date'  => now()->subDays(40)->toDateString(),
+                        'due_date'      => now()->subDays(5)->toDateString(),
+                        'status'        => 'paid',
+                        'notes'         => 'Échéance réglée — élève à jour (démonstration).',
+                        'created_by'    => $superAdmin?->id,
+                    ]
+                );
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
         // 19. SALAIRES PROFESSEURS — multi-mois, statuts variés (payé, partiel, impayé)
         // ─────────────────────────────────────────────────────────────────
         if ($berlinCenter) {
@@ -860,10 +930,11 @@ class DatabaseSeeder extends Seeder
                 $teacherJohannes->update(['monthly_salary' => $johannesSalary, 'domain' => 'informatique']);
 
                 $salaryMonths = [
-                    ['month' => 9, 'year' => 2026, 'paid' => $johannesSalary, 'status' => 'paid',    'date' => '2026-09-30', 'method' => 'Virement bancaire', 'note' => 'Salaire Septembre 2026.'],
-                    ['month' => 10,'year' => 2026, 'paid' => $johannesSalary, 'status' => 'paid',    'date' => '2026-10-31', 'method' => 'Virement bancaire', 'note' => 'Salaire Octobre 2026.'],
-                    ['month' => 11,'year' => 2026, 'paid' => 3750.00,          'status' => 'partial', 'date' => '2026-11-15', 'method' => 'Espèces',           'note' => 'Acompte Novembre — solde en cours.'],
-                    ['month' => 12,'year' => 2026, 'paid' => 0,                'status' => 'unpaid',  'date' => null,          'method' => null,                'note' => 'Décembre — non encore versé.'],
+                    ['month' => 8, 'year' => 2026, 'paid' => 0,               'status' => 'unpaid',  'date' => null,          'method' => null,                'scheduled' => now()->subDays(20)->toDateString(), 'note' => 'Août 2026 — date prévue dépassée, non versé → en retard.'],
+                    ['month' => 9, 'year' => 2026, 'paid' => $johannesSalary, 'status' => 'paid',    'date' => '2026-09-30', 'method' => 'Virement bancaire', 'scheduled' => '2026-09-30', 'note' => 'Salaire Septembre 2026.'],
+                    ['month' => 10,'year' => 2026, 'paid' => $johannesSalary, 'status' => 'paid',    'date' => '2026-10-31', 'method' => 'Virement bancaire', 'scheduled' => '2026-10-31', 'note' => 'Salaire Octobre 2026.'],
+                    ['month' => 11,'year' => 2026, 'paid' => 3750.00,          'status' => 'partial', 'date' => null,          'method' => 'Espèces',           'scheduled' => now()->addDays(15)->toDateString(), 'note' => 'Acompte Novembre — solde à venir, date prévue non atteinte.'],
+                    ['month' => 12,'year' => 2026, 'paid' => 0,                'status' => 'unpaid',  'date' => null,          'method' => null,                'scheduled' => null, 'note' => 'Décembre — sans date prévue : jamais « en retard ».'],
                 ];
 
                 foreach ($salaryMonths as $s) {
@@ -875,16 +946,17 @@ class DatabaseSeeder extends Seeder
                             'year'       => $s['year'],
                         ],
                         [
-                            'domain'          => $teacherJohannes->domain,
-                            'school_year'     => '2026/2027',
-                            'expected_amount' => $johannesSalary,
-                            'paid_amount'     => $s['paid'],
-                            'currency'        => 'MAD',
-                            'status'          => $s['status'],
-                            'payment_date'    => $s['date'],
-                            'payment_method'  => $s['method'],
-                            'notes'           => $s['note'],
-                            'recorded_by'     => $superAdmin?->id,
+                            'domain'                => $teacherJohannes->domain,
+                            'school_year'           => '2026/2027',
+                            'expected_amount'       => $johannesSalary,
+                            'paid_amount'           => $s['paid'],
+                            'currency'              => 'MAD',
+                            'status'                => $s['status'],
+                            'payment_date'          => $s['date'],
+                            'scheduled_payment_date'=> $s['scheduled'],
+                            'payment_method'        => $s['method'],
+                            'notes'                 => $s['note'],
+                            'recorded_by'           => $superAdmin?->id,
                         ]
                     );
                 }
@@ -902,9 +974,10 @@ class DatabaseSeeder extends Seeder
                 $teacherGreta->update(['monthly_salary' => $gretaSalary, 'domain' => 'sante']);
 
                 $salaryMonths = [
-                    ['month' => 9,  'year' => 2026, 'paid' => $gretaSalary, 'status' => 'paid',    'date' => '2026-09-28', 'method' => 'Virement bancaire', 'note' => 'Salaire Septembre 2026.'],
-                    ['month' => 10, 'year' => 2026, 'paid' => $gretaSalary, 'status' => 'paid',    'date' => '2026-10-29', 'method' => 'Virement bancaire', 'note' => 'Salaire Octobre 2026.'],
-                    ['month' => 11, 'year' => 2026, 'paid' => 4250.00,       'status' => 'partial', 'date' => '2026-11-10', 'method' => 'Virement bancaire', 'note' => 'Moitié Novembre versée — reste à payer.'],
+                    ['month' => 9,  'year' => 2026, 'paid' => $gretaSalary, 'status' => 'paid',    'date' => '2026-09-28', 'method' => 'Virement bancaire', 'scheduled' => '2026-09-28', 'note' => 'Salaire Septembre 2026.'],
+                    ['month' => 10, 'year' => 2026, 'paid' => $gretaSalary, 'status' => 'paid',    'date' => '2026-10-29', 'method' => 'Virement bancaire', 'scheduled' => '2026-10-29', 'note' => 'Salaire Octobre 2026.'],
+                    ['month' => 11, 'year' => 2026, 'paid' => 4250.00,       'status' => 'partial', 'date' => null,          'method' => 'Virement bancaire', 'scheduled' => now()->addDays(10)->toDateString(), 'note' => 'Moitié Novembre versée — reste à payer, date prévue non atteinte.'],
+                    ['month' => 12, 'year' => 2026, 'paid' => 0,              'status' => 'unpaid',  'date' => null,          'method' => null,                'scheduled' => null, 'note' => 'Décembre — en attente, sans date prévue.'],
                 ];
 
                 foreach ($salaryMonths as $s) {
@@ -916,16 +989,17 @@ class DatabaseSeeder extends Seeder
                             'year'       => $s['year'],
                         ],
                         [
-                            'domain'          => $teacherGreta->domain,
-                            'school_year'     => '2026/2027',
-                            'expected_amount' => $gretaSalary,
-                            'paid_amount'     => $s['paid'],
-                            'currency'        => 'MAD',
-                            'status'          => $s['status'],
-                            'payment_date'    => $s['date'],
-                            'payment_method'  => $s['method'],
-                            'notes'           => $s['note'],
-                            'recorded_by'     => $superAdmin?->id,
+                            'domain'                => $teacherGreta->domain,
+                            'school_year'           => '2026/2027',
+                            'expected_amount'       => $gretaSalary,
+                            'paid_amount'           => $s['paid'],
+                            'currency'              => 'MAD',
+                            'status'                => $s['status'],
+                            'payment_date'          => $s['date'],
+                            'scheduled_payment_date'=> $s['scheduled'],
+                            'payment_method'        => $s['method'],
+                            'notes'                 => $s['note'],
+                            'recorded_by'           => $superAdmin?->id,
                         ]
                     );
                 }

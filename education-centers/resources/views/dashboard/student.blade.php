@@ -103,12 +103,12 @@
                 <div class="mx-5 mt-5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
                     <span class="font-semibold">{{ __('Paiement en retard') }}</span>
                     @if($finance['overdue_invoices']->isNotEmpty())
-                        — {{ __('Votre échéance') }} {{ $finance['overdue_invoices']->first()->formation }}
-                        @if($finance['overdue_invoices']->first()->due_date)
-                            {{ __('du') }} {{ format_date($finance['overdue_invoices']->first()->due_date, 'd/m/Y') }}
-                        @endif
-                        {{ __('n’a pas encore été réglée. Montant exigible :') }}
-                        {{ format_price($finance['overdue_invoices']->first()->amount, $finance['currency']) }}.
+                        @php $firstOverdue = $finance['overdue_invoices']->first(); @endphp
+                        — {{ __('Votre échéance :formation du :date n’a pas encore été réglée. Montant exigible : :montant. Veuillez contacter l’administration de votre centre.', [
+                            'formation' => $firstOverdue->formation,
+                            'date' => $firstOverdue->due_date ? format_date($firstOverdue->due_date, 'd/m/Y') : __('(sans date)'),
+                            'montant' => format_price($firstOverdue->amount, $finance['currency']),
+                        ]) }}
                     @endif
                 </div>
             @endif

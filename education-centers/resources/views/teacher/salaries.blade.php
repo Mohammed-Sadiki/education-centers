@@ -31,10 +31,10 @@
                     <ul class="mt-1.5 space-y-1 text-sm text-rose-700 dark:text-rose-300">
                         @foreach($situation['overdue_salaries'] as $salary)
                             <li>
-                                {{ __('Votre salaire de') }}
-                                <span class="font-semibold">{{ $salary->month_name }} {{ $salary->year }}</span>
-                                {{ __('est en attente de versement. Solde dû :') }}
-                                <span class="font-semibold">{{ format_price($salary->remaining_amount, $salary->currency) }}</span>.
+                                {{ __('Votre salaire de :periode est en attente de versement. Solde dû : :montant.', [
+                                    'periode' => $salary->month_name.' '.$salary->year,
+                                    'montant' => format_price($salary->remaining_amount, $salary->currency),
+                                ]) }}
                             </li>
                         @endforeach
                     </ul>

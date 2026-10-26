@@ -75,8 +75,7 @@
             @if($finance['has_alert'])
                 <div class="mx-5 mt-5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
                     <span class="font-semibold">{{ __('Salaire en attente de versement') }}</span>
-                    — {{ __('Votre salaire de') }} {{ $currentSalary->month_name }} {{ $currentSalary->year }}
-                    {{ __('est en attente de versement.') }}
+                    — {{ __('Votre salaire de :periode est en attente de versement.', ['periode' => $currentSalary->month_name.' '.$currentSalary->year]) }}
                 </div>
             @endif
 
