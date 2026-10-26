@@ -10,18 +10,22 @@
     x-on:close-modal.window="if ($event.detail === '{{ $name }}') show = false"
     x-on:keydown.escape.window="show = false"
     x-show="show"
+    x-transition.opacity.duration.150ms
     x-cloak
     class="fixed inset-0 z-50 flex items-center justify-center p-4"
     role="dialog"
     aria-modal="true"
     :aria-labelledby="'modal-title-{{ $name }}'"
 >
-    <div class="absolute inset-0 bg-slate-900/50" x-on:click="show = false"></div>
+    <div class="absolute inset-0 bg-slate-900/50" x-show="show" x-transition.opacity.duration.150ms x-on:click="show = false"></div>
     <div
         x-show="show"
-        x-transition:enter="ease-out duration-200"
-        x-transition:enter-start="opacity-0 translate-y-2"
-        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-3 scale-95"
+        x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 translate-y-2 scale-95"
         class="relative w-full {{ $widths[$max] }} rounded-xl bg-white p-5 shadow-xl dark:bg-slate-900"
         x-trap.noscroll="show"
     >

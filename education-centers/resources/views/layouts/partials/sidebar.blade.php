@@ -294,7 +294,8 @@
          :class="$store.ui.sidebarCollapsed ? 'justify-center' : 'justify-between'">
         <a href="{{ $user->isSuperAdmin() ? ($isFinance ? route('super-admin.finance.dashboard') : ($isStagiaires ? route('stagiaires.dashboard') : ($activeDomain && $activeDomain !== 'sante' ? route('super-admin.domain.dashboard', $activeDomain) : route('super-admin.sante.dashboard')))) : route('dashboard') }}"
            class="flex min-w-0 items-center gap-2.5 font-semibold text-slate-900 dark:text-white"
-           x-show="!$store.ui.sidebarCollapsed">
+           x-show="!$store.ui.sidebarCollapsed"
+           x-transition.opacity.duration.200ms>
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white shadow-2xs">
                 <x-icon name="academic" class="h-5 w-5" />
             </span>
@@ -308,7 +309,7 @@
                 :title="$store.ui.sidebarCollapsed ? @js(__('Agrandir la sidebar')) : @js(__('Réduire la sidebar'))"
                 :aria-expanded="!$store.ui.sidebarCollapsed"
                 class="hidden lg:inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700/80 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white transition-colors">
-            <x-icon name="chevron-left" class="h-4 w-4 transition-transform duration-200" x-bind:class="$store.ui.sidebarCollapsed ? 'rotate-180' : ''" />
+            <x-icon name="chevron-left" class="ec-collapse-chevron h-4 w-4 transition-all duration-200" x-bind:class="$store.ui.sidebarCollapsed ? 'rotate-180' : ''" />
         </button>
     </div>
 
@@ -443,7 +444,7 @@
         </div>
     @endif
 
-    <nav class="flex-1 space-y-4 overflow-y-auto p-3">
+    <nav class="ec-nav-in flex-1 space-y-4 overflow-y-auto p-3">
         @foreach($groups as $index => $group)
             @if(!empty($group['items']))
                 @php
@@ -464,12 +465,13 @@
                         <button type="button"
                                 x-on:click="toggle()"
                                 x-show="!$store.ui.sidebarCollapsed"
+                                x-transition.opacity.duration.200ms
                                 class="group flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-start text-[11px] font-bold uppercase tracking-wider text-slate-500 hover:bg-slate-100 hover:text-slate-800 focus:outline-none dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200 transition-colors"
                                 :aria-expanded="open">
                             <span class="flex items-center gap-1.5 font-bold tracking-wider">
                                 {{ $group['title'] }}
                             </span>
-                            <span class="text-slate-400 transition-transform duration-200 ease-in-out group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"
+                            <span class="ec-accordion-chevron text-slate-400 transition-all duration-200 ease-in-out group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"
                                   :class="{ 'rotate-90': open, 'rotate-0': !open }">
                                 <x-icon name="chevron-right" class="h-3.5 w-3.5" />
                             </span>
@@ -498,7 +500,7 @@
                                            @if($item['active']) aria-current="page" @endif
                                            title="{{ $item['label'] }}">
                                             <x-icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
-                                            <span class="flex-1 truncate" x-show="!$store.ui.sidebarCollapsed">{{ $item['label'] }}</span>
+                                            <span class="flex-1 truncate" x-show="!$store.ui.sidebarCollapsed" x-transition.opacity.duration.150ms>{{ $item['label'] }}</span>
                                             @if($item['icon'] === 'message' && ($user->isSuperAdmin() || $user->isCenterAdmin()))
                                                 <span x-data="{ count: 0 }"
                                                       x-init="
@@ -539,7 +541,7 @@
                                        @if($item['active']) aria-current="page" @endif
                                        title="{{ $item['label'] }}">
                                         <x-icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
-                                        <span class="flex-1 truncate" x-show="!$store.ui.sidebarCollapsed">{{ $item['label'] }}</span>
+                                        <span class="flex-1 truncate" x-show="!$store.ui.sidebarCollapsed" x-transition.opacity.duration.150ms>{{ $item['label'] }}</span>
                                         @if($item['icon'] === 'message' && ($user->isSuperAdmin() || $user->isCenterAdmin()))
                                             <span x-data="{ count: 0 }"
                                                   x-init="
@@ -578,6 +580,7 @@
     @endphp
     <div class="border-t border-slate-200 p-3 dark:border-slate-800">
         <div x-show="!$store.ui.sidebarCollapsed"
+             x-transition.opacity.duration.200ms
              class="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-800 dark:bg-slate-800/50">
             <x-ui.avatar :name="$user->name" size="sm" />
             <div class="min-w-0 flex-1">

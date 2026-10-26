@@ -40,7 +40,12 @@
             </select>
         </div>
 
-        <div x-show="loading" class="py-8 text-sm text-slate-500">{{ __('Chargement des étudiants…') }}</div>
+        <div x-show="loading" role="status" class="space-y-2 p-4">
+            <span class="sr-only">{{ __('Chargement des étudiants…') }}</span>
+            <template x-for="i in 5" :key="i">
+                <div class="ec-skeleton h-10 w-full"></div>
+            </template>
+        </div>
 
         <div x-show="!loading && students.length" class="overflow-x-auto">
             <table class="ec-table">

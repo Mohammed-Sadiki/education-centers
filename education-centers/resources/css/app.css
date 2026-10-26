@@ -561,7 +561,7 @@ html[dir='rtl'] .ltr {
     background: #fff;
     padding: 1.25rem 1.35rem;
     box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 .ec-kpi:hover {
     transform: translateY(-2px);
@@ -709,4 +709,283 @@ html[dir='rtl'] .ltr {
     height: 2.25rem;
     width: 2.25rem;
     flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INTERACTIVE AURORA WAVES — site public (vitrine) uniquement.
+   Canvas injecté par layouts/public.blade.php seulement : jamais présent sur
+   les dashboards Super Admin / Admin Centre / Professeur / Élève, la page de
+   connexion ni les guests. Rendu basse résolution ×4 : les dégradés radiaux
+   additionnés (composite « lighter ») se fondent naturellement en vagues
+   diffuses violet/bleu/rose — sans cercles nets, contours ni anneaux.
+   zones lumineuses ~400–600 px, opacité par vague ≤ 0,16 : aucun texte,
+   bouton ni image masqué, curseur classique conservé.
+   Désactivé sur tactile et prefers-reduced-motion (CSS + JS).
+   ═══════════════════════════════════════════════════════════════════════════ */
+.ec-aurora {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+    filter: blur(36px);
+    -webkit-filter: blur(36px);
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    opacity: 0.95;
+    transition: opacity 0.4s ease;
+}
+
+/* Absent sur tactile et si l'utilisateur réduit les animations. */
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+    .ec-aurora {
+        display: none !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOTION DESIGN SYSTEM — micro-interactions centralisées (150–300 ms).
+   Uniquement transform/opacity (+ transitions de couleurs) pour éviter tout
+   décalage de mise en page. Positionnement logique : identique en FR/LTR et
+   AR/RTL. Neutralisé en intégralité par prefers-reduced-motion en fin de
+   bloc. Les pages publiques et la page de connexion ne sont pas touchées.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes ec-fade-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ec-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes ec-modal-pop {
+    from { opacity: 0; transform: translateY(10px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes ec-row-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ec-shimmer {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+}
+@keyframes ec-spin {
+    to { transform: rotate(360deg); }
+}
+@keyframes ec-indicator-in {
+    from { transform: scaleY(0); }
+    to   { transform: scaleY(1); }
+}
+
+/* ── 1. Transitions de page : fade-in léger + apparition progressive des
+      sections principales (enfants directs de <main class="ec-page-in">). ── */
+.ec-page-in > * {
+    animation: ec-fade-up 0.3s ease-out both;
+}
+.ec-page-in > :nth-child(2) { animation-delay: 40ms; }
+.ec-page-in > :nth-child(3) { animation-delay: 80ms; }
+.ec-page-in > :nth-child(4) { animation-delay: 120ms; }
+.ec-page-in > :nth-child(5) { animation-delay: 160ms; }
+.ec-page-in > :nth-child(n+6) { animation-delay: 200ms; }
+
+/* ── 2. Sidebar : sections en cascade, hover doux des liens et indicateur
+      de menu actif animé (côté logique start : identique LTR et RTL). ──── */
+.ec-nav-in > div {
+    animation: ec-fade-up 0.3s ease-out both;
+}
+.ec-nav-in > div:nth-child(2) { animation-delay: 50ms; }
+.ec-nav-in > div:nth-child(3) { animation-delay: 100ms; }
+.ec-nav-in > div:nth-child(n+4) { animation-delay: 150ms; }
+
+.ec-nav-link {
+    position: relative;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.ec-nav-link-active::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 22%;
+    bottom: 22%;
+    width: 3px;
+    border-radius: 9999px;
+    background: #4f46e5;
+    transform-origin: center;
+    animation: ec-indicator-in 0.25s ease-out;
+}
+.dark .ec-nav-link-active::before {
+    background: #a5b4fc;
+}
+
+/* Chevrons de la sidebar : miroir RTL propre. La propriété CSS `rotate`
+   (utilitaires Tailwind v4) compose avec ce transform sans conflit. */
+html[dir='rtl'] .ec-accordion-chevron {
+    transform: scaleX(-1);
+}
+html[dir='rtl'] .ec-accordion-chevron.rotate-90 {
+    rotate: -90deg;
+}
+html[dir='rtl'] .ec-collapse-chevron {
+    transform: scaleX(-1);
+}
+
+/* ── 3. Panneaux dashboard : ombre et bordures progressives au survol. ─── */
+.ec-panel {
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.ec-panel:hover {
+    box-shadow: 0 8px 24px -16px rgb(15 23 42 / 0.25);
+}
+.dark .ec-panel:hover {
+    box-shadow: 0 8px 24px -14px rgb(0 0 0 / 0.5);
+}
+
+/* ── 4. Boutons : transitions douces, effet de pression au clic et état
+      de chargement (classe is-loading ajoutée par JS à la soumission). ─── */
+.ec-btn,
+.ec-btn-primary,
+.ec-btn-secondary,
+.ec-btn-ghost,
+.ec-btn-danger,
+.ec-btn-success,
+.ec-btn-warning,
+.finance-btn-primary,
+.finance-btn-secondary,
+.btn,
+.fc .fc-button {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+        box-shadow 0.2s ease, transform 0.12s ease;
+}
+.ec-btn:active:not(:disabled),
+.ec-btn-primary:active:not(:disabled),
+.ec-btn-secondary:active:not(:disabled),
+.ec-btn-ghost:active:not(:disabled),
+.ec-btn-danger:active:not(:disabled),
+.ec-btn-success:active:not(:disabled),
+.ec-btn-warning:active:not(:disabled),
+.finance-btn-primary:active:not(:disabled),
+.finance-btn-secondary:active:not(:disabled),
+.btn:active:not(:disabled),
+.fc .fc-button:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.is-loading {
+    pointer-events: none;
+    cursor: progress;
+}
+.is-loading::after {
+    content: '';
+    width: 0.9em;
+    height: 0.9em;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    animation: ec-spin 0.6s linear infinite;
+}
+
+/* Champs de formulaire : transition des états focus (bordure + anneau). */
+.ec-input,
+.ec-select,
+.ec-textarea,
+.form-control,
+.form-select {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+/* Messages de validation : apparition douce. */
+.ec-error,
+.invalid-feedback {
+    animation: ec-fade-up 0.25s ease-out both;
+}
+
+/* ── 5. Tableaux : hover progressif + apparition en cascade limitée aux
+      dix premières lignes (les grandes listes ne s'animent pas une par une). */
+.ec-table tbody tr,
+.table tbody tr {
+    transition: background-color 0.15s ease;
+}
+.ec-table tbody tr:nth-child(-n+10),
+.table tbody tr:nth-child(-n+10) {
+    animation: ec-row-in 0.3s ease-out both;
+}
+.ec-table tbody tr:nth-child(2),
+.table tbody tr:nth-child(2) { animation-delay: 25ms; }
+.ec-table tbody tr:nth-child(3),
+.table tbody tr:nth-child(3) { animation-delay: 50ms; }
+.ec-table tbody tr:nth-child(4),
+.table tbody tr:nth-child(4) { animation-delay: 75ms; }
+.ec-table tbody tr:nth-child(5),
+.table tbody tr:nth-child(5) { animation-delay: 100ms; }
+.ec-table tbody tr:nth-child(n+6):nth-child(-n+10),
+.table tbody tr:nth-child(n+6):nth-child(-n+10) { animation-delay: 125ms; }
+
+/* États vides élégants (racine du composant x-ui.empty). */
+.ec-empty-in {
+    animation: ec-fade-up 0.35s ease-out both;
+}
+
+/* Skeleton loaders — réservés aux chargements réellement asynchrones. */
+.ec-skeleton {
+    border-radius: 0.5rem;
+    background-image: linear-gradient(
+        90deg,
+        rgb(148 163 184 / 0.16) 25%,
+        rgb(148 163 184 / 0.34) 50%,
+        rgb(148 163 184 / 0.16) 75%);
+    background-size: 200% 100%;
+    animation: ec-shimmer 1.4s ease-in-out infinite;
+}
+.dark .ec-skeleton {
+    background-image: linear-gradient(
+        90deg,
+        rgb(148 163 184 / 0.08) 25%,
+        rgb(148 163 184 / 0.18) 50%,
+        rgb(148 163 184 / 0.08) 75%);
+}
+
+/* ── 6. Modales : fondu du fond + léger zoom du contenu. ───────────────── */
+.modal.show {
+    animation: ec-fade-in 0.2s ease-out;
+}
+.modal.show .modal-content {
+    animation: ec-modal-pop 0.25s ease-out;
+}
+
+/* Panneau des modales Alpine : l'animation CSS redémarre naturellement
+   quand le parent passe de display:none à visible. */
+.ec-pop-in {
+    animation: ec-modal-pop 0.25s ease-out both;
+}
+
+/* ── 7. FullCalendar : survol léger des séances, sans toucher aux
+      dimensions ni au calcul de la grille (box-shadow/filtre uniquement). */
+.fc .fc-event {
+    transition: box-shadow 0.2s ease, filter 0.2s ease;
+}
+.fc .fc-event:hover {
+    box-shadow: 0 6px 14px -6px rgb(15 23 42 / 0.4);
+    filter: brightness(1.05);
+}
+.fc .fc-daygrid-day-frame {
+    transition: background-color 0.15s ease;
+}
+
+/* ── 8. Accessibilité : si l'utilisateur réduit les animations, tous les
+      effets deviennent instantanés (les états finaux restent exacts). ──── */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

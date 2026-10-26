@@ -35,7 +35,7 @@
 
 @section('content')
 {{-- ───────────────────────── HERO ───────────────────────── --}}
-<section class="relative overflow-hidden bg-gradient-to-b from-brand-50/80 via-slate-50 to-white dark:from-slate-900 dark:via-slate-950 dark:to-slate-950">
+<section class="relative overflow-hidden bg-gradient-to-b from-brand-50/60 via-slate-50/40 to-transparent dark:from-slate-900/60 dark:via-slate-950/40 dark:to-transparent">
     <div class="pointer-events-none absolute -top-32 -start-32 h-96 w-96 rounded-full bg-brand-200/40 blur-3xl dark:bg-brand-500/10" aria-hidden="true"></div>
     <div class="pointer-events-none absolute top-24 -end-24 h-80 w-80 rounded-full bg-turquoise-100/50 blur-3xl dark:bg-turquoise-500/10" aria-hidden="true"></div>
 
@@ -178,7 +178,7 @@
 </section>
 
 {{-- ───────────────────── FORMATIONS POPULAIRES ───────────────────── --}}
-<section class="bg-slate-50 py-16 dark:bg-slate-900/50 lg:py-24">
+<section class="bg-slate-50/60 py-16 dark:bg-slate-900/40 lg:py-24 backdrop-blur-[2px]">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -251,7 +251,7 @@
 
 {{-- ───────────────────────── ACTUALITÉS ───────────────────────── --}}
 @if($announcements->isNotEmpty())
-    <section class="bg-slate-50 py-16 dark:bg-slate-900/50 lg:py-24">
+    <section class="bg-slate-50/60 py-16 dark:bg-slate-900/40 lg:py-24 backdrop-blur-[2px]">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="mb-10 flex flex-wrap items-end justify-between gap-4">
                 <div>

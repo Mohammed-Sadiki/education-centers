@@ -50,7 +50,7 @@
         @keydown.window="focusSearch($event)">
     {{-- ── LEFT: menu, scope, domain, search ───────────────────────────── --}}
     <div class="flex min-w-0 items-center gap-2.5">
-        <button type="button" class="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden dark:text-slate-300 dark:hover:bg-slate-800" x-on:click="$store.ui.toggleSidebar()" aria-label="{{ __('Ouvrir le menu') }}">
+        <button type="button" class="rounded-lg p-2 text-slate-600 hover:bg-slate-100 transition-colors lg:hidden dark:text-slate-300 dark:hover:bg-slate-800" x-on:click="$store.ui.toggleSidebar()" aria-label="{{ __('Ouvrir le menu') }}">
             <x-icon name="menu" class="h-5 w-5" />
         </button>
 
@@ -110,7 +110,7 @@
         @include('layouts.partials.language-switcher')
 
         {{-- Theme toggle --}}
-        <button type="button" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" x-on:click="$store.ui.toggleTheme()" aria-label="{{ __('Basculer le thème') }}">
+        <button type="button" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 transition-colors dark:hover:bg-slate-800" x-on:click="$store.ui.toggleTheme()" aria-label="{{ __('Basculer le thème') }}">
             <x-icon name="moon" class="h-5 w-5" x-show="!$store.ui.dark" />
             <x-icon name="sun" class="h-5 w-5" x-show="$store.ui.dark" x-cloak />
         </button>
@@ -134,13 +134,20 @@
 
         {{-- Notifications --}}
         <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-            <button type="button" class="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" x-on:click="open = !open" aria-label="{{ __('Notifications') }}">
+            <button type="button" class="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100 transition-colors dark:hover:bg-slate-800" x-on:click="open = !open" aria-label="{{ __('Notifications') }}" aria-haspopup="true" :aria-expanded="open">
                 <x-icon name="bell" class="h-5 w-5" />
                 @if($unreadCount > 0)
                     <span class="absolute end-1 top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
                 @endif
             </button>
-            <div x-show="open" x-cloak x-transition class="absolute end-0 mt-2 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+            <div x-show="open" x-cloak
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 -translate-y-1 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="absolute end-0 mt-2 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
                 <div class="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 dark:border-slate-800">
                     <p class="text-sm font-semibold">{{ __('Notifications') }}</p>
                     @if($unreadCount > 0)
@@ -175,7 +182,14 @@
                 </span>
                 <x-icon name="chevron-down" class="hidden h-4 w-4 text-slate-400 sm:block" />
             </button>
-            <div x-show="open" x-cloak x-transition class="absolute end-0 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+            <div x-show="open" x-cloak
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 -translate-y-1 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="absolute end-0 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
                 <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
                     <p class="truncate font-semibold">{{ $user->name }}</p>
                     <p class="truncate text-xs text-slate-500">{{ $user->email }}</p>

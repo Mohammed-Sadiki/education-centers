@@ -75,12 +75,11 @@
         {{-- Liste des conversations --}}
         <div class="flex-1 overflow-y-auto">
             <template x-if="loading && conversations.length === 0">
-                <div class="flex items-center justify-center py-16 text-slate-400">
-                    <svg class="h-5 w-5 animate-spin me-2" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {{ __('Chargement…') }}
+                <div class="space-y-3 p-4" role="status">
+                    <span class="sr-only">{{ __('Chargement…') }}</span>
+                    <template x-for="i in 6" :key="i">
+                        <div class="ec-skeleton h-14 w-full"></div>
+                    </template>
                 </div>
             </template>
 
@@ -187,12 +186,11 @@
                 {{-- Zone de messages --}}
                 <div class="flex-1 overflow-y-auto px-4 py-4 space-y-3" id="messages-scroll-area" x-ref="scrollArea">
                     <template x-if="loadingMessages">
-                        <div class="flex items-center justify-center py-12 text-slate-400">
-                            <svg class="h-5 w-5 animate-spin me-2" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            {{ __('Chargement des messages…') }}
+                        <div class="space-y-3 py-4" role="status">
+                            <span class="sr-only">{{ __('Chargement des messages…') }}</span>
+                            <template x-for="i in 4" :key="i">
+                                <div class="ec-skeleton h-10" :class="i % 2 === 0 ? 'w-2/3 ms-auto' : 'w-1/2'"></div>
+                            </template>
                         </div>
                     </template>
 

@@ -249,7 +249,8 @@ document.addEventListener('DOMContentLoaded', () => {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                animation: { duration: 700, easing: 'easeOutQuart' },
+                plugins: { legend: { display: false }, tooltip: { animation: { duration: 150 } } },
                 scales: {
                     x: { grid: { display: false }, ticks: { color: tickColor } },
                     y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor, precision: 0 } },
@@ -275,7 +276,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: '62%',
-                plugins: { legend: { position: 'bottom', labels: { color: tickColor, usePointStyle: true, padding: 14, boxWidth: 8 } } },
+                animation: { duration: 700, easing: 'easeOutQuart' },
+                plugins: { legend: { position: 'bottom', labels: { color: tickColor, usePointStyle: true, padding: 14, boxWidth: 8 } }, tooltip: { animation: { duration: 150 } } },
             },
         });
     }

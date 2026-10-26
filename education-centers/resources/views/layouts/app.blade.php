@@ -23,7 +23,7 @@
         <div class="flex min-w-0 flex-1 flex-col">
             @include('layouts.partials.topbar')
 
-            <main class="flex-1 @yield('main-class', 'p-4 sm:p-6 lg:p-8')">
+            <main class="ec-page-in flex-1 @yield('main-class', 'p-4 sm:p-6 lg:p-8')">
                 @yield('content')
             </main>
         </div>
@@ -32,6 +32,7 @@
     <div
         class="fixed inset-0 z-30 bg-slate-900/40 lg:hidden"
         x-show="$store.ui.sidebarOpen"
+        x-transition.opacity.duration.200ms
         x-cloak
         x-on:click="$store.ui.closeSidebar()"
     ></div>
