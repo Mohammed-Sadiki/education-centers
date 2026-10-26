@@ -14,7 +14,7 @@
             document.documentElement.classList.add('dark');
         }
     </script>
-<body class="relative min-h-screen bg-white text-slate-800 dark:bg-slate-950 dark:text-slate-100 overflow-x-hidden">
+<body class="relative min-h-screen bg-[#fafafc] text-slate-800 dark:bg-[#080c16] dark:text-slate-100 overflow-x-hidden">
     {{-- Arrière-plan Aurora 3D : Couche 1 (Décor fixe) + Couche 2 (Lumière souris interactive) --}}
     <canvas id="ec-aurora-static" class="ec-aurora-layer ec-aurora-static" aria-hidden="true"></canvas>
     <canvas id="ec-aurora-interactive" class="ec-aurora-layer ec-aurora-interactive" aria-hidden="true"></canvas>
