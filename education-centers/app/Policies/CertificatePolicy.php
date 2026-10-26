@@ -10,7 +10,9 @@ class CertificatePolicy {
     public function viewAny(User $user): bool { return $user->isCenterAdmin() || $user->isStudent(); }
     public function view(User $user, Certificate $certificate): bool {
         if ($user->isStudent()) {
-            return $user->center_id === $certificate->center_id && $user->student?->id === $certificate->student_id;
+            return $user->center_id === $certificate->center_id
+                && $user->student?->id === $certificate->student_id
+                && $certificate->status === 'issued';
         }
         return $user->isCenterAdmin() && $user->center_id === $certificate->center_id;
     }

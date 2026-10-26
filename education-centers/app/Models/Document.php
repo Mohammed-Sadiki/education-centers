@@ -50,4 +50,12 @@ class Document extends Model
 
         return round($this->size / 1048576, 1).' MB';
     }
+
+    /**
+     * Le document peut-il être affiché/imprimé directement dans le navigateur ?
+     */
+    public function isPrintable(): bool
+    {
+        return in_array($this->mime_type, ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'], true);
+    }
 }

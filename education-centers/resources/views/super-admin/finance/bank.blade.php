@@ -138,16 +138,16 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table class="w-full text-start text-xs">
                 <thead class="bg-slate-50/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-100 dark:bg-slate-800/50 dark:border-slate-800">
                     <tr>
                         <th class="py-3 px-4">{{ __('Date') }}</th>
                         <th class="py-3 px-4">{{ __('Libellé') }}</th>
                         <th class="py-3 px-4">{{ __('Origine') }}</th>
                         <th class="py-3 px-4">{{ __('Mode') }}</th>
-                        <th class="py-3 px-4 text-right">{{ __('Dépôt') }}</th>
-                        <th class="py-3 px-4 text-right">{{ __('Retrait') }}</th>
-                        <th class="py-3 px-4 text-right">{{ __('Solde cumulé') }}</th>
+                        <th class="py-3 px-4 text-end">{{ __('Dépôt') }}</th>
+                        <th class="py-3 px-4 text-end">{{ __('Retrait') }}</th>
+                        <th class="py-3 px-4 text-end">{{ __('Solde cumulé') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -168,13 +168,13 @@
                             <td class="py-3 px-4 whitespace-nowrap text-slate-600">
                                 {{ ucfirst(str_replace('_', ' ', $t->method)) }}
                             </td>
-                            <td class="py-3 px-4 text-right font-bold text-[#0DAD98] whitespace-nowrap">
+                            <td class="py-3 px-4 text-end font-bold text-[#0DAD98] whitespace-nowrap">
                                 {{ $t->type === 'deposit' ? format_price($t->amount, 'MAD') : '—' }}
                             </td>
-                            <td class="py-3 px-4 text-right font-bold text-rose-600 whitespace-nowrap">
+                            <td class="py-3 px-4 text-end font-bold text-rose-600 whitespace-nowrap">
                                 {{ $t->type === 'withdrawal' ? format_price($t->amount, 'MAD') : '—' }}
                             </td>
-                            <td class="py-3 px-4 text-right font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
+                            <td class="py-3 px-4 text-end font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
                                 {{ format_price($t->running_balance, 'MAD') }}
                             </td>
                         </tr>

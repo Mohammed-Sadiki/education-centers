@@ -63,7 +63,7 @@
                     <td>{{ $e->classRoom?->name ?? __('Non affectée') }}</td>
                     <td>{{ $e->formatted_application_date }}</td>
                     <td><x-status-badge type="enrollment" :status="$e->status" /></td>
-                    <td class="text-right"><a href="{{ route('enrollments.show', $e) }}" class="ec-btn-ghost ec-btn-sm">{{ __('Voir') }}</a></td>
+                    <td class="text-end"><a href="{{ route('enrollments.show', $e) }}" class="ec-btn-ghost ec-btn-sm">{{ __('Voir') }}</a></td>
                 </tr>
             @empty
                 <tr><td colspan="8"><x-ui.empty :title="__('Aucune inscription')" /></td></tr>

@@ -25,7 +25,7 @@
                     <td>{{ $log->user?->name ?? __('Système') }}</td>
                     <td class="font-mono text-xs">{{ $log->action }}</td>
                     <td>{{ class_basename((string) $log->auditable_type) }} #{{ $log->auditable_id }}</td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div x-data="{ open: false }">
                             <button type="button" class="ec-btn-ghost ec-btn-sm" x-on:click="open = true">{{ __('Détails') }}</button>
                             <div x-show="open" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">

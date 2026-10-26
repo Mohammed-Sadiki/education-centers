@@ -49,6 +49,11 @@
 
             <div class="hidden items-center gap-3 lg:flex">
                 @include('layouts.partials.language-switcher')
+                <button type="button" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                        x-on:click="$store.ui.toggleTheme()" aria-label="{{ __('Basculer le thème') }}">
+                    <x-icon name="moon" class="h-5 w-5" x-show="!$store.ui.dark" />
+                    <x-icon name="sun" class="h-5 w-5" x-show="$store.ui.dark" x-cloak />
+                </button>
                 @auth
                     <a href="{{ route('dashboard') }}" class="ec-btn-primary">
                         <x-icon name="home" class="h-4 w-4 rtl:-scale-x-100" />
@@ -83,7 +88,14 @@
                 @endforeach
             </nav>
             <div class="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
-                @include('layouts.partials.language-switcher')
+                <div class="flex items-center gap-2">
+                    @include('layouts.partials.language-switcher')
+                    <button type="button" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                            x-on:click="$store.ui.toggleTheme()" aria-label="{{ __('Basculer le thème') }}">
+                        <x-icon name="moon" class="h-5 w-5" x-show="!$store.ui.dark" />
+                        <x-icon name="sun" class="h-5 w-5" x-show="$store.ui.dark" x-cloak />
+                    </button>
+                </div>
                 @auth
                     <a href="{{ route('dashboard') }}" class="ec-btn-primary w-full">{{ __('Tableau de bord') }}</a>
                 @else

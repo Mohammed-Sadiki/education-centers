@@ -236,7 +236,7 @@
                     @endif
 
                     <input type="file" name="cin_recto" id="cin_recto" accept=".pdf,.png,.jpg,.jpeg"
-                           class="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-700 dark:text-slate-300">
+                           class="block w-full text-xs text-slate-600 file:me-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-700 dark:text-slate-300">
                 </div>
 
                 {{-- CIN Verso --}}
@@ -254,7 +254,7 @@
                     @endif
 
                     <input type="file" name="cin_verso" id="cin_verso" accept=".pdf,.png,.jpg,.jpeg"
-                           class="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-700 dark:text-slate-300">
+                           class="block w-full text-xs text-slate-600 file:me-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-700 dark:text-slate-300">
                 </div>
             </div>
         </div>
@@ -431,7 +431,7 @@
                             <div class="sm:col-span-3">
                                 <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">{{ __('Fichier justificatif (PDF, image)') }}</label>
                                 <input type="file" :name="'diplomas[' + idx + '][file]'" accept=".pdf,.png,.jpg,.jpeg"
-                                       class="mt-1 block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-amber-600 file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-amber-700 dark:text-slate-300">
+                                       class="mt-1 block w-full text-xs text-slate-600 file:me-3 file:rounded-lg file:border-0 file:bg-amber-600 file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-amber-700 dark:text-slate-300">
                             </div>
                         </div>
                     </div>
@@ -467,7 +467,7 @@
                         <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 text-xs dark:border-slate-700/60 dark:bg-slate-800/40">
                             <div>
                                 <span class="font-bold text-slate-900 dark:text-white">{{ $doc->title }}</span>
-                                <span class="rounded bg-teal-100 px-1.5 py-0.5 text-[10px] font-semibold text-teal-800 dark:bg-teal-950 dark:text-teal-300 ml-2">
+                                <span class="rounded bg-teal-100 px-1.5 py-0.5 text-[10px] font-semibold text-teal-800 dark:bg-teal-950 dark:text-teal-300 ms-2">
                                     {{ ucfirst($doc->type) }}
                                 </span>
                             </div>
@@ -511,7 +511,7 @@
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">{{ __('Fichier *') }}</label>
                                 <input type="file" :name="'other_documents[' + idx + '][file]'" accept=".pdf,.png,.jpg,.jpeg" required
-                                       class="mt-1 block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-teal-600 file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-teal-700 dark:text-slate-300">
+                                       class="mt-1 block w-full text-xs text-slate-600 file:me-3 file:rounded-lg file:border-0 file:bg-teal-600 file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-teal-700 dark:text-slate-300">
                             </div>
                         </div>
                     </div>

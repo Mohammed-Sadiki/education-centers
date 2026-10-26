@@ -193,7 +193,7 @@
                             </tr>
                             <tr>
                                 <th class="ps-4 text-secondary small">{{ __('Devise') }}</th>
-                                <td>{{ $formation->currency }}</td>
+                                <td>{{ currency_symbol($formation->currency) }}</td>
                             </tr>
                         </tbody>
                     </table>

@@ -101,7 +101,7 @@
                 <span class="text-xs text-slate-400">{{ __('Partie double') }}</span>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
+                <table class="w-full text-start text-xs">
                     <thead class="bg-slate-50/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-100">
                         <tr>
                             <th class="py-3 px-4">{{ __('N° Pièce') }}</th>
@@ -109,8 +109,8 @@
                             <th class="py-3 px-4">{{ __('Type') }}</th>
                             <th class="py-3 px-4">{{ __('Libellé') }}</th>
                             <th class="py-3 px-4">{{ __('Tiers') }}</th>
-                            <th class="py-3 px-4 text-right">{{ __('Débit') }}</th>
-                            <th class="py-3 px-4 text-right">{{ __('Crédit') }}</th>
+                            <th class="py-3 px-4 text-end">{{ __('Débit') }}</th>
+                            <th class="py-3 px-4 text-end">{{ __('Crédit') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -121,8 +121,8 @@
                                 <td class="py-3 px-4"><span class="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">{{ translate_label($entry->entry_type) }}</span></td>
                                 <td class="py-3 px-4 font-semibold text-slate-900">{{ translate_label($entry->label) }}</td>
                                 <td class="py-3 px-4 text-slate-600">{{ translate_label($entry->third_party ?? '—') }}</td>
-                                <td class="py-3 px-4 text-right font-bold text-rose-600">{{ $entry->debit > 0 ? format_price($entry->debit, 'MAD') : '—' }}</td>
-                                <td class="py-3 px-4 text-right font-bold text-[#0DAD98]">{{ $entry->credit > 0 ? format_price($entry->credit, 'MAD') : '—' }}</td>
+                                <td class="py-3 px-4 text-end font-bold text-rose-600">{{ $entry->debit > 0 ? format_price($entry->debit, 'MAD') : '—' }}</td>
+                                <td class="py-3 px-4 text-end font-bold text-[#0DAD98]">{{ $entry->credit > 0 ? format_price($entry->credit, 'MAD') : '—' }}</td>
                             </tr>
                         @empty
                             <tr>

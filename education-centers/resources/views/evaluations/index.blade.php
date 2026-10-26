@@ -9,12 +9,15 @@
 </x-ui.page-header>
 <x-ui.card class="mb-4">
     <form method="GET" class="grid gap-3 md:grid-cols-3">
-        <select name="class_id" class="ec-select">
-            <option value="">{{ __('Toutes les classes') }}</option>
-            @foreach($classes as $class)
-                <option value="{{ $class->id }}" @selected(request('class_id')==$class->id)>{{ $class->name }}</option>
-            @endforeach
-        </select>
+        {{-- Filtre de classe masqué quand une seule classe est attribuable. --}}
+        @if($classes->count() > 1)
+            <select name="class_id" class="ec-select">
+                <option value="">{{ auth()->user()->isTeacher() ? __('Toutes mes classes') : __('Toutes les classes') }}</option>
+                @foreach($classes as $class)
+                    <option value="{{ $class->id }}" @selected(request('class_id')==$class->id)>{{ $class->name }}</option>
+                @endforeach
+            </select>
+        @endif
         <select name="type" class="ec-select">
             <option value="">{{ __('Tous les types') }}</option>
             @foreach(['exam'=>'Examen','control'=>'Contrôle','homework'=>'Devoir','oral'=>'Oral','project'=>'Projet','participation'=>'Participation'] as $k=>$v)
@@ -35,7 +38,7 @@
                     <td>{{ $evaluation->type_label }}</td>
                     <td>{{ format_date($evaluation->evaluation_date, 'd/m/Y') }}</td>
                     <td><x-status-badge type="evaluation" :status="$evaluation->status" /></td>
-                    <td class="text-right">
+                    <td class="text-end">
                         @unless(auth()->user()->isStudent())
                             <a href="{{ route('evaluations.show', $evaluation) }}" class="ec-btn-ghost ec-btn-sm">{{ __('Notes') }}</a>
                         @endunless

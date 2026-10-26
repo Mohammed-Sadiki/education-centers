@@ -30,7 +30,7 @@
                     <td>{{ format_date($document->created_at, 'd/m/Y') }}</td>
                     <td>{{ $document->formatted_size }}</td>
                     <td><x-status-badge :status="$document->status" /></td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <div class="flex justify-end gap-1">
                             @if(!auth()->user()->isStudent())
                                 <a href="{{ route('documents.show', $document) }}" class="ec-btn-ghost ec-btn-sm">{{ __('Consulter') }}</a>

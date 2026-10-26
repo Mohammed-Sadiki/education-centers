@@ -8,6 +8,7 @@ use App\Models\ClassRoom;
 use App\Models\Enrollment;
 use App\Models\Schedule;
 use App\Models\Student;
+use App\Services\TeacherPortalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,13 +17,21 @@ use Illuminate\View\View;
 
 class AttendanceController extends Controller
 {
+    public function __construct(protected TeacherPortalService $portal) {}
+
     public function index(Request $request): View
     {
         Gate::authorize('viewAny', Attendance::class);
         $user = $request->user();
         $query = Attendance::query()->with(['student', 'classRoom', 'schedule']);
-        if ($user->isCenterAdmin() || $user->isTeacher()) {
+        $teacher = null;
+        if ($user->isCenterAdmin()) {
             $query->where('center_id', $user->center_id);
+        } elseif ($user->isTeacher()) {
+            // Le professeur ne voit que les présences de ses classes réellement
+            // affectées (class_teacher), y compris hors filtres UI.
+            $teacher = $this->portal->teacherFor($user);
+            $query->whereIn('class_id', $this->portal->classIds($teacher));
         } elseif ($user->isStudent()) {
             $studentId = $user->student?->id;
             $query->where('student_id', $studentId)->where('center_id', $user->center_id);
@@ -46,7 +55,11 @@ class AttendanceController extends Controller
         }
         $attendances = $query->latest('date')->paginate(20)->withQueryString();
         $centerId = $user->isCenterAdmin() || $user->isTeacher() ? $user->center_id : null;
-        $classes = ClassRoom::when($centerId, fn ($q) => $q->where('center_id', $centerId))->orderBy('name')->get();
+        if ($user->isTeacher()) {
+            $classes = $this->portal->classesQuery($teacher)->orderBy('name')->get();
+        } else {
+            $classes = ClassRoom::when($centerId, fn ($q) => $q->where('center_id', $centerId))->orderBy('name')->get();
+        }
         $centers = $user->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
 
         return view('attendances.index', compact('attendances', 'classes', 'centers'));
@@ -59,8 +72,22 @@ class AttendanceController extends Controller
         $centerId = $user->isSuperAdmin() ? $request->input('center_id') : $user->center_id;
         $scheduleId = $request->input('schedule_id');
         $schedule = $scheduleId ? Schedule::find($scheduleId) : null;
-        $classes = ClassRoom::when($centerId, fn ($q) => $q->where('center_id', $centerId))->where('status', 'active')->orderBy('name')->get();
-        $schedules = Schedule::when($centerId, fn ($q) => $q->where('center_id', $centerId))->where('status', 'scheduled')->orderBy('date')->orderBy('start_time')->get();
+        if ($user->isTeacher()) {
+            $teacher = $this->portal->teacherFor($user);
+            // Un professeur ne saisit les présences que de ses propres séances,
+            // dans ses classes affectées. Toute autre séance est refusée.
+            if ($schedule) {
+                $this->portal->assertScheduleAccess($teacher, $schedule);
+            }
+            $classes = $this->portal->classesQuery($teacher)->where('status', 'active')->orderBy('name')->get();
+            $schedules = $this->portal->schedulesQuery($teacher)
+                ->where('status', 'scheduled')
+                ->with('classRoom')
+                ->orderBy('date')->orderBy('start_time')->get();
+        } else {
+            $classes = ClassRoom::when($centerId, fn ($q) => $q->where('center_id', $centerId))->where('status', 'active')->orderBy('name')->get();
+            $schedules = Schedule::when($centerId, fn ($q) => $q->where('center_id', $centerId))->where('status', 'scheduled')->with('classRoom')->orderBy('date')->orderBy('start_time')->get();
+        }
         $students = collect();
         if ($schedule) {
             $enrolledStudentIds = Enrollment::where('class_id', $schedule->class_id)->where('status', 'accepted')->pluck('student_id');
@@ -88,6 +115,12 @@ class AttendanceController extends Controller
         $schedule = Schedule::findOrFail($request->schedule_id);
         if ($schedule->center_id !== $centerId) {
             abort(403);
+        }
+        if ($user->isTeacher()) {
+            // Refusé même si l'identifiant de séance est manipulé dans l'URL
+            // ou le formulaire : la séance doit être au professeur et dans une
+            // classe qui lui est affectée.
+            $this->portal->assertScheduleAccess($this->portal->teacherFor($user), $schedule);
         }
         $count = 0;
         foreach ($request->input('attendances', []) as $att) {
@@ -157,6 +190,9 @@ class AttendanceController extends Controller
         $user = $request->user();
         if (! $user->isSuperAdmin() && $user->center_id !== $schedule->center_id) {
             abort(403);
+        }
+        if ($user->isTeacher()) {
+            $this->portal->assertScheduleAccess($this->portal->teacherFor($user), $schedule);
         }
         $enrolledStudentIds = Enrollment::where('class_id', $schedule->class_id)->where('status', 'accepted')->pluck('student_id');
         $students = Student::whereIn('id', $enrolledStudentIds)->where('status', 'active')->orderBy('last_name')->get(['id', 'first_name', 'last_name', 'student_number']);

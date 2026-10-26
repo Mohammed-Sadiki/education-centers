@@ -110,7 +110,7 @@
                                     <option value="">{{ __('Sélectionner une formation...') }}</option>
                                     @foreach($formations as $f)
                                         <option value="{{ $f->id }}" {{ old('formation_id', $preselectedFormationId) == $f->id ? 'selected' : '' }}>
-                                            {{ $f->translated('name') }} ({{ $f->code }} — {{ $f->price }} {{ $f->currency }})
+                                            {{ $f->translated('name') }} ({{ $f->code }} - {{ format_price($f->price, $f->currency) }})
                                         </option>
                                     @endforeach
                                 </select>

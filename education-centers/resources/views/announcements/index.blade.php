@@ -28,7 +28,7 @@
                     <td>{{ $a->author?->name }}</td>
                     <td>{{ format_date($a->created_at, 'd/m/Y') }}</td>
                     <td><x-status-badge type="announcement" :status="$a->status" /></td>
-                    <td class="text-right"><a href="{{ route('announcements.show', $a) }}" class="ec-btn-ghost ec-btn-sm">{{ __('Voir') }}</a></td>
+                    <td class="text-end"><a href="{{ route('announcements.show', $a) }}" class="ec-btn-ghost ec-btn-sm">{{ __('Voir') }}</a></td>
                 </tr>
             @empty
                 <tr><td colspan="5"><x-ui.empty :title="__('Aucune annonce')" /></td></tr>

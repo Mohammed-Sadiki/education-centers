@@ -13,15 +13,17 @@ use Illuminate\View\View;
  * du Super Admin (DomainDashboardData + vue partagée) en la restreignant au
  * centre courant de l'utilisateur.
  *
- * Isolation stricte :
- *  - le périmètre est toujours limité au centre de l'Admin Centre (jamais celui
- *    fourni par l'URL) ;
- *  - un domaine étranger (aucune formation dans le centre) renvoie un 404.
+ * Catalogue commun + isolation des données :
+ *  - les six domaines sont disponibles pour chaque centre (aucun domaine absent
+ *    faute de données) ; un domaine sans formation affiche un état vide ;
+ *  - le périmètre est TOUJOURS limité au centre de l'Admin Centre (jamais celui
+ *    fourni par l'URL) : un Admin Centre ne voit jamais les données d'un autre
+ *    centre, même sur un domaine commun.
  */
 class CenterAdminDomainController extends SuperAdminDomainController
 {
     /**
-     * Portail de sélection des domaines proposés par le centre.
+     * Portail de sélection des domaines : catalogue commun aux deux centres.
      * (Nom distinct de l'index() du parent, sans conflit de signature.)
      */
     public function domainPicker(Request $request): View
@@ -55,7 +57,8 @@ class CenterAdminDomainController extends SuperAdminDomainController
     }
 
     /**
-     * Un Admin Centre n'accède qu'aux domaines réellement proposés par son centre.
+     * Un domaine n'est accessible que s'il est valide (catalogue commun).
+     * Les données restent filtrées par le centre forcé du contexte.
      */
     protected function assertDomainAllowed(string $domain): void
     {

@@ -80,14 +80,14 @@ class MessageController extends Controller
                 'id' => $conv->id,
                 'other_user' => [
                     'id' => $other?->id,
-                    'name' => $other?->name ?? 'Utilisateur',
+                    'name' => $other?->name ?? __('Utilisateur'),
                     'role' => $other?->isSuperAdmin() ? __('Super Admin') : __('Admin Centre'),
                     'center_name' => $other?->center?->name ?? ($conv->center?->name ?? __('Direction Générale')),
                     'email' => $other?->email,
                 ],
                 'last_message' => $latest ? [
-                    'content' => $latest->content ?: ($latest->attachments->count() ? '📎 Fichier joint' : ''),
-                    'time' => $latest->created_at->locale('fr')->diffForHumans(null, true),
+                    'content' => $latest->content ?: ($latest->attachments->count() ? '📎 '.__('Fichier joint') : ''),
+                    'time' => $latest->created_at->locale(app()->getLocale())->diffForHumans(null, true),
                     'created_at' => $latest->created_at->toIso8601String(),
                     'is_mine' => $latest->sender_id === $user->id,
                 ] : null,
@@ -161,7 +161,7 @@ class MessageController extends Controller
                 'is_mine' => $msg->sender_id === $user->id,
                 'content' => $msg->content,
                 'time' => $msg->created_at->format('H:i'),
-                'date' => $msg->created_at->locale('fr')->isoFormat('D MMMM YYYY'),
+                'date' => $msg->created_at->locale(app()->getLocale())->isoFormat('D MMMM YYYY'),
                 'created_at' => $msg->created_at->toIso8601String(),
                 'attachments' => $msg->attachments->map(function ($att) {
                     return [
@@ -258,7 +258,7 @@ class MessageController extends Controller
                     'is_mine' => true,
                     'content' => $message->content,
                     'time' => $message->created_at->format('H:i'),
-                    'date' => $message->created_at->locale('fr')->isoFormat('D MMMM YYYY'),
+                    'date' => $message->created_at->locale(app()->getLocale())->isoFormat('D MMMM YYYY'),
                     'created_at' => $message->created_at->toIso8601String(),
                     'attachments' => $message->attachments->map(function ($att) {
                         return [

@@ -44,8 +44,10 @@ if (! function_exists('format_price')) {
         }
 
         $symbol = $currency ?? config('currency.symbol', 'DH');
+        $isMoroccanDirham = strtoupper((string) $symbol) === 'MAD'
+            || ($currency === null && strtoupper(default_currency()) === 'MAD');
         // Si on passe le code ISO, afficher le symbol correspondant
-        if (strtoupper((string) $symbol) === 'MAD') {
+        if ($isMoroccanDirham) {
             $symbol = App::getLocale() === 'ar' ? 'د.م.' : 'DH';
         }
 

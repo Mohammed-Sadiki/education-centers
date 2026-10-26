@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Http\Response;
 
 class DocumentController extends Controller
 {
@@ -105,6 +106,35 @@ class DocumentController extends Controller
         }
 
         return Storage::disk('private')->download($document->file_path, $document->original_name);
+    }
+
+    /**
+     * Ouvre le vrai fichier dans le navigateur (aperçu / impression).
+     *
+     * Seuls les formats affichables nativement (PDF et images) sont exposés
+     * inline. Les autres documents restent téléchargeables uniquement.
+     */
+    public function preview(Document $document): Response
+    {
+        Gate::authorize('download', $document);
+
+        abort_unless(
+            $document->file_path && Storage::disk('private')->exists($document->file_path),
+            404
+        );
+
+        $mimeType = $document->mime_type ?: Storage::disk('private')->mimeType($document->file_path);
+        $printableMimes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+
+        abort_unless(in_array($mimeType, $printableMimes, true), 415);
+
+        $filename = $document->original_name ?: basename($document->file_path);
+
+        return response(Storage::disk('private')->get($document->file_path), 200, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="'.addslashes($filename).'"',
+            'Cache-Control' => 'private, max-age=0, must-revalidate',
+        ]);
     }
 
     public function destroy(Document $document): RedirectResponse

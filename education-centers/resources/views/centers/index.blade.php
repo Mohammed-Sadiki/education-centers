@@ -28,7 +28,7 @@
                     <td class="font-mono text-xs">{{ $center->code }}</td>
                     <td>{{ $center->city }}</td>
                     <td><x-status-badge :status="$center->status" /></td>
-                    <td class="text-right">
+                    <td class="text-end">
                         <a href="{{ route('centers.show', $center) }}" class="ec-btn-ghost ec-btn-sm">{{ __('Voir') }}</a>
                     </td>
                 </tr>

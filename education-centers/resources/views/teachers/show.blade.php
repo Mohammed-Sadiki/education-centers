@@ -141,7 +141,7 @@
                                 <td>
                                     @if($teacher->phone)
                                         <a href="tel:{{ $teacher->phone }}" class="text-decoration-none">
-                                            <i class="bi bi-telephone me-1"></i>{{ $teacher->phone }}
+                                            <i class="bi bi-telephone me-1"></i><bdi dir="ltr">{{ $teacher->phone }}</bdi>
                                         </a>
                                     @else
                                         —

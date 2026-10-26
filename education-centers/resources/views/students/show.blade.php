@@ -46,7 +46,7 @@
         <dl class="grid gap-3 sm:grid-cols-2">
             <div><dt class="text-slate-500">{{ __('Nom') }}</dt><dd class="font-medium">{{ $student->full_name }}</dd></div>
             <div><dt class="text-slate-500">{{ __('Naissance') }}</dt><dd>{{ format_date($student->date_of_birth, 'd/m/Y') ?: '—' }}</dd></div>
-            <div><dt class="text-slate-500">{{ __('Téléphone') }}</dt><dd>{{ $student->phone ?: '—' }}</dd></div>
+            <div><dt class="text-slate-500">{{ __('Téléphone') }}</dt><dd><bdi dir="ltr">{{ $student->phone ?: '-' }}</bdi></dd></div>
             <div><dt class="text-slate-500">{{ __('Ville') }}</dt><dd>{{ $student->city ?: '—' }}</dd></div>
             <div class="sm:col-span-2"><dt class="text-slate-500">{{ __('Adresse') }}</dt><dd>{{ $student->address ?: '—' }}</dd></div>
         </dl>
@@ -88,7 +88,7 @@
     <div x-show="tab === 'paiements'" x-cloak>
         <div class="ec-table-wrap"><table class="ec-table"><thead><tr><th>{{ __('Date') }}</th><th>{{ __('Montant') }}</th><th>{{ __('Statut') }}</th></tr></thead><tbody>
             @forelse($payments as $p)
-                <tr><td>{{ format_date($p->payment_date, 'd/m/Y') }}</td><td>{{ format_number((float) $p->amount, 2) }} {{ $p->currency }}</td><td><x-status-badge type="payment" :status="$p->status" /></td></tr>
+                <tr><td>{{ format_date($p->payment_date, 'd/m/Y') }}</td><td>{{ format_price((float) $p->amount, $p->currency) }}</td><td><x-status-badge type="payment" :status="$p->status" /></td></tr>
             @empty
                 <tr><td colspan="3"><x-ui.empty :title="__('Aucun paiement')" /></td></tr>
             @endforelse

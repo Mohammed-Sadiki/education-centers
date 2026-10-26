@@ -21,7 +21,7 @@
     ──────────────────────────────────────────────────────────── --}}
     <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-800 via-indigo-800 to-slate-900 p-6 sm:p-8 text-white shadow-xl">
         {{-- Décoration de fond --}}
-        <div class="absolute -right-10 -bottom-10 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl pointer-events-none"></div>
+        <div class="absolute -end-10 -bottom-10 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl pointer-events-none"></div>
 
         <div class="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div class="space-y-2">
@@ -70,12 +70,12 @@
     <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <form method="GET" action="{{ route('stagiaires.index') }}" class="flex flex-col sm:flex-row gap-3">
             <div class="relative flex-1">
-                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3.5 text-slate-400">
                     <x-icon name="search" class="h-4 w-4" />
                 </div>
                 <input type="text" name="search"
                        placeholder="{{ __('Recherche rapide d\'un stagiaire par nom, prénom, CIN, email ou téléphone...') }}"
-                       class="block w-full rounded-xl border border-slate-300 bg-slate-50/50 pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500">
+                       class="block w-full rounded-xl border border-slate-300 bg-slate-50/50 ps-10 pe-4 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500">
             </div>
             <button type="submit"
                     class="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-purple-700 transition">
@@ -105,7 +105,7 @@
             <p class="mt-3 text-3xl font-black text-slate-900 dark:text-white">{{ $total }}</p>
             <p class="mt-1 text-[11px] text-slate-400 flex items-center justify-between">
                 <span>{{ __('Dossiers créés') }}</span>
-                <span class="text-purple-600 dark:text-purple-400 group-hover:translate-x-0.5 transition-transform">→</span>
+                <span class="text-purple-600 dark:text-purple-400 group-hover:translate-x-0.5 transition-transform rtl:rotate-180">→</span>
             </p>
         </a>
 
@@ -121,7 +121,7 @@
             <p class="mt-3 text-3xl font-black text-blue-700 dark:text-blue-300">{{ $nouveaux }}</p>
             <p class="mt-1 text-[11px] text-blue-600/80 dark:text-blue-400/80 flex items-center justify-between">
                 <span>{{ __('Récemment inscrits') }}</span>
-                <span class="group-hover:translate-x-0.5 transition-transform">→</span>
+                <span class="group-hover:translate-x-0.5 transition-transform rtl:rotate-180">→</span>
             </p>
         </a>
 
@@ -137,7 +137,7 @@
             <p class="mt-3 text-3xl font-black text-emerald-700 dark:text-emerald-300">{{ $enCours }}</p>
             <p class="mt-1 text-[11px] text-emerald-600/80 dark:text-emerald-400/80 flex items-center justify-between">
                 <span>{{ __('Actuellement au centre') }}</span>
-                <span class="group-hover:translate-x-0.5 transition-transform">→</span>
+                <span class="group-hover:translate-x-0.5 transition-transform rtl:rotate-180">→</span>
             </p>
         </a>
 
@@ -153,7 +153,7 @@
             <p class="mt-3 text-3xl font-black text-slate-800 dark:text-slate-200">{{ $termines }}</p>
             <p class="mt-1 text-[11px] text-slate-400 flex items-center justify-between">
                 <span>{{ __('Période échue') }}</span>
-                <span class="group-hover:translate-x-0.5 transition-transform">→</span>
+                <span class="group-hover:translate-x-0.5 transition-transform rtl:rotate-180">→</span>
             </p>
         </a>
 
@@ -169,7 +169,7 @@
             <p class="mt-3 text-3xl font-black text-emerald-800 dark:text-emerald-200">{{ $dossiersComplets }}</p>
             <p class="mt-1 text-[11px] text-emerald-700/80 dark:text-emerald-300/80 flex items-center justify-between">
                 <span>{{ __('CIN & dates OK') }}</span>
-                <span class="group-hover:translate-x-0.5 transition-transform">→</span>
+                <span class="group-hover:translate-x-0.5 transition-transform rtl:rotate-180">→</span>
             </p>
         </a>
 
@@ -185,7 +185,7 @@
             <p class="mt-3 text-3xl font-black text-amber-800 dark:text-amber-200">{{ $dossiersIncomplets }}</p>
             <p class="mt-1 text-[11px] text-amber-700/80 dark:text-amber-300/80 flex items-center justify-between">
                 <span>{{ __('Pièces à régulariser') }}</span>
-                <span class="group-hover:translate-x-0.5 transition-transform">→</span>
+                <span class="group-hover:translate-x-0.5 transition-transform rtl:rotate-180">→</span>
             </p>
         </a>
     </div>
@@ -288,7 +288,7 @@
                         <th>{{ __('Période du stage') }}</th>
                         <th>{{ __('Prix convenu') }}</th>
                         <th>{{ __('Statut') }}</th>
-                        <th class="text-right">{{ __('Actions') }}</th>
+                        <th class="text-end">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -301,7 +301,7 @@
                                     </a>
                                 </div>
                                 <div class="text-[11px] text-slate-500">
-                                    {{ $stagiaire->email ?? $stagiaire->phone ?? __('Aucun contact') }}
+                                    <bdi dir="ltr">{{ $stagiaire->email ?? $stagiaire->phone ?? __('Aucun contact') }}</bdi>
                                 </div>
                             </td>
                             <td>
@@ -337,7 +337,7 @@
                                     {{ $stagiaire->status_label }}
                                 </span>
                             </td>
-                            <td class="text-right">
+                            <td class="text-end">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <a href="{{ route('stagiaires.show', $stagiaire) }}"
                                        class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-purple-600 dark:hover:bg-slate-800 dark:hover:text-purple-400 transition"

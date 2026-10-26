@@ -123,17 +123,17 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table class="w-full text-start text-xs">
                 <thead class="bg-slate-50/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-100 dark:bg-slate-800/50 dark:border-slate-800">
                     <tr>
                         <th class="py-3 px-4">{{ __('Étudiant') }}</th>
                         <th class="py-3 px-4">{{ __('Centre') }}</th>
                         <th class="py-3 px-4">{{ __('Formation') }}</th>
-                        <th class="py-3 px-4 text-right">{{ __('Total attendu') }}</th>
-                        <th class="py-3 px-4 text-right">{{ __('Déjà versé') }}</th>
-                        <th class="py-3 px-4 text-right">{{ __('Cumul restant') }}</th>
+                        <th class="py-3 px-4 text-end">{{ __('Total attendu') }}</th>
+                        <th class="py-3 px-4 text-end">{{ __('Déjà versé') }}</th>
+                        <th class="py-3 px-4 text-end">{{ __('Cumul restant') }}</th>
                         <th class="py-3 px-4 text-center">{{ __('Relance') }}</th>
-                        <th class="py-3 px-4 text-right">{{ __('Action') }}</th>
+                        <th class="py-3 px-4 text-end">{{ __('Action') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -152,13 +152,13 @@
                             <td class="py-3 px-4 text-slate-700 whitespace-nowrap">
                                 {{ $debtor->formation->name }}
                             </td>
-                            <td class="py-3 px-4 text-right text-slate-600 whitespace-nowrap">
+                            <td class="py-3 px-4 text-end text-slate-600 whitespace-nowrap">
                                 {{ format_price($debtor->annual_price, 'MAD') }}
                             </td>
-                            <td class="py-3 px-4 text-right font-semibold text-[#0DAD98] whitespace-nowrap">
+                            <td class="py-3 px-4 text-end font-semibold text-[#0DAD98] whitespace-nowrap">
                                 {{ format_price($debtor->paid_amount, 'MAD') }}
                             </td>
-                            <td class="py-3 px-4 text-right font-black text-rose-600 whitespace-nowrap">
+                            <td class="py-3 px-4 text-end font-black text-rose-600 whitespace-nowrap">
                                 {{ format_price($debtor->remaining_amount, 'MAD') }}
                             </td>
                             <td class="py-3 px-4 text-center whitespace-nowrap">
@@ -170,7 +170,7 @@
                                     <span>{{ __('WhatsApp') }}</span>
                                 </button>
                             </td>
-                            <td class="py-3 px-4 text-right whitespace-nowrap">
+                            <td class="py-3 px-4 text-end whitespace-nowrap">
                                 <a href="{{ route('super-admin.finance.students', ['search' => $debtor->student->full_name, 'view' => 'students']) }}"
                                    class="finance-btn-secondary py-1 px-2.5 text-[11px]">
                                     <span>{{ __('Encaisser') }}</span>

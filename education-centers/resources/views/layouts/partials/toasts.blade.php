@@ -6,7 +6,7 @@
         @if(session('warning')) $store.ui.showToast('warning', @js(session('warning'))); @endif
         @if(session('info')) $store.ui.showToast('info', @js(session('info'))); @endif
     "
-    class="pointer-events-none fixed right-4 top-4 z-[70] w-full max-w-sm"
+    class="pointer-events-none fixed end-4 top-4 z-[70] w-full max-w-sm"
 >
     <template x-if="$store.ui.toast">
         <div

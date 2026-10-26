@@ -15,7 +15,7 @@
         @forelse($formations as $formation)
             <article class="ec-card p-5">
                 <h3 class="font-semibold">{{ $formation->translated('name') }}</h3>
-                <p class="mt-1 text-sm text-slate-500">{{ $formation->duration_hours }} h · {{ format_number((float) $formation->price, 2) }} {{ $formation->currency }}</p>
+                <p class="mt-1 text-sm text-slate-500">{{ $formation->duration_hours }} h · {{ format_price((float) $formation->price, $formation->currency) }}</p>
                 <a href="{{ route('public.formations.show', $formation) }}" class="ec-btn-secondary ec-btn-sm mt-4">{{ __('Voir') }}</a>
             </article>
         @empty

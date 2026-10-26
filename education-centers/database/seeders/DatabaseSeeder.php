@@ -83,6 +83,18 @@ class DatabaseSeeder extends Seeder
             $teacherMunich->save();
         }
 
+        // 7 bis. Second professeur Berlin — classes distinctes pour un scénario
+        // réaliste (chaque professeur ne voit que ses propres classes).
+        if ($berlinCenter) {
+            $teacherBerlin2 = User::firstOrNew(['email' => 'prof.berlin2@education-centers.de']);
+            $teacherBerlin2->name = 'Professeur Berlin 2';
+            $teacherBerlin2->password = \Illuminate\Support\Facades\Hash::make($devPassword);
+            $teacherBerlin2->role = User::ROLE_TEACHER;
+            $teacherBerlin2->center_id = $berlinCenter->id;
+            $teacherBerlin2->status = 'active';
+            $teacherBerlin2->save();
+        }
+
         // 8. Élève Berlin
         if ($berlinCenter) {
             $studentBerlin = User::firstOrNew(['email' => 'eleve.berlin@education-centers.de']);
@@ -180,6 +192,32 @@ class DatabaseSeeder extends Seeder
                     'qualification'  => 'Master en Linguistique Appliquée',
                     'hire_date'      => '2022-09-01',
                     'notes'          => 'Formateur certifié TELC.',
+                    'status'         => 'active',
+                ]
+            );
+        }
+
+        if ($berlinCenter && isset($teacherBerlin2)) {
+            \App\Models\Teacher::updateOrCreate(
+                ['user_id' => $teacherBerlin2->id],
+                [
+                    'center_id'      => $berlinCenter->id,
+                    'teacher_number' => 'BER-T-000002',
+                    'first_name'     => 'Hanna',
+                    'last_name'      => 'Weiss',
+                    'date_of_birth'  => '1990-07-22',
+                    'place_of_birth' => 'Potsdam',
+                    'gender'         => 'female',
+                    'nationality'    => 'Allemande',
+                    'address'        => 'Potsdamer Platz 3',
+                    'postal_code'    => '14467',
+                    'city'           => 'Berlin',
+                    'country'        => 'Germany',
+                    'phone'          => '+49 30 22334455',
+                    'specialization' => 'Allemand langue vivante',
+                    'qualification'  => 'Master en Didactique des Langues',
+                    'hire_date'      => '2024-02-01',
+                    'notes'          => 'Cours du soir : groupe A1-02 uniquement.',
                     'status'         => 'active',
                 ]
             );
@@ -368,17 +406,26 @@ class DatabaseSeeder extends Seeder
         }
 
         // 14. Affectations de démonstration : Professeurs -> Classes
+        // Scénario réaliste : chaque classe a un professeur distinct ;
+        // aucun professeur n'est affecté à toutes les classes du centre.
         if ($berlinCenter) {
-            $teacherBerlinModel = \App\Models\Teacher::where('center_id', $berlinCenter->id)->first();
+            $teacherBerlinModel = \App\Models\Teacher::where('center_id', $berlinCenter->id)->where('teacher_number', 'BER-T-000001')->first();
+            $teacherBerlin2Model = \App\Models\Teacher::where('center_id', $berlinCenter->id)->where('teacher_number', 'BER-T-000002')->first();
             $berlinClassA1_01 = \App\Models\ClassRoom::where('center_id', $berlinCenter->id)->where('code', 'A1-01')->first();
+            $berlinClassA1_02 = \App\Models\ClassRoom::where('center_id', $berlinCenter->id)->where('code', 'A1-02')->first();
             $berlinClassB1_01 = \App\Models\ClassRoom::where('center_id', $berlinCenter->id)->where('code', 'B1-01')->first();
-
+        
             if ($teacherBerlinModel && $berlinClassA1_01) {
                 $berlinClassA1_01->teachers()->syncWithoutDetaching([$teacherBerlinModel->id]);
             }
-
+        
             if ($teacherBerlinModel && $berlinClassB1_01) {
                 $berlinClassB1_01->teachers()->syncWithoutDetaching([$teacherBerlinModel->id]);
+            }
+        
+            // A1-02 (cours du soir) est confié au second professeur berlin.
+            if ($teacherBerlin2Model && $berlinClassA1_02) {
+                $berlinClassA1_02->teachers()->syncWithoutDetaching([$teacherBerlin2Model->id]);
             }
         }
 

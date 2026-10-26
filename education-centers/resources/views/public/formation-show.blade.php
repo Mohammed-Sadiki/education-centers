@@ -9,7 +9,7 @@
     <div class="mt-6 flex flex-wrap gap-3 text-sm">
         <span class="ec-badge bg-slate-100">{{ $formation->duration_hours }} {{ __('heures') }}</span>
         <span class="ec-badge bg-slate-100">{{ $formation->duration_weeks }} {{ __('semaines') }}</span>
-        <span class="ec-badge bg-brand-50 text-brand-700">{{ format_number((float) $formation->price, 2) }} {{ $formation->currency }}</span>
+        <span class="ec-badge bg-brand-50 text-brand-700">{{ format_price((float) $formation->price, $formation->currency) }}</span>
     </div>
     @if($formation->description)
         <div class="prose mt-8 max-w-none text-slate-700 dark:text-slate-300">{{ $formation->translated('description') }}</div>

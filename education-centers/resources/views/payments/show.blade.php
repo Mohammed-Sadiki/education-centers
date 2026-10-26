@@ -10,7 +10,7 @@
 </x-ui.page-header>
 <x-ui.card>
     <dl class="grid gap-3 text-sm sm:grid-cols-2">
-        <div><dt class="text-slate-500">{{ __('Montant') }}</dt><dd class="text-xl font-semibold">{{ format_number((float) $payment->amount, 2) }} {{ $payment->currency }}</dd></div>
+        <div><dt class="text-slate-500">{{ __('Montant') }}</dt><dd class="text-xl font-semibold">{{ format_price((float) $payment->amount, $payment->currency) }}</dd></div>
         <div><dt class="text-slate-500">{{ __('Statut') }}</dt><dd><x-status-badge type="payment" :status="$payment->status" /></dd></div>
         <div><dt class="text-slate-500">{{ __('Date') }}</dt><dd>{{ format_date($payment->payment_date, 'd/m/Y') }}</dd></div>
         <div><dt class="text-slate-500">{{ __('Méthode') }}</dt><dd>{{ $payment->method_label }}</dd></div>

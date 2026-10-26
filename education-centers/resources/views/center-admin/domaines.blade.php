@@ -39,7 +39,7 @@
                 {{ __('Sélectionnez votre domaine') }}
             </h1>
             <p class="mt-4 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-300">
-                {{ __('Choisissez une filière de formation pour administrer les données de votre centre. Seuls les domaines proposés par votre centre sont affichés.') }}
+                {{ __('Choisissez une filière de formation pour administrer les données de votre centre. Les six domaines sont disponibles ; les données restent propres à votre centre.') }}
             </p>
         </div>
     </section>
@@ -56,7 +56,7 @@
                 {{ __('Domaines de formation') }}
             </h2>
             <p class="text-sm text-slate-500 dark:text-slate-400">
-                {{ __('Filières proposées par votre centre.') }}
+                {{ __('Les six domaines sont disponibles pour votre centre.') }}
             </p>
         </div>
     </div>
@@ -67,7 +67,7 @@
             <a href="{{ route('center-admin.domain.dashboard', $domain->slug) }}"
                id="card-domaine-{{ $domain->slug }}"
                class="group relative flex flex-col overflow-hidden rounded-3xl border p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl {{ $c['card'] }}"
-               aria-label="{{ __('Accéder au domaine ' . $domain->name) }}">
+               aria-label="{{ __('Accéder au domaine :domain', ['domain' => $domain->name]) }}">
 
                 <div class="mb-5 flex items-center justify-between">
                     <span class="flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-lg {{ $c['chip'] }}">
@@ -87,7 +87,7 @@
                 </p>
 
                 <div class="mt-6 flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors {{ $c['cta'] }}">
-                    <span>{{ __('Accéder à l\'espace ' . $domain->name) }}</span>
+                    <span>{{ __('Accéder à l\'espace :domain', ['domain' => $domain->name]) }}</span>
                     <span class="flex h-7 w-7 items-center justify-center rounded-full shadow-sm transition-transform group-hover:translate-x-1 {{ $c['circle'] }}">
                         <x-icon name="arrow-right" class="h-4 w-4 rtl:rotate-180" />
                     </span>

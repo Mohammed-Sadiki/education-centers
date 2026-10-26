@@ -12,13 +12,42 @@ class AttendancePolicy {
         if ($user->isStudent()) {
             return $user->center_id === $attendance->center_id && $user->student?->id === $attendance->student_id;
         }
-        return ($user->isCenterAdmin() || $user->isTeacher()) && $user->center_id === $attendance->center_id;
+
+        if ($user->isCenterAdmin()) {
+            return (int) $user->center_id === (int) $attendance->center_id;
+        }
+
+        return $this->teacherCanAccessAttendance($user, $attendance);
     }
-    public function create(User $user): bool { return $user->isCenterAdmin() || $user->isTeacher(); }
+    public function create(User $user): bool { return $user->isCenterAdmin() || ($user->isTeacher() && $user->teacher !== null); }
     public function update(User $user, Attendance $attendance): bool {
-        return ($user->isCenterAdmin() || $user->isTeacher()) && $user->center_id === $attendance->center_id;
+        if ($user->isCenterAdmin()) {
+            return (int) $user->center_id === (int) $attendance->center_id;
+        }
+
+        return $this->teacherCanAccessAttendance($user, $attendance)
+            && $attendance->schedule !== null
+            && (int) $attendance->schedule->teacher_id === (int) $user->teacher?->id;
     }
     public function delete(User $user, Attendance $attendance): bool {
-        return $user->isCenterAdmin() && $user->center_id === $attendance->center_id;
+        return $user->isCenterAdmin() && (int) $user->center_id === (int) $attendance->center_id;
+    }
+
+    /**
+     * Le professeur ne voit que les présences de ses classes affectées.
+     */
+    private function teacherCanAccessAttendance(User $user, Attendance $attendance): bool
+    {
+        if (! $user->isTeacher()) {
+            return false;
+        }
+
+        $teacher = $user->teacher;
+
+        return $teacher !== null
+            && (int) $attendance->center_id === (int) $teacher->center_id
+            && $attendance->classRoom !== null
+            && (int) $attendance->classRoom->center_id === (int) $teacher->center_id
+            && $attendance->classRoom->hasTeacher($teacher);
     }
 }

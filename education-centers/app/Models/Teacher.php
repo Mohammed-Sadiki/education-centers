@@ -89,6 +89,14 @@ class Teacher extends Model
     }
 
     /**
+     * Fiches de salaire du professeur (module Finance existant).
+     */
+    public function salaries(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TeacherSalary::class);
+    }
+
+    /**
      * Un professeur peut enseigner dans plusieurs domaines :
      * son domaine principal (colonne `domain`) OU tout domaine de classe
      * auquel il est affecté via le pivot `class_teacher`.

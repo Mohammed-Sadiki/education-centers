@@ -42,11 +42,11 @@
                 <tr>
                     <td class="font-mono text-xs">{{ $payment->reference }}</td>
                     <td>{{ $payment->student?->full_name }}</td>
-                    <td>{{ format_number((float) $payment->amount, 2) }} {{ $payment->currency }}</td>
+                    <td>{{ format_price((float) $payment->amount, $payment->currency) }}</td>
                     <td>{{ format_date($payment->payment_date, 'd/m/Y') }}</td>
                     <td>{{ $payment->method_label }}</td>
                     <td><x-status-badge type="payment" :status="$payment->status" /></td>
-                    <td class="text-right"><a href="{{ route('payments.show', $payment) }}" class="ec-btn-ghost ec-btn-sm">{{ __('Voir') }}</a></td>
+                    <td class="text-end"><a href="{{ route('payments.show', $payment) }}" class="ec-btn-ghost ec-btn-sm">{{ __('Voir') }}</a></td>
                 </tr>
             @empty
                 <tr><td colspan="7"><x-ui.empty :title="__('Aucun paiement')" /></td></tr>

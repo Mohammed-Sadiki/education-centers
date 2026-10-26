@@ -92,7 +92,7 @@
                             <span class="text-muted small d-block">{{ __('Téléphone') }}</span>
                             @if($center->phone)
                                 <a href="tel:{{ $center->phone }}" class="text-decoration-none fw-medium text-body">
-                                    <i class="bi bi-telephone me-1 text-muted"></i>{{ $center->phone }}
+                                    <i class="bi bi-telephone me-1 text-muted"></i><bdi dir="ltr">{{ $center->phone }}</bdi>
                                 </a>
                             @else
                                 <span class="text-muted">—</span>

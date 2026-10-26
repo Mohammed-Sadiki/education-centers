@@ -19,7 +19,7 @@
                 <h2 class="font-semibold">{{ $formation->translated('name') }}</h2>
                 <p class="mt-1 text-sm text-slate-500">{{ $formation->center?->translated('name') }}</p>
                 <p class="mt-3 text-sm">{{ $formation->duration_hours }} h · {{ $formation->duration_weeks }} {{ __('semaines') }}</p>
-                <p class="mt-1 font-medium">{{ format_number((float) $formation->price, 2) }} {{ $formation->currency }}</p>
+                <p class="mt-1 font-medium">{{ format_price((float) $formation->price, $formation->currency) }}</p>
                 <x-status-badge :status="$formation->status" />
                 <a href="{{ route('public.formations.show', $formation) }}" class="ec-btn-primary ec-btn-sm mt-4">{{ __('Détail') }}</a>
             </article>

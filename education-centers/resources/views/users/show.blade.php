@@ -62,7 +62,7 @@
                                 @if($user->phone)
                                     <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3">
                                         <span class="text-muted fw-semibold">{{ __('Téléphone') }}</span>
-                                        <span>{{ $user->phone }}</span>
+                                        <span><bdi dir="ltr">{{ $user->phone }}</bdi></span>
                                     </li>
                                 @endif
                                 <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3">

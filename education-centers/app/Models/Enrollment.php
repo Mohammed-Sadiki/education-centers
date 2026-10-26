@@ -90,6 +90,22 @@ class Enrollment extends Model
         return $this->belongsTo(ClassRoom::class, 'class_id');
     }
 
+    /**
+     * Versements rattachés à cette inscription (module Finance).
+     */
+    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Factures / échéances rattachées à cette inscription (module Finance).
+     */
+    public function invoices(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
     // --- Helpers de statut ---
 
     public function isPending(): bool

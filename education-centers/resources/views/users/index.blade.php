@@ -43,7 +43,7 @@
                     <td><x-role-label :role="$u->role" /></td>
                     <td>{{ $u->center?->name ?? __('Tous les centres') }}</td>
                     <td><x-status-badge :status="$u->status" /></td>
-                    <td class="text-right"><a href="{{ route('users.show', $u) }}" class="ec-btn-ghost ec-btn-sm">{{ __('Voir') }}</a></td>
+                    <td class="text-end"><a href="{{ route('users.show', $u) }}" class="ec-btn-ghost ec-btn-sm">{{ __('Voir') }}</a></td>
                 </tr>
             @empty
                 <tr><td colspan="6"><x-ui.empty :title="__('Aucun utilisateur')" /></td></tr>

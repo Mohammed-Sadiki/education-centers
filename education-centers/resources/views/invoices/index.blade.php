@@ -31,11 +31,11 @@
                     <td class="font-mono text-xs">{{ $invoice->invoice_number }}</td>
                     <td>{{ $invoice->student?->full_name }}</td>
                     <td>{{ format_date($invoice->invoice_date, 'd/m/Y') }}</td>
-                    <td>{{ format_number((float) $invoice->total_amount, 2) }} {{ $invoice->currency }}</td>
+                    <td>{{ format_price((float) $invoice->total_amount, $invoice->currency) }}</td>
                     <td>{{ format_number($paid, 2) }}</td>
                     <td>{{ format_number($remaining, 2) }}</td>
                     <td><x-status-badge type="invoice" :status="$invoice->status" /></td>
-                    <td class="text-right"><a href="{{ route('invoices.show', $invoice) }}" class="ec-btn-ghost ec-btn-sm">{{ __('Voir') }}</a></td>
+                    <td class="text-end"><a href="{{ route('invoices.show', $invoice) }}" class="ec-btn-ghost ec-btn-sm">{{ __('Voir') }}</a></td>
                 </tr>
             @empty
                 <tr><td colspan="8"><x-ui.empty :title="__('Aucune facture')" /></td></tr>

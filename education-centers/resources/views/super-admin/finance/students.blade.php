@@ -64,7 +64,7 @@
     {{-- ────────────────────────────────────────────────────────────
          KPI SYNTHÉTIQUES (4 CARTES ÉPURÉES CAD SYNDIC)
     ──────────────────────────────────────────────────────────── --}}
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {{-- Total Attendu --}}
         <div class="finance-card p-4.5">
             <div class="flex items-start justify-between">
@@ -267,7 +267,7 @@
                     {{-- En-tête de l'accordéon --}}
                     <button type="button"
                             x-on:click="expanded = !expanded"
-                            class="w-full p-4.5 flex items-center justify-between text-left hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                            class="w-full p-4.5 flex items-center justify-between text-start hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
                         <div class="flex items-center gap-3.5 min-w-0">
                             {{-- Badge du mois --}}
                             <div class="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-[#ECFDF5] text-[#0DAD98] dark:bg-[#0DAD98]/15 dark:text-[#0DAD98]">
@@ -288,7 +288,7 @@
                         </div>
 
                         <div class="flex items-center gap-5">
-                            <div class="text-right">
+                            <div class="text-end">
                                 <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ __('Encaissé ce mois') }}</span>
                                 <span class="text-base sm:text-lg font-extrabold text-[#0DAD98] whitespace-nowrap">
                                     {{ format_price($group->total_collected, 'MAD') }}
@@ -304,7 +304,7 @@
                     {{-- Corps de l'accordéon : Tableau des versements du mois --}}
                     <div x-show="expanded" x-collapse>
                         <div class="border-t border-slate-100 dark:border-slate-800 overflow-x-auto">
-                            <table class="w-full text-left text-xs">
+                            <table class="w-full text-start text-xs">
                                 <thead class="bg-slate-50/70 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-800/40">
                                     <tr>
                                         <th class="py-2.5 px-4">{{ __('Date') }}</th>
@@ -312,7 +312,7 @@
                                         <th class="py-2.5 px-4">{{ __('Étudiant') }}</th>
                                         <th class="py-2.5 px-4">{{ __('Formation & Centre') }}</th>
                                         <th class="py-2.5 px-4">{{ __('Règlement') }}</th>
-                                        <th class="py-2.5 px-4 text-right">{{ __('Montant') }}</th>
+                                        <th class="py-2.5 px-4 text-end">{{ __('Montant') }}</th>
                                         <th class="py-2.5 px-4 text-center">{{ __('Action') }}</th>
                                     </tr>
                                 </thead>
@@ -341,7 +341,7 @@
                                                     @endif
                                                 </span>
                                             </td>
-                                            <td class="py-3 px-4 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                                            <td class="py-3 px-4 text-end font-bold text-slate-900 dark:text-white whitespace-nowrap">
                                                 {{ format_price($pay->amount, 'MAD') }}
                                             </td>
                                             <td class="py-3 px-4 text-center whitespace-nowrap">
@@ -378,17 +378,17 @@
     @elseif(($viewMode ?? '') === 'students')
         <div class="finance-card overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
+                <table class="w-full text-start text-xs">
                     <thead class="bg-slate-50/80 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-800/50 dark:border-slate-800">
                         <tr>
                             <th class="py-3 px-4">{{ __('Étudiant') }}</th>
                             <th class="py-3 px-4">{{ __('Formation & Centre') }}</th>
-                            <th class="py-3 px-4 text-right">{{ __('Prix annuel') }}</th>
-                            <th class="py-3 px-4 text-right">{{ __('Total payé') }}</th>
-                            <th class="py-3 px-4 text-right">{{ __('Reste à payer') }}</th>
+                            <th class="py-3 px-4 text-end">{{ __('Prix annuel') }}</th>
+                            <th class="py-3 px-4 text-end">{{ __('Total payé') }}</th>
+                            <th class="py-3 px-4 text-end">{{ __('Reste à payer') }}</th>
                             <th class="py-3 px-4 text-center">{{ __('Progression') }}</th>
                             <th class="py-3 px-4 text-center">{{ __('Statut') }}</th>
-                            <th class="py-3 px-4 text-right">{{ __('Action') }}</th>
+                            <th class="py-3 px-4 text-end">{{ __('Action') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -410,13 +410,13 @@
                                         {{ $row->formation->center->name ?? '' }} · {{ $row->enrollment->school_year }}
                                     </div>
                                 </td>
-                                <td class="py-3 px-4 text-right font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                                <td class="py-3 px-4 text-end font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
                                     {{ format_price($row->annual_price, 'MAD') }}
                                 </td>
-                                <td class="py-3 px-4 text-right font-bold text-[#0DAD98] whitespace-nowrap">
+                                <td class="py-3 px-4 text-end font-bold text-[#0DAD98] whitespace-nowrap">
                                     {{ format_price($row->paid_amount, 'MAD') }}
                                 </td>
-                                <td class="py-3 px-4 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                                <td class="py-3 px-4 text-end font-bold text-slate-900 dark:text-white whitespace-nowrap">
                                     {{ format_price($row->remaining_amount, 'MAD') }}
                                 </td>
                                 <td class="py-3 px-4 text-center whitespace-nowrap">
@@ -438,7 +438,7 @@
                                         <span class="finance-badge-unpaid">{{ __('Non payé') }}</span>
                                     @endif
                                 </td>
-                                <td class="py-3 px-4 text-right whitespace-nowrap">
+                                <td class="py-3 px-4 text-end whitespace-nowrap">
                                     @if($row->remaining_amount > 0)
                                         <button type="button"
                                                 x-on:click="openQuickPayment('{{ $row->student->id }}', '{{ $row->formation->id }}', '{{ $row->remaining_amount }}')"
@@ -482,16 +482,16 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
+                <table class="w-full text-start text-xs">
                     <thead class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-800">
                         <tr>
                             <th class="py-3 px-4">{{ __('Étudiant débiteur') }}</th>
                             <th class="py-3 px-4">{{ __('Formation & Centre') }}</th>
-                            <th class="py-3 px-4 text-right">{{ __('Total attendu') }}</th>
-                            <th class="py-3 px-4 text-right">{{ __('Total encaissé') }}</th>
-                            <th class="py-3 px-4 text-right">{{ __('Reste à payer') }}</th>
+                            <th class="py-3 px-4 text-end">{{ __('Total attendu') }}</th>
+                            <th class="py-3 px-4 text-end">{{ __('Total encaissé') }}</th>
+                            <th class="py-3 px-4 text-end">{{ __('Reste à payer') }}</th>
                             <th class="py-3 px-4 text-center">{{ __('Dernier versement') }}</th>
-                            <th class="py-3 px-4 text-right">{{ __('Action') }}</th>
+                            <th class="py-3 px-4 text-end">{{ __('Action') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -509,19 +509,19 @@
                                     <div class="font-medium text-slate-800 dark:text-slate-200">{{ $debtor->formation->name }}</div>
                                     <div class="text-[10px] text-slate-400">{{ $debtor->formation->center->name ?? '' }}</div>
                                 </td>
-                                <td class="py-3 px-4 text-right text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                                <td class="py-3 px-4 text-end text-slate-600 dark:text-slate-300 whitespace-nowrap">
                                     {{ format_price($debtor->annual_price, 'MAD') }}
                                 </td>
-                                <td class="py-3 px-4 text-right font-bold text-[#0DAD98] whitespace-nowrap">
+                                <td class="py-3 px-4 text-end font-bold text-[#0DAD98] whitespace-nowrap">
                                     {{ format_price($debtor->paid_amount, 'MAD') }}
                                 </td>
-                                <td class="py-3 px-4 text-right font-black text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                                <td class="py-3 px-4 text-end font-black text-rose-600 dark:text-rose-400 whitespace-nowrap">
                                     {{ format_price($debtor->remaining_amount, 'MAD') }}
                                 </td>
                                 <td class="py-3 px-4 text-center text-slate-500 whitespace-nowrap">
                                     {{ $debtor->last_payment?->payment_date ? format_date($debtor->last_payment->payment_date, 'd/m/Y') : __('Aucun versement') }}
                                 </td>
-                                <td class="py-3 px-4 text-right whitespace-nowrap">
+                                <td class="py-3 px-4 text-end whitespace-nowrap">
                                     <button type="button"
                                             x-on:click="openQuickPayment('{{ $debtor->student->id }}', '{{ $debtor->formation->id }}', '{{ $debtor->remaining_amount }}')"
                                             class="finance-btn-primary py-1 px-2.5 text-[11px]">

@@ -67,6 +67,28 @@
         </div>
     </div>
 
+    {{-- ── ÉTAT VIDE (aucune formation dans ce domaine pour ce périmètre) ── --}}
+    @if(($stats['formations'] ?? 0) === 0)
+        <div class="mb-8 overflow-hidden rounded-3xl border border-dashed border-slate-300 bg-white/60 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-900/40">
+            <span class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl {{ $cfg['dot'] }}/15 {{ $cfg['text'] }}">
+                <x-icon name="book" class="h-7 w-7" />
+            </span>
+            <h2 class="mt-4 text-lg font-bold text-slate-900 dark:text-white">
+                {{ __('Aucune formation dans ce domaine pour le moment') }}
+            </h2>
+            <p class="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                {{ __('Le domaine :domain est disponible pour votre centre. Créez votre première formation pour commencer à gérer étudiants, classes et séances.', ['domain' => $domainLabel]) }}
+            </p>
+            @can('create', \App\Models\Formation::class)
+                <a href="{{ route('formations.create') }}"
+                   class="mt-5 inline-flex items-center gap-2 rounded-xl {{ $cfg['dot'] }} px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90">
+                    <x-icon name="plus" class="h-4 w-4" />
+                    {{ __('Créer une formation') }}
+                </a>
+            @endcan
+        </div>
+    @endif
+
     {{-- ── KPI ────────────────────────────────────────────────────────── --}}
     <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-ui.stat :label="__('Étudiants')" :value="format_number($stats['students'])" icon="users" tone="primary" :hint="__('inscrits')" />

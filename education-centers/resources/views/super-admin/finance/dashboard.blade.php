@@ -269,14 +269,14 @@
             <div class="flex items-center gap-4 text-xs font-semibold">
                 <div>
                     <span class="text-slate-400">{{ __('Total attendu :') }}</span>
-                    <span class="text-slate-900 dark:text-white font-bold ml-1 whitespace-nowrap">
+                    <span class="text-slate-900 dark:text-white font-bold ms-1 whitespace-nowrap">
                         {{ format_price($kpis['total_attendu'] ?? 0, 'MAD') }}
                     </span>
                 </div>
                 <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
                 <div>
                     <span class="text-slate-400">{{ __('Total encaissé :') }}</span>
-                    <span class="text-[#0DAD98] font-bold ml-1 whitespace-nowrap">
+                    <span class="text-[#0DAD98] font-bold ms-1 whitespace-nowrap">
                         {{ format_price($kpis['total_encaisse'] ?? 0, 'MAD') }}
                     </span>
                 </div>

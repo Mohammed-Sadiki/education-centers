@@ -85,9 +85,9 @@
 {{-- ══════════════════════════════════════════════════════════════════
      PLANNING + PANNEAU LATÉRAL
 ═══════════════════════════════════════════════════════════════════ --}}
-<div class="grid gap-5 xl:grid-cols-4">
+<div class="grid gap-5 xl:grid-cols-5">
     {{-- Calendrier principal --}}
-    <div class="xl:col-span-3">
+    <div class="xl:col-span-4">
         <div class="ec-card p-3 sm:p-5">
             <div id="planning-calendar"
                  data-locale="{{ $locale }}"
@@ -267,6 +267,7 @@
     #planning-calendar .fc-toolbar { flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem !important; }
     #planning-calendar .fc-toolbar-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -.01em; color: #0f172a; }
     .dark #planning-calendar .fc-toolbar-title { color: #fff; }
+    #planning-calendar .fc-scroller { scrollbar-width: thin; }
     #planning-calendar .fc-button {
         border-radius: .6rem !important;
         border: 1px solid rgb(226 232 240);
@@ -321,6 +322,13 @@
     }
     .fc-event.ec-fc-event .fc-event-title,
     .fc-event.ec-fc-event .fc-event-time { font-weight: 600; }
+    #planning-calendar .fc-event-time,
+    #planning-calendar .fc-list-event-time {
+        direction: ltr;
+        unicode-bidi: isolate;
+        white-space: nowrap;
+    }
+    #planning-calendar .ec-fc-event .fc-event-main { color: inherit !important; }
     .ec-fc-event--course   { background: rgb(59 130 246 / .12);  border-inline-start-color: #3b82f6; color: #1e40af; }
     .ec-fc-event--workshop { background: rgb(16 185 129 / .12);  border-inline-start-color: #10b981; color: #065f46; }
     .ec-fc-event--exam     { background: rgb(245 158 11 / .14);  border-inline-start-color: #f59e0b; color: #92400e; }
@@ -337,6 +345,14 @@
     #planning-mini .fc-button { padding: .1rem .4rem !important; font-size: .72rem !important; }
     #planning-mini .fc-daygrid-day-frame { min-height: 2rem; }
     #planning-mini .fc-daygrid-day-number { font-size: .72rem; }
+    #planning-mini .fc-col-header-cell-cushion {
+        display: block;
+        padding: .35rem .05rem;
+        font-size: .62rem;
+        font-weight: 700;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
 </style>
 @endpush
 
@@ -392,11 +408,12 @@ window.addEventListener('load', function () {
     const locale = el.dataset.locale || 'fr';
     const isRtl = el.dataset.dir === 'rtl';
     const initialDate = el.dataset.initialDate || undefined;
+    const isMobile = window.matchMedia('(max-width: 639px)').matches;
 
     const calendar = new FullCalendar.Calendar(el, {
-        initialView: 'timeGridWeek',
+        initialView: isMobile ? 'timeGridDay' : 'timeGridWeek',
         locale: locale,
-        dir: isRtl ? 'rtl' : 'ltr',
+        direction: isRtl ? 'rtl' : 'ltr',
         initialDate: initialDate,
         events: events,
         height: 720,
@@ -408,6 +425,7 @@ window.addEventListener('load', function () {
         expandRows: true,
         dayMaxEventRows: 4,
         eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+        allDayText: @js(__('Toute la journée')),
         buttonText: {
             today: @js(__('Aujourd\'hui')),
             day: @js(__('Jour')),
@@ -415,11 +433,9 @@ window.addEventListener('load', function () {
             month: @js(__('Mois')),
             list: @js(__('Liste')),
         },
-        headerToolbar: {
-            start: 'prev,next today',
-            center: 'title',
-            end: 'timeGridDay,timeGridWeek,dayGridMonth,listWeek',
-        },
+        headerToolbar: isMobile
+            ? { start: 'prev,next', center: 'title', end: 'today' }
+            : { start: 'prev,next today', center: 'title', end: 'timeGridDay,timeGridWeek,dayGridMonth,listWeek' },
         views: {
             listWeek: { listDayFormat: { month: 'long', year: 'numeric', day: 'numeric' } },
         },
@@ -438,10 +454,11 @@ window.addEventListener('load', function () {
         const mini = new FullCalendar.Calendar(miniEl, {
             initialView: 'dayGridMonth',
             locale: locale,
-            dir: isRtl ? 'rtl' : 'ltr',
+            direction: isRtl ? 'rtl' : 'ltr',
             initialDate: initialDate,
             height: 'auto',
             headerToolbar: { start: 'prev', center: 'title', end: 'next' },
+            dayHeaderFormat: { weekday: 'narrow' },
             fixedWeekCount: false,
             dateClick: function (info) { calendar.gotoDate(info.date); },
         });

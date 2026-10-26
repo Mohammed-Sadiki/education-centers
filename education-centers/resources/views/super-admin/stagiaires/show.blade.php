@@ -147,7 +147,7 @@
                     <div>
                         <dt class="font-medium text-slate-500 dark:text-slate-400">{{ __('Téléphone') }}</dt>
                         <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
-                            {{ $stagiaire->phone ? $stagiaire->phone : '—' }}
+                            <bdi dir="ltr">{{ $stagiaire->phone ? $stagiaire->phone : '-' }}</bdi>
                         </dd>
                     </div>
 

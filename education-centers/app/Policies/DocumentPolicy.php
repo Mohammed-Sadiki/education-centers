@@ -10,7 +10,9 @@ class DocumentPolicy {
     public function viewAny(User $user): bool { return $user->isCenterAdmin() || $user->isStudent(); }
     public function view(User $user, Document $document): bool {
         if ($user->isStudent()) {
-            return $user->center_id === $document->center_id && $user->student?->id === $document->student_id;
+            return $user->center_id === $document->center_id
+                && $user->student?->id === $document->student_id
+                && $document->status === 'active';
         }
         return $user->isCenterAdmin() && $user->center_id === $document->center_id;
     }
@@ -19,7 +21,9 @@ class DocumentPolicy {
     public function delete(User $user, Document $document): bool { return $user->isCenterAdmin() && $user->center_id === $document->center_id; }
     public function download(User $user, Document $document): bool {
         if ($user->isStudent()) {
-            return $user->center_id === $document->center_id && $user->student?->id === $document->student_id;
+            return $user->center_id === $document->center_id
+                && $user->student?->id === $document->student_id
+                && $document->status === 'active';
         }
         return ($user->isCenterAdmin() || $user->isSuperAdmin()) && ($user->center_id === $document->center_id || $user->isSuperAdmin());
     }

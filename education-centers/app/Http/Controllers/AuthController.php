@@ -61,12 +61,16 @@ class AuthController extends Controller
                 }
             }
 
+            // Ne jamais restaurer une URL interne (polling, endpoint JSON, page
+            // interdite au rôle) comme destination post-connexion.
+            $request->session()->forget('url.intended');
+
             if (Auth::user()->isSuperAdmin()) {
-                return redirect()->intended(route('super-admin.domaines'))
+                return redirect()->route('super-admin.domaines')
                     ->with('success', __('Connexion réussie. Bienvenue !'));
             }
 
-            return redirect()->intended(route('dashboard'))
+            return redirect()->route('dashboard')
                 ->with('success', __('Connexion réussie. Bienvenue !'));
         }
 

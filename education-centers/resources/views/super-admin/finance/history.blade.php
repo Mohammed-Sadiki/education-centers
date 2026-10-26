@@ -200,7 +200,7 @@
     ──────────────────────────────────────────────────────────── --}}
     <div class="finance-card overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table class="w-full text-start text-xs">
                 <thead class="bg-slate-50/80 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-800/50 dark:border-slate-800">
                     <tr>
                         <th class="py-3 px-4">{{ __('Référence') }}</th>
@@ -210,7 +210,7 @@
                         <th class="py-3 px-4">{{ __('Étudiant') }}</th>
                         <th class="py-3 px-4">{{ __('Centre') }}</th>
                         <th class="py-3 px-4">{{ __('Mode') }}</th>
-                        <th class="py-3 px-4 text-right">{{ __('Montant') }}</th>
+                        <th class="py-3 px-4 text-end">{{ __('Montant') }}</th>
                         <th class="py-3 px-4 text-center">{{ __('Statut') }}</th>
                         <th class="py-3 px-4 text-center">{{ __('Reçu') }}</th>
                     </tr>
@@ -248,7 +248,7 @@
                                     @endif
                                 </span>
                             </td>
-                            <td class="py-3 px-4 text-right font-extrabold text-[#0DAD98] whitespace-nowrap">
+                            <td class="py-3 px-4 text-end font-extrabold text-[#0DAD98] whitespace-nowrap">
                                 {{ format_price($payment->amount, 'MAD') }}
                             </td>
                             <td class="py-3 px-4 text-center whitespace-nowrap">

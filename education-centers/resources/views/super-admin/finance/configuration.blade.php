@@ -81,8 +81,8 @@
                                    name="formations[{{ $i }}][annual_price]"
                                    value="{{ old('formations.'.$i.'.annual_price', $fm->annual_price ?? 12000) }}"
                                    required
-                                   class="w-full rounded-lg border-slate-200 bg-white py-1.5 pl-3 pr-10 text-xs font-bold text-slate-900 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
-                            <span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-slate-400">
+                                   class="w-full rounded-lg border-slate-200 bg-white py-1.5 ps-3 pe-10 text-xs font-bold text-slate-900 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                            <span class="absolute inset-y-0 end-3 flex items-center text-xs font-bold text-slate-400">
                                 {{ currency_symbol('MAD') }}
                             </span>
                         </div>
@@ -128,8 +128,8 @@
                                    name="teachers[{{ $j }}][monthly_salary]"
                                    value="{{ old('teachers.'.$j.'.monthly_salary', $tc->monthly_salary ?? 6000) }}"
                                    required
-                                   class="w-full rounded-lg border-slate-200 bg-white py-1.5 pl-3 pr-10 text-xs font-bold text-slate-900 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
-                            <span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-slate-400">
+                                   class="w-full rounded-lg border-slate-200 bg-white py-1.5 ps-3 pe-10 text-xs font-bold text-slate-900 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                            <span class="absolute inset-y-0 end-3 flex items-center text-xs font-bold text-slate-400">
                                 {{ currency_symbol('MAD') }}
                             </span>
                         </div>

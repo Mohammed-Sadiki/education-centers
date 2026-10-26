@@ -13,7 +13,7 @@
     {{-- ═══════════════════════════════════════════════════════════════════════
          PANNEAU GAUCHE — LISTE DES CONVERSATIONS
     ══════════════════════════════════════════════════════════════════════════ --}}
-    <div class="flex w-full flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 sm:w-80 md:w-96"
+    <div class="flex w-full flex-col border-e border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 sm:w-80 md:w-96"
          :class="activeConversationId && isMobile ? 'hidden' : 'flex'">
 
         {{-- Header --}}
@@ -37,13 +37,13 @@
         {{-- Recherche --}}
         <div class="border-b border-slate-100 px-4 py-2 dark:border-slate-800">
             <div class="relative">
-                <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <svg class="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                 </svg>
                 <input type="text"
                        x-model="searchQuery"
                        placeholder="{{ __('Rechercher une conversation…') }}"
-                       class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-4 text-sm placeholder:text-slate-400 focus:border-[#0DAD98] focus:outline-none focus:ring-2 focus:ring-[#0DAD98]/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500">
+                       class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 ps-9 pe-4 text-sm placeholder:text-slate-400 focus:border-[#0DAD98] focus:outline-none focus:ring-2 focus:ring-[#0DAD98]/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500">
             </div>
         </div>
 
@@ -56,7 +56,7 @@
                 @foreach($contacts as $contact)
                 <button type="button"
                         @click="startDirect({{ $contact->id }})"
-                        class="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-[#0DAD98]/10 transition-colors">
+                        class="flex w-full items-center gap-3 px-4 py-2.5 text-start hover:bg-[#0DAD98]/10 transition-colors">
                     <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0DAD98] text-xs font-bold text-white uppercase">
                         {{ substr($contact->name, 0, 1) }}
                     </div>
@@ -76,7 +76,7 @@
         <div class="flex-1 overflow-y-auto">
             <template x-if="loading && conversations.length === 0">
                 <div class="flex items-center justify-center py-16 text-slate-400">
-                    <svg class="h-5 w-5 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+                    <svg class="h-5 w-5 animate-spin me-2" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -99,15 +99,15 @@
                     <li>
                         <button type="button"
                                 @click="openConversation(conv.id)"
-                                class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors border-b border-slate-50 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/40"
-                                :class="activeConversationId === conv.id ? 'bg-[#ECFDF5] dark:bg-[#0DAD98]/10 border-l-2 border-l-[#0DAD98]' : ''">
+                                class="flex w-full items-center gap-3 px-4 py-3 text-start transition-colors border-b border-slate-50 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                                :class="activeConversationId === conv.id ? 'bg-[#ECFDF5] dark:bg-[#0DAD98]/10 border-s-2 border-s-[#0DAD98]' : ''">
                             {{-- Avatar --}}
                             <div class="relative shrink-0">
                                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#0DAD98] to-[#0b9b88] text-sm font-bold text-white uppercase"
                                      x-text="conv.other_user.name ? conv.other_user.name.charAt(0) : '?'">
                                 </div>
                                 <span x-show="conv.unread_count > 0"
-                                      class="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#0DAD98] text-[9px] font-bold text-white">
+                                      class="absolute -top-0.5 -end-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#0DAD98] text-[9px] font-bold text-white">
                                 </span>
                             </div>
                             {{-- Info --}}
@@ -188,7 +188,7 @@
                 <div class="flex-1 overflow-y-auto px-4 py-4 space-y-3" id="messages-scroll-area" x-ref="scrollArea">
                     <template x-if="loadingMessages">
                         <div class="flex items-center justify-center py-12 text-slate-400">
-                            <svg class="h-5 w-5 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+                            <svg class="h-5 w-5 animate-spin me-2" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
@@ -226,7 +226,7 @@
                                                  ? 'bg-[#0DAD98] text-white rounded-tr-sm'
                                                  : 'bg-white text-slate-800 dark:bg-slate-800 dark:text-slate-100 rounded-tl-sm border border-slate-100 dark:border-slate-700'">
                                             <p class="leading-relaxed whitespace-pre-wrap" x-text="msg.content"></p>
-                                            <p class="mt-1 text-right text-[10px]"
+                                            <p class="mt-1 text-end text-[10px]"
                                                :class="msg.is_mine ? 'text-white/70' : 'text-slate-400'"
                                                x-text="msg.time"></p>
                                         </div>
@@ -254,7 +254,7 @@
                                                                 <p class="truncate font-semibold text-slate-700 dark:text-slate-200" x-text="att.name"></p>
                                                                 <p class="text-xs text-slate-400" x-text="att.size"></p>
                                                             </div>
-                                                            <svg class="h-4 w-4 shrink-0 text-slate-400 ml-auto" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                            <svg class="h-4 w-4 shrink-0 text-slate-400 ms-auto" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                                                             </svg>
                                                         </a>

@@ -50,7 +50,7 @@
                             <x-ui.avatar :name="$student->full_name" size="sm" />
                             <div>
                                 <div class="font-medium">{{ $student->full_name }}</div>
-                                <div class="text-xs text-slate-500">{{ $student->phone ?? '—' }}</div>
+                                <div class="text-xs text-slate-500"><bdi dir="ltr">{{ $student->phone ?? '—' }}</bdi></div>
                             </div>
                         </div>
                     </td>
@@ -58,7 +58,7 @@
                     <td>{{ $student->user?->email ?? '—' }}</td>
                     <td>{{ $student->center?->name ?? '—' }}</td>
                     <td><x-status-badge :status="$student->status" /></td>
-                    <td class="text-right">
+                    <td class="text-end">
                         @can('view', $student)
                             <a href="{{ route('students.show', $student) }}" class="ec-btn-ghost ec-btn-sm" id="btn-show-student-{{ $student->id }}">{{ __('Voir') }}</a>
                         @endcan

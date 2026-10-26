@@ -12,7 +12,7 @@
     <a href="{{ route('invoices.index') }}" class="ec-btn-ghost">{{ __('Retour') }}</a>
 </x-ui.page-header>
 <div class="mb-6 grid gap-4 sm:grid-cols-3">
-    <x-ui.stat :label="__('Total')" :value="format_number((float) $invoice->total_amount, 2).' '.$invoice->currency" icon="document" />
+    <x-ui.stat :label="__('Total')" :value="format_price((float) $invoice->total_amount, $invoice->currency)" icon="document" />
     <x-ui.stat :label="__('Payé')" :value="format_number($paid, 2)" icon="banknotes" tone="success" />
     <x-ui.stat :label="__('Restant')" :value="format_number($remaining, 2)" icon="clock" tone="warning" />
 </div>

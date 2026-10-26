@@ -78,11 +78,11 @@
                                             <label class="text-xs font-bold text-slate-600 dark:text-slate-300">
                                                 {{ strtoupper($locale) }}
                                                 @if($translation)
-                                                    <span class="ml-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold {{ $translation->isManual() ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' }}">
+                                                    <span class="ms-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold {{ $translation->isManual() ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' }}">
                                                         {{ $translation->isManual() ? __('Manuelle') : __('Automatique') }}
                                                     </span>
                                                 @else
-                                                    <span class="ml-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 dark:bg-slate-700 dark:text-slate-300">{{ __('Manquante') }}</span>
+                                                    <span class="ms-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 dark:bg-slate-700 dark:text-slate-300">{{ __('Manquante') }}</span>
                                                 @endif
                                             </label>
                                         </div>

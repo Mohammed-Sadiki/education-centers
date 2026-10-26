@@ -26,8 +26,10 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StagiaireController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudentPortalController;
 use App\Http\Controllers\SuperAdminDomainController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\TeacherPortalController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -296,16 +298,44 @@ Route::middleware('auth')->group(function () {
     });
 
     // ──────────────────────────────────────────────────────────────────────────
+    //  ESPACE PROFESSEUR — Classes, étudiants et emploi du temps personnels
+    // ──────────────────────────────────────────────────────────────────────────
+    Route::middleware('role:teacher')->group(function () {
+        Route::get('/professeur/mes-classes', [TeacherPortalController::class, 'classes'])
+            ->name('teacher.classes');
+        Route::get('/professeur/mes-classes/{class}', [TeacherPortalController::class, 'showClass'])
+            ->name('teacher.classes.show');
+        Route::get('/professeur/mon-emploi-du-temps', [TeacherPortalController::class, 'schedule'])
+            ->name('teacher.schedule');
+        Route::get('/professeur/mes-salaires', [TeacherPortalController::class, 'salaries'])
+            ->name('teacher.salaries');
+    });
+
+    // ──────────────────────────────────────────────────────────────────────────
     //  ACCÈS ÉTUDIANT — Lecture seule
     // ──────────────────────────────────────────────────────────────────────────
     Route::middleware('role:student')->group(function () {
-        Route::get('/mes-presences', [AttendanceController::class, 'index'])->name('student.attendances');
-        Route::get('/mes-notes', [EvaluationController::class, 'index'])->name('student.evaluations');
-        Route::get('/mes-documents', [DocumentController::class, 'index'])->name('student.documents');
-        Route::get('/documents/{document}/download', [DocumentController::class, 'download'])
-            ->name('student.documents.download')->withoutMiddleware('role:student');
-        Route::get('/mes-certificats', [CertificateController::class, 'index'])->name('student.certificates');
+        Route::get('/mes-formations', [StudentPortalController::class, 'formations'])
+            ->name('student.formations');
+        Route::get('/mon-emploi-du-temps', [StudentPortalController::class, 'schedule'])
+            ->name('student.schedule');
+        Route::get('/mes-presences', [StudentPortalController::class, 'attendances'])
+            ->name('student.attendances');
+        Route::get('/mes-notes', [StudentPortalController::class, 'evaluations'])
+            ->name('student.evaluations');
+        Route::get('/mes-documents', [StudentPortalController::class, 'documents'])
+            ->name('student.documents');
+        Route::get('/mes-documents/{document}/download', [DocumentController::class, 'download'])
+            ->name('student.documents.download');
+        Route::get('/mes-documents/{document}/apercu', [DocumentController::class, 'preview'])
+            ->name('student.documents.preview');
+        Route::get('/mes-certificats', [StudentPortalController::class, 'certificates'])
+            ->name('student.certificates');
         Route::get('/mes-certificats/{certificate}/download', [CertificateController::class, 'download'])
             ->name('student.certificates.download');
+        Route::get('/mes-certificats/{certificate}/print', [CertificateController::class, 'printPdf'])
+            ->name('student.certificates.print');
+        Route::get('/mes-paiements', [StudentPortalController::class, 'payments'])
+            ->name('student.payments');
     });
 });

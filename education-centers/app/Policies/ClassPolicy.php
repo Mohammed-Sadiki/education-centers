@@ -22,22 +22,31 @@ class ClassPolicy
 
     /**
      * viewAny : voir la liste des classes.
-     * Accessible au Super Admin et à l'Admin Centre.
-     * Refusé pour Professeur et Élève (403).
+     * Admin Centre : son centre. Professeur : uniquement ses classes affectées
+     * (le contrôleur limite la requête, la policy sert de garde-fou).
      */
     public function viewAny(User $authUser): bool
     {
-        return $authUser->isCenterAdmin();
+        return $authUser->isCenterAdmin()
+            || ($authUser->isTeacher() && $authUser->teacher !== null);
     }
 
     /**
      * view : consulter une classe spécifique.
-     * Admin Centre : uniquement les classes de son propre centre.
+     * Admin Centre : son centre. Professeur : classe affectée via class_teacher.
      */
     public function view(User $authUser, ClassRoom $classRoom): bool
     {
         if ($authUser->isCenterAdmin()) {
             return $authUser->center_id === $classRoom->center_id;
+        }
+
+        if ($authUser->isTeacher()) {
+            $teacher = $authUser->teacher;
+
+            return $teacher !== null
+                && (int) $teacher->center_id === (int) $classRoom->center_id
+                && $classRoom->hasTeacher($teacher);
         }
 
         return false;

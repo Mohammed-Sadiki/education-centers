@@ -132,19 +132,19 @@
                 </div>
 
                 {{-- tuiles flottantes --}}
-                <span class="absolute left-4 top-6 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
+                <span class="absolute start-4 top-6 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
                     <x-icon name="heart" class="h-5 w-5" />
                 </span>
-                <span class="absolute right-10 top-0 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 text-white shadow-lg shadow-blue-500/30">
+                <span class="absolute end-10 top-0 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 text-white shadow-lg shadow-blue-500/30">
                     <x-icon name="monitor" class="h-5 w-5" />
                 </span>
-                <span class="absolute -right-1 top-24 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg shadow-amber-500/30">
+                <span class="absolute -end-1 top-24 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg shadow-amber-500/30">
                     <x-icon name="building" class="h-5 w-5" />
                 </span>
-                <span class="absolute bottom-6 right-8 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-400 to-pink-600 text-white shadow-lg shadow-pink-500/30">
+                <span class="absolute bottom-6 end-8 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-400 to-pink-600 text-white shadow-lg shadow-pink-500/30">
                     <x-icon name="brush" class="h-5 w-5" />
                 </span>
-                <span class="absolute bottom-2 left-10 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-400 to-violet-600 text-white shadow-lg shadow-violet-500/30">
+                <span class="absolute bottom-2 start-10 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-400 to-violet-600 text-white shadow-lg shadow-violet-500/30">
                     <x-icon name="chart" class="h-5 w-5" />
                 </span>
             </div>
@@ -177,7 +177,7 @@
             <a href="{{ $domain->routeUrl() }}"
                id="card-domaine-{{ $domain->slug }}"
                class="group relative flex flex-col overflow-hidden rounded-3xl border p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl {{ $c['card'] }}"
-               aria-label="{{ __('Accéder au domaine ' . $domain->name) }}">
+               aria-label="{{ __('Accéder au domaine :domain', ['domain' => $domain->name]) }}">
 
                 <div class="mb-5 flex items-center justify-between">
                     <span class="flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-lg {{ $c['chip'] }}">
@@ -197,7 +197,7 @@
                 </p>
 
                 <div class="mt-6 flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors {{ $c['cta'] }}">
-                    <span>{{ __('Accéder à l\'espace ' . $domain->name) }}</span>
+                    <span>{{ __('Accéder à l\'espace :domain', ['domain' => $domain->name]) }}</span>
                     <span class="flex h-7 w-7 items-center justify-center rounded-full shadow-sm transition-transform group-hover:translate-x-1 {{ $c['circle'] }}">
                         <x-icon name="arrow-right" class="h-4 w-4 rtl:rotate-180" />
                     </span>

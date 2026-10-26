@@ -91,12 +91,12 @@
             <div>
                 <label for="search" class="sr-only">{{ __('Recherche') }}</label>
                 <div class="relative">
-                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-slate-400">
                         <x-icon name="search" class="h-3.5 w-3.5" />
                     </div>
                     <input type="text" id="search" name="search" value="{{ request('search') }}"
                            placeholder="{{ __('Nom, CIN, email, tél...') }}"
-                           class="block w-full rounded-xl border border-slate-300 bg-slate-50/50 pl-9 pr-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                           class="block w-full rounded-xl border border-slate-300 bg-slate-50/50 ps-9 pe-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
                 </div>
             </div>
 
@@ -157,7 +157,7 @@
                         <th>{{ __('Période du stage') }}</th>
                         <th>{{ __('Prix convenu') }}</th>
                         <th>{{ __('Statut') }}</th>
-                        <th class="text-right">{{ __('Actions') }}</th>
+                        <th class="text-end">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -170,7 +170,7 @@
                                     </a>
                                 </div>
                                 <div class="text-[11px] text-slate-500">
-                                    {{ $stagiaire->email ?? $stagiaire->phone ?? __('Aucun contact') }}
+                                    <bdi dir="ltr">{{ $stagiaire->email ?? $stagiaire->phone ?? __('Aucun contact') }}</bdi>
                                 </div>
                             </td>
                             <td>
@@ -211,7 +211,7 @@
                                     {{ $stagiaire->status_label }}
                                 </span>
                             </td>
-                            <td class="text-right">
+                            <td class="text-end">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <a href="{{ route('stagiaires.show', $stagiaire) }}"
                                        class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-purple-600 dark:hover:bg-slate-800 dark:hover:text-purple-400 transition"

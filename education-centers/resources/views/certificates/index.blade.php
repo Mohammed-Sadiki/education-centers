@@ -29,7 +29,7 @@
                     <td>{{ $certificate->student?->full_name }}</td>
                     <td>{{ $certificate->formation?->name ?? '—' }}</td>
                     <td>{{ format_date($certificate->issued_date, 'd/m/Y') }}</td>
-                    <td class="text-right">
+                    <td class="text-end">
                         @if(auth()->user()->isStudent())
                             <a href="{{ route('student.certificates.download', $certificate) }}" class="ec-btn-secondary ec-btn-sm">{{ __('Télécharger') }}</a>
                         @else

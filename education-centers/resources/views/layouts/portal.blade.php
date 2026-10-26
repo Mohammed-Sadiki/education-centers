@@ -42,7 +42,7 @@
                 <span class="text-base font-bold tracking-tight text-slate-900 dark:text-white">
                     {{ __('Education Centers') }}
                 </span>
-                <span class="hidden sm:inline-block ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <span class="hidden sm:inline-block ms-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                     {{ $user?->isCenterAdmin() ? __('Portail Admin Centre') : __('Portail Super Admin') }}
                 </span>
             </div>
@@ -69,7 +69,7 @@
             {{-- Profil de l'utilisateur --}}
             <div class="flex items-center gap-2.5">
                 <x-ui.avatar :name="$user->name" size="sm" />
-                <div class="hidden text-left sm:block">
+                <div class="hidden text-start sm:block">
                     <span class="block max-w-[160px] truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
                         {{ $user->name }}
                     </span>

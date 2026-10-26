@@ -188,7 +188,7 @@
                     </div>
 
                     <div class="flex items-center gap-4">
-                        <div class="text-right">
+                        <div class="text-end">
                             <span class="text-xs sm:text-sm font-extrabold text-rose-600 dark:text-rose-400 whitespace-nowrap">
                                 {{ format_price($group->total_amount, 'MAD') }}
                             </span>
@@ -202,7 +202,7 @@
 
                 {{-- Tableau à l'ouverture --}}
                 <div x-show="open" class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
+                    <table class="w-full text-start text-xs">
                         <thead class="bg-slate-50/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-100 dark:bg-slate-800/50 dark:border-slate-800">
                             <tr>
                                 <th class="py-2.5 px-4">{{ __('Date') }}</th>
@@ -210,9 +210,9 @@
                                 <th class="py-2.5 px-4">{{ __('Articles achetés') }}</th>
                                 <th class="py-2.5 px-4">{{ __('Catégorie') }}</th>
                                 <th class="py-2.5 px-4">{{ __('Mode') }}</th>
-                                <th class="py-2.5 px-4 text-right">{{ __('Montant') }}</th>
+                                <th class="py-2.5 px-4 text-end">{{ __('Montant') }}</th>
                                 <th class="py-2.5 px-4 text-center">{{ __('Justificatif') }}</th>
-                                <th class="py-2.5 px-4 text-right">{{ __('Actions') }}</th>
+                                <th class="py-2.5 px-4 text-end">{{ __('Actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -259,7 +259,7 @@
                                         @else {{ $exp->payment_method }}
                                         @endif
                                     </td>
-                                    <td class="py-3 px-4 text-right font-bold {{ $isCancelled ? 'text-slate-400' : 'text-rose-600' }} whitespace-nowrap">
+                                    <td class="py-3 px-4 text-end font-bold {{ $isCancelled ? 'text-slate-400' : 'text-rose-600' }} whitespace-nowrap">
                                         {{ format_price($exp->amount, 'MAD') }}
                                         @if($isCancelled)
                                             <span class="block text-[9px] text-rose-500 font-bold uppercase no-underline">{{ __('Annulé') }}</span>
@@ -282,7 +282,7 @@
                                             <span>{{ __('🖨️ Imprimer') }}</span>
                                         </a>
                                     </td>
-                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                    <td class="py-3 px-4 text-end whitespace-nowrap">
                                         <div class="flex items-center justify-end gap-1.5">
                                             <button type="button" x-on:click="openDetail({{ Js::from($exp) }})"
                                                     class="rounded-md bg-slate-100 hover:bg-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -430,11 +430,11 @@
                                     <div class="relative">
                                         <input type="number" min="0" step="0.01" :name="'items['+index+'][unit_price]'" x-model.number="item.unit_price" required
                                                placeholder="{{ __('Prix unit.') }}"
-                                               class="w-full rounded-lg border-slate-200 bg-white py-1.5 pl-2.5 pr-8 text-xs font-semibold text-slate-900">
-                                        <span class="absolute inset-y-0 right-2 flex items-center text-[10px] text-slate-400 font-bold">DH</span>
+                                               class="w-full rounded-lg border-slate-200 bg-white py-1.5 ps-2.5 pe-8 text-xs font-semibold text-slate-900">
+                                        <span class="absolute inset-y-0 end-2 flex items-center text-[10px] text-slate-400 font-bold">DH</span>
                                     </div>
                                 </div>
-                                <div class="w-28 text-right font-extrabold text-xs text-slate-900 dark:text-white">
+                                <div class="w-28 text-end font-extrabold text-xs text-slate-900 dark:text-white">
                                     <span x-text="((item.quantity || 0) * (item.unit_price || 0)).toFixed(2)"></span> {{ currency_symbol('MAD') }}
                                 </div>
                                 <button type="button" x-on:click="removeItem(index)" class="text-slate-400 hover:text-rose-500 px-1 text-sm font-bold">
@@ -473,7 +473,7 @@
                             {{ __('Justificatif (PDF, Image)') }}
                         </label>
                         <input type="file" name="receipt" accept=".pdf,.png,.jpg,.jpeg"
-                               class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#ECFDF5] file:text-[#0DAD98] hover:file:bg-[#0DAD98]/20">
+                               class="w-full text-xs text-slate-500 file:me-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#ECFDF5] file:text-[#0DAD98] hover:file:bg-[#0DAD98]/20">
                     </div>
                 </div>
 

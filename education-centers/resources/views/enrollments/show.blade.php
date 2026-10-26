@@ -167,7 +167,7 @@
                         <div class="col-md-6">
                             <span class="text-muted small text-uppercase d-block mb-1">{{ __('Coût de la formation') }}</span>
                             <div class="fs-5 fw-bold text-primary">
-                                {{ format_number($enrollment->formation->price, 2) }} {{ $enrollment->formation->currency }}
+                                {{ format_price($enrollment->formation->price, $enrollment->formation->currency) }}
                             </div>
                             <small class="text-muted">{{ $enrollment->formation->duration_hours }} {{ __('heures (') }}{{ $enrollment->formation->duration_weeks }} {{ __('semaines)') }}</small>
                         </div>
@@ -255,7 +255,7 @@
                     </div>
                     @if($enrollment->student->phone)
                         <div class="small text-muted mb-1">
-                            <i class="bi bi-telephone me-1"></i>{{ $enrollment->student->phone }}
+                            <i class="bi bi-telephone me-1"></i><bdi dir="ltr">{{ $enrollment->student->phone }}</bdi>
                         </div>
                     @endif
                     <div class="small text-muted">

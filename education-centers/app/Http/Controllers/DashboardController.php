@@ -16,10 +16,17 @@ use App\Models\Schedule;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Services\StudentPortalService;
+use App\Services\TeacherPortalService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 class DashboardController extends Controller {
+    public function __construct(
+        protected StudentPortalService $studentPortal,
+        protected TeacherPortalService $teacherPortal,
+    ) {}
+
     public function index(Request $request): View|RedirectResponse {
         $user = $request->user();
         // Le Super Admin est désormais redirigé vers la sélection des domaines
@@ -72,26 +79,9 @@ class DashboardController extends Controller {
         return view('dashboard.center_admin', compact('stats','upcoming','recentEnrollments','notifications'));
     }
     private function teacherDashboard(User $user): View {
-        $teacher = $user->teacher;
-        $cid = $user->center_id;
-        $classes = $teacher ? $teacher->classes()->with('formation')->get() : collect();
-        $upcoming = Schedule::where('center_id',$cid)->where('teacher_id', $teacher?->id)->where('date','>=',now()->toDateString())->where('status','scheduled')->with(['classRoom','room'])->orderBy('date')->orderBy('start_time')->take(10)->get();
-        $recentSchedules = Schedule::where('center_id',$cid)->where('teacher_id', $teacher?->id)->where('date','<',now()->toDateString())->where('status','completed')->orderBy('date','desc')->take(5)->get();
-        $notifications = AppNotification::where('user_id',$user->id)->whereNull('read_at')->latest()->take(5)->get();
-        return view('dashboard.teacher', compact('classes','upcoming','recentSchedules','teacher','notifications'));
+        return view('dashboard.teacher', $this->teacherPortal->dashboardData($user));
     }
     private function studentDashboard(User $user): View {
-        $student = $user->student;
-        $cid = $user->center_id;
-        $enrollments = $student ? Enrollment::where('student_id',$student->id)->with(['formation','classRoom'])->get() : collect();
-        $attendances = $student ? Attendance::where('student_id',$student->id)->where('center_id',$cid)->whereMonth('date',now()->month)->get() : collect();
-        $presentCount = $attendances->where('status','present')->count();
-        $absentCount  = $attendances->where('status','absent')->count();
-        $lateCount    = $attendances->where('status','late')->count();
-        $grades = $student ? \App\Models\Grade::where('student_id',$student->id)->where('center_id',$cid)->with('evaluation')->get() : collect();
-        $notifications = AppNotification::where('user_id',$user->id)->whereNull('read_at')->latest()->take(5)->get();
-        $payments = $student ? Payment::where('student_id',$student->id)->where('status','paid')->latest('payment_date')->take(5)->get() : collect();
-        $certificates = $student ? Certificate::where('student_id',$student->id)->where('status','issued')->latest('issued_date')->take(5)->get() : collect();
-        return view('dashboard.student', compact('student','enrollments','presentCount','absentCount','lateCount','grades','notifications','payments','certificates'));
+        return view('dashboard.student', $this->studentPortal->dashboardData($user));
     }
 }

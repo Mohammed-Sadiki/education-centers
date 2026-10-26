@@ -107,11 +107,7 @@
     {{-- ── RIGHT: lang, theme, messages, notifications, user ────────────── --}}
     <div class="flex items-center gap-1.5 sm:gap-2">
         {{-- FR / AR pill --}}
-        <div class="ec-lang-pill" role="group" aria-label="{{ __('Changer de langue') }}">
-            @php $currentLocale = app()->getLocale(); @endphp
-            <a href="{{ route('locale.switch', 'fr') }}" @if($currentLocale === 'fr') aria-current="true" @endif>{{ __('FR') }}</a>
-            <a href="{{ route('locale.switch', 'ar') }}" @if($currentLocale === 'ar') aria-current="true" @endif>{{ __('AR') }}</a>
-        </div>
+        @include('layouts.partials.language-switcher')
 
         {{-- Theme toggle --}}
         <button type="button" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" x-on:click="$store.ui.toggleTheme()" aria-label="{{ __('Basculer le thème') }}">

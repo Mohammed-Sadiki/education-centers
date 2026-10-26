@@ -8,6 +8,7 @@ use App\Models\Enrollment;
 use App\Models\Evaluation;
 use App\Models\Grade;
 use App\Models\Student;
+use App\Services\TeacherPortalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -15,16 +16,28 @@ use Illuminate\View\View;
 
 class EvaluationController extends Controller
 {
+    public function __construct(protected TeacherPortalService $portal) {}
+
     public function index(Request $request): View
     {
         Gate::authorize('viewAny', Evaluation::class);
         $user = $request->user();
-        $query = Evaluation::query()->with(['classRoom', 'formation', 'teacher.user']);
-        if ($user->isCenterAdmin() || $user->isTeacher()) {
-            $query->where('center_id', $user->center_id);
+        $teacher = null;
+        if ($user->isCenterAdmin()) {
+            $query = Evaluation::query()->with(['classRoom', 'formation', 'teacher.user'])
+                ->where('center_id', $user->center_id);
+        } elseif ($user->isTeacher()) {
+            // Un professeur ne liste que ses propres évaluations, dans les
+            // classes qui lui sont réellement affectées (class_teacher).
+            $teacher = $this->portal->teacherFor($user);
+            $query = $this->portal->evaluationsQuery($teacher)
+                ->with(['classRoom', 'formation', 'teacher.user']);
         } elseif ($user->isStudent()) {
             $classIds = Enrollment::where('student_id', $user->student?->id)->where('status', 'accepted')->pluck('class_id');
-            $query->whereIn('class_id', $classIds)->where('center_id', $user->center_id);
+            $query = Evaluation::query()->with(['classRoom', 'formation', 'teacher.user'])
+                ->whereIn('class_id', $classIds)->where('center_id', $user->center_id);
+        } else {
+            $query = Evaluation::query()->with(['classRoom', 'formation', 'teacher.user']);
         }
         // Filtrage par domaine actif
         $query = $this->applyDomainScope($query);
@@ -36,7 +49,11 @@ class EvaluationController extends Controller
         }
         $evaluations = $query->latest('evaluation_date')->paginate(15)->withQueryString();
         $centerId = $user->isSuperAdmin() ? null : $user->center_id;
-        $classes = ClassRoom::when($centerId, fn ($q) => $q->where('center_id', $centerId))->orderBy('name')->get();
+        if ($user->isTeacher()) {
+            $classes = $this->portal->classesQuery($teacher)->orderBy('name')->get();
+        } else {
+            $classes = ClassRoom::when($centerId, fn ($q) => $q->where('center_id', $centerId))->orderBy('name')->get();
+        }
         $centers = $user->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
 
         return view('evaluations.index', compact('evaluations', 'classes', 'centers'));
@@ -47,7 +64,13 @@ class EvaluationController extends Controller
         Gate::authorize('create', Evaluation::class);
         $user = $request->user();
         $centerId = $user->isSuperAdmin() ? $request->input('center_id') : $user->center_id;
-        $classes = ClassRoom::when($centerId, fn ($q) => $q->where('center_id', $centerId))->where('status', 'active')->orderBy('name')->get();
+        if ($user->isTeacher()) {
+            // Création possible uniquement pour une classe affectée au professeur.
+            $classes = $this->portal->classesQuery($this->portal->teacherFor($user))
+                ->where('status', 'active')->orderBy('name')->get();
+        } else {
+            $classes = ClassRoom::when($centerId, fn ($q) => $q->where('center_id', $centerId))->where('status', 'active')->orderBy('name')->get();
+        }
         $centers = $user->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
 
         return view('evaluations.create', compact('classes', 'centers', 'centerId'));
@@ -72,9 +95,16 @@ class EvaluationController extends Controller
         if ($class->center_id !== $centerId) {
             abort(403);
         }
+        if ($user->isTeacher()) {
+            // Le `class_id` soumis est confronté aux affectations réelles :
+            // une classe non attribuée est refusée même via requête directe.
+            $this->portal->assertClassAccess($this->portal->teacherFor($user), $class);
+        }
         $data['center_id'] = $centerId;
         $data['formation_id'] = $class->formation_id;
-        $data['teacher_id'] = $user->isTeacher() ? $user->teacher?->id : ($request->input('teacher_id') ?: null);
+        // teacher_id est toujours dérivé de l'utilisateur authentifié pour un
+        // professeur ; jamais de la requête du navigateur.
+        $data['teacher_id'] = $user->isTeacher() ? $this->portal->teacherFor($user)?->id : ($request->input('teacher_id') ?: null);
         $evaluation = Evaluation::create($data);
 
         return redirect()->route('evaluations.show', $evaluation)->with('success', __('Évaluation \\":title\\" créée.', ['title' => $evaluation->title]));
@@ -95,8 +125,13 @@ class EvaluationController extends Controller
     public function edit(Evaluation $evaluation): View
     {
         Gate::authorize('update', $evaluation);
+        $user = request()->user();
         $evaluation->load(['classRoom']);
-        $classes = ClassRoom::where('center_id', $evaluation->center_id)->orderBy('name')->get();
+        if ($user->isTeacher()) {
+            $classes = $this->portal->classesQuery($this->portal->teacherFor($user))->orderBy('name')->get();
+        } else {
+            $classes = ClassRoom::where('center_id', $evaluation->center_id)->orderBy('name')->get();
+        }
 
         return view('evaluations.edit', compact('evaluation', 'classes'));
     }

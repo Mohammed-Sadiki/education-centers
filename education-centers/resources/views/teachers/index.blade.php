@@ -163,7 +163,7 @@
                                 @endif
                             </td>
                             <td>
-                                {{ $teacher->phone ?? '—' }}
+                                <bdi dir="ltr">{{ $teacher->phone ?? '-' }}</bdi>
                             </td>
                             <td>
                                 @if($teacher->isActive())

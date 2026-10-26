@@ -178,14 +178,14 @@
                 <div>
                     <label for="cin_recto" class="ec-label">{{ __('Fichier CIN Recto (PDF, JPG, PNG)') }}</label>
                     <input type="file" id="cin_recto" name="cin_recto" accept=".pdf,.jpg,.jpeg,.png"
-                           class="ec-input w-full file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1 file:text-xs file:font-semibold">
+                           class="ec-input w-full file:me-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1 file:text-xs file:font-semibold">
                     <p class="mt-1 text-[11px] text-slate-400">{{ __('Stockage sécurisé et privé (max: 5 Mo)') }}</p>
                 </div>
 
                 <div>
                     <label for="cin_verso" class="ec-label">{{ __('Fichier CIN Verso (PDF, JPG, PNG)') }}</label>
                     <input type="file" id="cin_verso" name="cin_verso" accept=".pdf,.jpg,.jpeg,.png"
-                           class="ec-input w-full file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1 file:text-xs file:font-semibold">
+                           class="ec-input w-full file:me-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1 file:text-xs file:font-semibold">
                     <p class="mt-1 text-[11px] text-slate-400">{{ __('Stockage sécurisé et privé (max: 5 Mo)') }}</p>
                 </div>
             </div>
@@ -232,9 +232,9 @@
                         <div class="relative flex-1">
                             <input type="number" step="0.01" min="0" max="999999.99" id="stage_price" name="stage_price"
                                    value="{{ old('stage_price', '0.00') }}"
-                                   class="ec-input w-full text-lg font-bold pr-12 @error('stage_price') ec-input-error @enderror"
+                                   class="ec-input w-full text-lg font-bold pe-12 @error('stage_price') ec-input-error @enderror"
                                    placeholder="0.00">
-                            <span class="absolute right-3 top-2.5 font-bold text-slate-500">DH</span>
+                            <span class="absolute end-3 top-2.5 font-bold text-slate-500">DH</span>
                         </div>
                         <input type="hidden" name="currency" value="MAD">
                         <span class="rounded-lg bg-indigo-50 px-3 py-2 text-sm font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
@@ -327,7 +327,7 @@
                             <div>
                                 <label class="ec-label text-xs">{{ __('Fichier scanné (PDF, image)') }}</label>
                                 <input type="file" :name="'diplomas[' + index + '][file]'" accept=".pdf,.jpg,.jpeg,.png"
-                                       class="ec-input w-full text-xs file:mr-2 file:rounded file:border-0 file:bg-slate-200 file:px-2 file:py-0.5 file:text-[11px]">
+                                       class="ec-input w-full text-xs file:me-2 file:rounded file:border-0 file:bg-slate-200 file:px-2 file:py-0.5 file:text-[11px]">
                             </div>
                         </div>
                     </div>
@@ -398,7 +398,7 @@
                             <div>
                                 <label class="ec-label text-xs">{{ __('Fichier scanné (PDF, image)') }}</label>
                                 <input type="file" :name="'other_documents[' + index + '][file]'" accept=".pdf,.jpg,.jpeg,.png"
-                                       class="ec-input w-full text-xs file:mr-2 file:rounded file:border-0 file:bg-slate-200 file:px-2 file:py-0.5 file:text-[11px]">
+                                       class="ec-input w-full text-xs file:me-2 file:rounded file:border-0 file:bg-slate-200 file:px-2 file:py-0.5 file:text-[11px]">
                             </div>
                         </div>
                     </div>

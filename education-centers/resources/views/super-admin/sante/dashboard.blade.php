@@ -162,7 +162,7 @@
                                 {{ $schedule->room?->name ?? '—' }}
                             </p>
                         </div>
-                        <div class="shrink-0 text-right text-xs text-slate-500 dark:text-slate-400">
+                        <div class="shrink-0 text-end text-xs text-slate-500 dark:text-slate-400">
                             <p class="font-medium text-slate-700 dark:text-slate-200">
                                 {{ \Carbon\Carbon::parse($schedule->date)->translatedFormat('d M Y') }}
                             </p>

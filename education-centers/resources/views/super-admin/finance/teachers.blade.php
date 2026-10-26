@@ -225,17 +225,17 @@
     ──────────────────────────────────────────────────────────── --}}
     <div class="finance-card overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table class="w-full text-start text-xs">
                 <thead class="bg-slate-50/80 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-800/50 dark:border-slate-800">
                     <tr>
                         <th class="py-3 px-4">{{ __('Professeur') }}</th>
                         <th class="py-3 px-4">{{ __('Centre & Filières') }}</th>
-                        <th class="py-3 px-4 text-right">{{ __('Salaire mensuel') }}</th>
-                        <th class="py-3 px-4 text-right">{{ __('Montant versé') }}</th>
-                        <th class="py-3 px-4 text-right">{{ __('Reste à payer') }}</th>
+                        <th class="py-3 px-4 text-end">{{ __('Salaire mensuel') }}</th>
+                        <th class="py-3 px-4 text-end">{{ __('Montant versé') }}</th>
+                        <th class="py-3 px-4 text-end">{{ __('Reste à payer') }}</th>
                         <th class="py-3 px-4 text-center">{{ __('Période') }}</th>
                         <th class="py-3 px-4 text-center">{{ __('Statut') }}</th>
-                        <th class="py-3 px-4 text-right">{{ __('Action') }}</th>
+                        <th class="py-3 px-4 text-end">{{ __('Action') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -257,13 +257,13 @@
                                     {{ !empty($row->domains) ? implode(', ', $row->domains) : __('Général') }}
                                 </div>
                             </td>
-                            <td class="py-3 px-4 text-right font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                            <td class="py-3 px-4 text-end font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
                                 {{ format_price($row->monthly_salary, 'MAD') }}
                             </td>
-                            <td class="py-3 px-4 text-right font-bold text-[#0DAD98] whitespace-nowrap">
+                            <td class="py-3 px-4 text-end font-bold text-[#0DAD98] whitespace-nowrap">
                                 {{ format_price($row->paid_amount, 'MAD') }}
                             </td>
-                            <td class="py-3 px-4 text-right font-bold {{ $row->remaining_amount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400' }} whitespace-nowrap">
+                            <td class="py-3 px-4 text-end font-bold {{ $row->remaining_amount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400' }} whitespace-nowrap">
                                 {{ format_price($row->remaining_amount, 'MAD') }}
                             </td>
                             <td class="py-3 px-4 text-center text-slate-500 whitespace-nowrap">
@@ -278,7 +278,7 @@
                                     <span class="finance-badge-unpaid">{{ __('Non payé') }}</span>
                                 @endif
                             </td>
-                            <td class="py-3 px-4 text-right whitespace-nowrap">
+                            <td class="py-3 px-4 text-end whitespace-nowrap">
                                 @if($row->remaining_amount > 0)
                                     <button type="button"
                                             x-on:click="openTeacherSalary('{{ $row->teacher->id }}', '{{ $row->monthly_salary }}', '{{ $row->paid_amount }}')"

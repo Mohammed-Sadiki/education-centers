@@ -22,6 +22,7 @@ class TeacherSalary extends Model
         'currency',
         'status',
         'payment_date',
+        'scheduled_payment_date',
         'payment_method',
         'reference',
         'notes',
@@ -36,6 +37,7 @@ class TeacherSalary extends Model
             'expected_amount' => 'decimal:2',
             'paid_amount' => 'decimal:2',
             'payment_date' => 'date',
+            'scheduled_payment_date' => 'date',
         ];
     }
 
@@ -57,6 +59,44 @@ class TeacherSalary extends Model
     public function getRemainingAmountAttribute(): float
     {
         return max(0, (float) $this->expected_amount - (float) $this->paid_amount);
+    }
+
+    /**
+     * Statut personnel vu par le professeur, calculé à partir des données réelles.
+     *
+     * - paid     : solde intégralement versé.
+     * - overdue  : reste dû ET date prévue connue ET dépassée.
+     * - partial  : un versement partiel a été effectué, sans retard avéré.
+     * - pending  : rien n'est versé et aucune date prévue dépassée.
+     *
+     * On n'affiche JAMAIS « en retard » sans date de versement contractuelle.
+     */
+    public function getPersonalStatusAttribute(): string
+    {
+        $remaining = $this->remaining_amount;
+
+        if ($remaining <= 0.01) {
+            return 'paid';
+        }
+
+        $overdue = $this->scheduled_payment_date !== null
+            && $this->scheduled_payment_date->isPast();
+
+        if ($overdue) {
+            return 'overdue';
+        }
+
+        return (float) $this->paid_amount > 0 ? 'partial' : 'pending';
+    }
+
+    public function getPersonalStatusLabelAttribute(): string
+    {
+        return match ($this->personal_status) {
+            'paid' => __('Versé'),
+            'partial' => __('Partiellement versé'),
+            'overdue' => __('En retard'),
+            default => __('En attente'),
+        };
     }
 
     public function getMonthNameAttribute(): string

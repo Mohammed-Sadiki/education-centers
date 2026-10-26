@@ -86,12 +86,12 @@
                 <input type="hidden" name="type" value="{{ request('type') }}">
             @endif
             <div class="relative flex-1">
-                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-slate-400">
                     <x-icon name="search" class="h-3.5 w-3.5" />
                 </div>
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="{{ __('Rechercher par titre de document ou nom du stagiaire...') }}"
-                       class="block w-full rounded-xl border border-slate-300 bg-slate-50/50 pl-9 pr-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                       class="block w-full rounded-xl border border-slate-300 bg-slate-50/50 ps-9 pe-3 py-2 text-xs text-slate-900 focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
             </div>
             <button type="submit"
                     class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-purple-700 transition">

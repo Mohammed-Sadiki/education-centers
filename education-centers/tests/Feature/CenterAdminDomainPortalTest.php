@@ -15,9 +15,13 @@ use Tests\TestCase;
  * Phase 5 — Portail Admin Centre piloté par domaine (réutilisation du module
  * Super Admin, restreint au centre) + isolation stricte des données.
  *
+ * Les domaines forment un catalogue COMMUN : les six domaines sont disponibles
+ * pour chaque centre, même sans formation. L'isolation porte sur les DONNÉES
+ * (forçage du center_id), jamais sur le catalogue.
+ *
  * Vérifie :
- *  - l'Admin Centre n'est proposé que les domaines de SON centre ;
- *  - un domaine absent de son centre renvoie un 404 (pas de fuite) ;
+ *  - l'Admin Centre voit les six domaines communs sur son portail ;
+ *  - un domaine sans formation dans son centre reste accessible (état vide) ;
  *  - le dashboard domaine ne montre que les données de son centre + domaine ;
  *  - le Super Admin garde l'accès à tous les domaines.
  */
@@ -92,7 +96,7 @@ class CenterAdminDomainPortalTest extends TestCase
         return $student;
     }
 
-    public function test_center_admin_sees_only_own_center_domains_on_picker(): void
+    public function test_center_admin_sees_all_six_common_domains_on_picker(): void
     {
         $domains = $this->actingAs($this->adminA)
             ->get(route('center-admin.domaines'))
@@ -101,10 +105,18 @@ class CenterAdminDomainPortalTest extends TestCase
 
         $slugs = collect($domains)->pluck('slug')->all();
 
-        $this->assertContains('sante', $slugs);
-        $this->assertContains('informatique', $slugs);
-        // hotellerie est proposé par le Centre B, jamais par le Centre A.
-        $this->assertNotContains('hotellerie', $slugs);
+        sort($slugs);
+
+        // Catalogue commun : les six domaines sont disponibles pour chaque centre,
+        // y compris ceux où le centre n'a encore aucune formation (ex : hotellerie).
+        $this->assertSame([
+            'design-graphique',
+            'design-interieur',
+            'hotellerie',
+            'informatique',
+            'maconnerie',
+            'sante',
+        ], $slugs);
     }
 
     public function test_center_admin_domain_dashboard_ok_for_own_domain(): void
@@ -115,12 +127,19 @@ class CenterAdminDomainPortalTest extends TestCase
             ->assertSee('Santé');
     }
 
-    public function test_center_admin_is_blocked_from_foreign_center_domain(): void
+    public function test_center_admin_can_open_common_domain_without_formation_shows_empty_state(): void
     {
-        // « hotellerie » existe globalement mais pas dans le centre A => 404.
-        $this->actingAs($this->adminA)
+        // « hotellerie » est un domaine commun : accessible au Centre A même sans
+        // formation, avec un état vide (aucune donnée du Centre B fuite).
+        $response = $this->actingAs($this->adminA)
             ->get(route('center-admin.domain.dashboard', 'hotellerie'))
-            ->assertNotFound();
+            ->assertOk()
+            ->assertSee('Aucune formation dans ce domaine pour le moment');
+
+        $stats = $response->viewData('stats');
+        // Aucune formation/étudiant hotellerie dans le Centre A => périmètre vide.
+        $this->assertSame(0, $stats['formations']);
+        $this->assertSame(0, $stats['students']);
     }
 
     public function test_center_admin_dashboard_stats_are_center_and_domain_scoped(): void

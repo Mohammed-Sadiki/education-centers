@@ -4,7 +4,6 @@ namespace App\Support;
 
 use App\Http\Controllers\SuperAdminDomainController;
 use App\Models\Domain;
-use App\Models\Formation;
 use Illuminate\Support\Collection;
 
 /**
@@ -127,51 +126,32 @@ class DomainRegistry
     }
 
     /**
-     * Domaines effectivement proposés par un centre : les domaines des
-     * formations rattachées à ce centre. Si le centre n'a aucune formation
-     * (base de test vide, centre fraîchement créé), on retombe sur la liste
-     * visible complète pour ne jamais bloquer la navigation.
+     * Domaines disponibles pour un centre.
+     *
+     * Les domaines constituent un catalogue COMMUN : chaque centre dispose de
+     * tous les domaines actifs, indépendamment du fait qu'il possède déjà des
+     * formations/étudiants dans un domaine. Le périmètre (données réelles) est
+     * filtré par centre au niveau des dashboards et des listes, jamais au
+     * niveau du catalogue — un domaine n'est donc jamais absent « faute de
+     * données ». Méthode conservée pour la rétrocompatibilité d'appel.
      *
      * @return Collection<int, Domain>
      */
     public static function visibleForCenter(int $centerId): Collection
     {
-        $slugs = Formation::query()
-            ->where('center_id', $centerId)
-            ->whereNotNull('domain')
-            ->distinct()
-            ->pluck('domain')
-            ->all();
-
-        if ($slugs === []) {
-            return static::visible();
-        }
-
-        $bySlug = static::visible()->keyBy('slug');
-
-        return collect($slugs)
-            ->map(fn (string $slug): ?Domain => $bySlug->get($slug))
-            ->filter()
-            ->values();
+        return static::visible();
     }
 
     /**
-     * Le domaine est-il proposé par ce centre ? (isolation stricte Admin Centre)
+     * Le domaine est-il disponible pour ce centre ?
+     *
+     * Comme le catalogue est commun, tout domaine actif est disponible pour
+     * tous les centres. L'isolation des données reste assurée par le forçage
+     * du `center_id` côté dashboard/listes (un Admin Centre ne voit jamais les
+     * données d'un autre centre), non par la restriction du catalogue.
      */
     public static function existsForCenter(string $slug, int $centerId): bool
     {
-        $slugs = Formation::query()
-            ->where('center_id', $centerId)
-            ->whereNotNull('domain')
-            ->distinct()
-            ->pluck('domain')
-            ->all();
-
-        // Aucun formation du centre => on s'en remet à la validité globale.
-        if ($slugs === []) {
-            return static::isValid($slug);
-        }
-
-        return in_array($slug, $slugs, true);
+        return static::isValid($slug);
     }
 }
