@@ -722,24 +722,38 @@ html[dir='rtl'] .ltr {
    bouton ni image masqué, curseur classique conservé.
    Désactivé sur tactile et prefers-reduced-motion (CSS + JS).
    ═══════════════════════════════════════════════════════════════════════════ */
+.ec-aurora-layer,
 .ec-aurora {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 0;
     pointer-events: none;
     transform: translate3d(0, 0, 0);
     will-change: transform;
-    opacity: 0.98;
-    transition: opacity 0.4s ease;
 }
 
-/* Fallback statique ou masquage sur tactile / reduced-motion si nécessaire */
+/* Couche 1 : Décor 3D fixe (anneaux, orbes de verre, particules) */
+.ec-aurora-static {
+    z-index: 0;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+/* Couche 2 : Lumière et vagues interactives du curseur */
+.ec-aurora-interactive {
+    z-index: 1;
+    filter: blur(22px);
+    -webkit-filter: blur(22px);
+    opacity: 0.95;
+    transition: opacity 0.3s ease;
+}
+
+/* Si l'utilisateur a configuré une réduction de mouvement */
 @media (prefers-reduced-motion: reduce) {
-    .ec-aurora {
-        opacity: 0.6;
+    .ec-aurora-interactive {
+        display: none !important;
     }
 }
 

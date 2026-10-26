@@ -15,9 +15,9 @@
         }
     </script>
 <body class="relative min-h-screen bg-white text-slate-800 dark:bg-slate-950 dark:text-slate-100 overflow-x-hidden">
-    {{-- Aurores interactives — site vitrine uniquement (absentes des dashboards,
-         du tactile et de prefers-reduced-motion ; voir .ec-aurora dans app.css). --}}
-    <canvas id="ec-aurora" class="ec-aurora" aria-hidden="true"></canvas>
+    {{-- Arrière-plan Aurora 3D : Couche 1 (Décor fixe) + Couche 2 (Lumière souris interactive) --}}
+    <canvas id="ec-aurora-static" class="ec-aurora-layer ec-aurora-static" aria-hidden="true"></canvas>
+    <canvas id="ec-aurora-interactive" class="ec-aurora-layer ec-aurora-interactive" aria-hidden="true"></canvas>
 
     @php
         $navItems = [
