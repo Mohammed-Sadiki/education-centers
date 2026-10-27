@@ -251,7 +251,7 @@
                     <div class="font-monospace small text-primary mb-2">{{ $enrollment->student->student_number }}</div>
 
                     <div class="small text-muted mb-1">
-                        <i class="bi bi-envelope me-1"></i>{{ $enrollment->student->user->email ?? '—' }}
+                        <i class="bi bi-envelope me-1"></i>{{ $enrollment->student->user?->email ?? '—' }}
                     </div>
                     @if($enrollment->student->phone)
                         <div class="small text-muted mb-1">

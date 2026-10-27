@@ -437,4 +437,169 @@ class StudentCreationCentralizationTest extends TestCase
             ->assertOk()
             ->assertSee(route('students.index'), false);
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Inscription administrative DIRECTE — aucun compte utilisateur requis
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function test_create_page_no_longer_asks_for_an_account(): void
+    {
+        foreach ([$this->superAdmin, $this->adminBerlin] as $admin) {
+            $response = $this->actingAs($admin)
+                ->get(route('students.create'))
+                ->assertOk()
+                ->assertSee('Enregistrer l\'élève');
+
+            // Le sélecteur de compte a disparu, ainsi que l'alerte de préinscription.
+            $response->assertDontSee('name="user_id"', false);
+            $response->assertDontSee('Compte utilisateur élève');
+            $response->assertDontSee('Aucun compte élève disponible');
+            $response->assertDontSee('Créer un compte utilisateur');
+        }
+    }
+
+    public function test_super_admin_can_create_student_without_any_user_account(): void
+    {
+        $usersBefore = User::count();
+
+        $response = $this->actingAs($this->superAdmin)->post(route('students.store'), [
+            'center_id' => $this->centerMunich->id,
+            'domain' => 'sante',
+            'formation_id' => $this->formationSanteMunich->id,
+            'first_name' => 'Nadia',
+            'last_name' => 'SansCompte',
+            'date_of_birth' => '2003-02-10',
+            'status' => 'active',
+        ]);
+
+        $response->assertRedirect();
+
+        $student = Student::where('first_name', 'Nadia')->first();
+        $this->assertNotNull($student);
+        $this->assertNull($student->user_id, 'Le dossier doit être créé sans compte lié.');
+        $this->assertSame($this->centerMunich->id, $student->center_id);
+        $this->assertStringStartsWith('MUN-', $student->student_number);
+
+        // Inscription créée normalement.
+        $enrollment = Enrollment::where('student_id', $student->id)->first();
+        $this->assertNotNull($enrollment);
+        $this->assertSame($this->formationSanteMunich->id, $enrollment->formation_id);
+        $this->assertStringStartsWith('MUN-INS-', $enrollment->registration_number);
+
+        // Aucun compte utilisateur fictif n'a été créé.
+        $this->assertSame($usersBefore, User::count());
+    }
+
+    public function test_center_admin_berlin_can_create_student_without_account(): void
+    {
+        $usersBefore = User::count();
+
+        // Aucun user_id, aucun center_id : tout est déduit côté serveur.
+        $response = $this->actingAs($this->adminBerlin)->post(route('students.store'), [
+            'domain' => 'sante',
+            'formation_id' => $this->formationSanteBerlin->id,
+            'first_name' => 'Lena',
+            'last_name' => 'OhneKonto',
+            'status' => 'active',
+        ]);
+
+        $response->assertRedirect();
+
+        $student = Student::where('first_name', 'Lena')->first();
+        $this->assertNotNull($student);
+        $this->assertNull($student->user_id);
+        $this->assertSame($this->centerBerlin->id, $student->center_id);
+        $this->assertStringStartsWith('BER-', $student->student_number);
+        $this->assertSame($usersBefore, User::count());
+    }
+
+    public function test_center_admin_munich_can_create_student_without_account(): void
+    {
+        $this->actingAs($this->adminMunich)->post(route('students.store'), [
+            'domain' => 'sante',
+            'formation_id' => $this->formationSanteMunich->id,
+            'first_name' => 'Max',
+            'last_name' => 'OhneKonto',
+            'status' => 'active',
+        ])->assertRedirect();
+
+        $student = Student::where('first_name', 'Max')->first();
+        $this->assertNotNull($student);
+        $this->assertNull($student->user_id);
+        $this->assertSame($this->centerMunich->id, $student->center_id);
+    }
+
+    public function test_center_admin_without_account_still_cannot_cross_centers(): void
+    {
+        // Admin Berlin tente d'utiliser une formation de Munich, sans compte.
+        $response = $this->actingAs($this->adminBerlin)->post(route('students.store'), [
+            'center_id' => $this->centerMunich->id, // injection ignorée
+            'domain' => 'sante',
+            'formation_id' => $this->formationSanteMunich->id,
+            'first_name' => 'Intrus',
+            'last_name' => 'Test',
+            'status' => 'active',
+        ]);
+
+        $response->assertSessionHasErrors('formation_id');
+        $this->assertDatabaseMissing('students', ['first_name' => 'Intrus']);
+    }
+
+    public function test_multiple_students_without_accounts_can_coexist(): void
+    {
+        // L'index UNIQUE sur user_id autorise plusieurs NULL (MariaDB/MySQL).
+        $this->actingAs($this->adminBerlin)->post(route('students.store'), [
+            'first_name' => 'Awa', 'last_name' => 'Un', 'status' => 'active',
+        ])->assertRedirect();
+
+        $this->actingAs($this->adminBerlin)->post(route('students.store'), [
+            'first_name' => 'Awa', 'last_name' => 'Deux', 'status' => 'active',
+        ])->assertRedirect();
+
+        $nulls = Student::whereNull('user_id')->count();
+        $this->assertGreaterThanOrEqual(2, $nulls);
+
+        $n1 = Student::where('last_name', 'Un')->first();
+        $n2 = Student::where('last_name', 'Deux')->first();
+        $this->assertNotEquals($n1->student_number, $n2->student_number);
+    }
+
+    public function test_student_without_account_is_consultable_and_listed(): void
+    {
+        $student = Student::factory()->forCenter($this->centerBerlin)->withoutAccount()->create([
+            'first_name' => 'Orphelin',
+            'last_name' => 'Dossier',
+        ]);
+
+        $this->assertNull($student->user_id);
+
+        // Liste (le module liste des élèves gère user_id null).
+        $this->actingAs($this->adminBerlin)
+            ->get(route('students.index'))
+            ->assertOk()
+            ->assertSee($student->student_number);
+
+        // Fiche individuelle (affiches null-safe du compte).
+        $this->actingAs($this->adminBerlin)
+            ->get(route('students.show', $student))
+            ->assertOk()
+            ->assertSee($student->student_number);
+    }
+
+    public function test_existing_account_linked_students_still_work(): void
+    {
+        // Récupération : un dossier lié à un compte conserve son comportement.
+        $user = $this->newStudentUser($this->centerBerlin, 'Garde Lien', 'garde@test.de');
+
+        $this->actingAs($this->adminBerlin)->post(route('students.store'), [
+            'user_id' => $user->id,
+            'first_name' => 'Garde',
+            'last_name' => 'Lien',
+            'status' => 'active',
+        ])->assertRedirect();
+
+        $student = Student::where('user_id', $user->id)->first();
+        $this->assertNotNull($student);
+        $this->assertSame($this->centerBerlin->id, $student->center_id);
+    }
 }

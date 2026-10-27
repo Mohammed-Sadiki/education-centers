@@ -139,7 +139,7 @@
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($debtors as $debtor)
                         @php
-                            $phone = $debtor->student->phone ?? $debtor->student->user->phone ?? null;
+                            $phone = $debtor->student->phone ?? $debtor->student->user?->phone ?? null;
                         @endphp
                         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                             <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white whitespace-nowrap">

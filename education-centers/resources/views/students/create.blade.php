@@ -18,7 +18,6 @@
 <div class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6"
      x-data="studentFormApp({
          formations: @js($formationsData),
-         users: @js($usersData),
          isCenterAdmin: @js($isCenterAdmin),
          forcedCenterId: @js($isCenterAdmin ? (int) $authUser->center_id : null),
      })">
@@ -33,21 +32,6 @@
             <div>
                 {{ __('Centre') }} : <strong>{{ $forcedCenter?->translated('name') ?? $forcedCenter?->name }}</strong>
                 — {{ __('Le centre est déterminé automatiquement à partir de votre compte et ne peut pas être modifié.') }}
-            </div>
-        </div>
-    @endif
-
-    @if($availableUsers->isEmpty())
-        <div class="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-            <x-icon name="warning" class="h-5 w-5 shrink-0" />
-            <div>
-                <div class="font-semibold">{{ __('Aucun compte élève disponible') }}</div>
-                <p class="mt-0.5">
-                    {{ __('Tous les comptes ayant le rôle Élève possèdent déjà un dossier, ou aucun compte élève n\'a été créé dans votre périmètre.') }}
-                    @can('create', \App\Models\User::class)
-                        <a href="{{ route('users.create') }}" class="font-semibold underline">{{ __('Créer un compte utilisateur d\'abord') }}</a>
-                    @endcan
-                </p>
             </div>
         </div>
     @endif
@@ -141,33 +125,19 @@
             </div>
         </x-ui.card>
 
-        {{-- Bloc 3 : Compte utilisateur & informations personnelles --}}
+        {{-- Bloc 3 : Informations personnelles de l'élève --}}
         <x-ui.card>
             <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
                 <h2 class="flex items-center gap-2 text-base font-bold text-brand-700 dark:text-brand-300">
                     <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-xs font-extrabold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">3</span>
                     <x-icon name="user" class="h-5 w-5" />
-                    {{ __('Compte & informations de l\'élève') }}
+                    {{ __('Informations de l\'élève') }}
                 </h2>
             </div>
             <div class="grid gap-4 p-5 sm:grid-cols-2">
-                <div class="sm:col-span-2">
-                    <label for="user_id" class="ec-label">{{ __('Compte utilisateur élève') }} <span class="text-red-500">*</span></label>
-                    <select id="user_id" name="user_id" class="ec-select @error('user_id') is-invalid @enderror" required>
-                        <option value="">{{ __('— Sélectionner un compte élève —') }}</option>
-                        @foreach($availableUsers as $user)
-                            <option value="{{ $user->id }}"
-                                    data-center-id="{{ $user->center_id }}"
-                                    data-name="{{ $user->name }}"
-                                    data-phone="{{ $user->phone }}"
-                                    @selected(old('user_id') == $user->id)>
-                                {{ $user->name }} ({{ $user->email }})@if(!$isCenterAdmin && $user->center) — [{{ $user->center->translated('name') }}]@endif
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('user_id') <p class="ec-error">{{ $message }}</p> @enderror
-                    <p class="ec-help">{{ __('Seuls les utilisateurs avec le rôle Élève sans dossier existant sont listés.') }}</p>
-                </div>
+                <p class="ec-help sm:col-span-2">
+                    {{ __('Aucun compte de connexion n\'est requis : le dossier administratif est créé directement. Un compte pourra être associé ultérieurement si besoin.') }}
+                </p>
 
                 <div>
                     <label for="first_name" class="ec-label">{{ __('Prénom') }} <span class="text-red-500">*</span></label>
@@ -304,7 +274,6 @@
     function studentFormApp(config) {
         return {
             formations: config.formations,
-            users: config.users,
             isCenterAdmin: config.isCenterAdmin,
             forcedCenterId: config.forcedCenterId,
             centerId: document.getElementById('center_id')?.value || (config.isCenterAdmin ? String(config.forcedCenterId) : ''),
@@ -337,16 +306,10 @@
             init() {
                 const centerSelect = document.getElementById('center_id');
                 const domainSelect = document.getElementById('domain');
-                const formationSelect = document.getElementById('formation_id');
-                const userSelect = document.getElementById('user_id');
 
                 // Synchronise l'état Alpine avec les selects (natifs, compatibles sans JS).
                 centerSelect?.addEventListener('change', () => { this.centerId = centerSelect.value; this.applyCascade(); });
                 domainSelect?.addEventListener('change', () => { this.domain = domainSelect.value; this.applyCascade(); });
-
-                // Super Admin : le centre choisi filtre les comptes élèves disponibles ;
-                // changer de centre réinitialise une sélection devenue invalide.
-                userSelect?.addEventListener('change', () => { this.prefillFromUser(userSelect); this.applyCascade(); });
 
                 // Centre pré-sélectionné (Admin Centre ou old() du Super Admin).
                 if (this.isCenterAdmin && centerSelect) this.centerId = this.forcedCenterId;
@@ -374,55 +337,9 @@
                     && (selectedFormation.hidden || selectedFormation.disabled)) {
                     formationSelect.value = '';
                 }
-                // Sans centre/domaine choisis, aucune inscription ne peut être transmise.
+                // Sans domaine choisi, aucune inscription ne peut être transmise.
                 if (this.domain === '' && selectedFormation?.dataset?.centerId) {
                     formationSelect.value = '';
-                }
-
-                // Super Admin : filtrer les comptes élèves selon le centre.
-                if (!this.isCenterAdmin && center !== '') {
-                    const userSelect = document.getElementById('user_id');
-                    userSelect.querySelectorAll('option[data-center-id]').forEach((option) => {
-                        const match = option.dataset.centerId === center;
-                        option.hidden = !match;
-                        option.disabled = !match;
-                    });
-                    const selectedUser = userSelect.selectedOptions[0];
-                    if (selectedUser?.dataset?.centerId && (selectedUser.hidden || selectedUser.disabled)) {
-                        userSelect.value = '';
-                    }
-                }
-            },
-
-            prefillFromUser(userSelect) {
-                const selected = userSelect.selectedOptions[0];
-                if (!selected || !selected.value) return;
-
-                const centerSelect = document.getElementById('center_id');
-                const firstNameInput = document.getElementById('first_name');
-                const lastNameInput = document.getElementById('last_name');
-                const phoneInput = document.getElementById('phone');
-
-                // Le compte impose son centre (garanti aussi côté serveur).
-                if (selected.dataset.centerId) {
-                    if (centerSelect) {
-                        centerSelect.value = selected.dataset.centerId;
-                        this.centerId = selected.dataset.centerId;
-                    }
-                }
-
-                const fullName = selected.dataset.name || '';
-                if (fullName && !firstNameInput.value && !lastNameInput.value) {
-                    const parts = fullName.trim().split(' ');
-                    if (parts.length > 1) {
-                        firstNameInput.value = parts[0];
-                        lastNameInput.value = parts.slice(1).join(' ');
-                    } else {
-                        firstNameInput.value = parts[0];
-                    }
-                }
-                if (selected.dataset.phone && !phoneInput.value) {
-                    phoneInput.value = selected.dataset.phone;
                 }
             },
         };

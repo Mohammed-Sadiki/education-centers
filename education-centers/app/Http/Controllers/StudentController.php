@@ -8,7 +8,6 @@ use App\Models\Center;
 use App\Models\Enrollment;
 use App\Models\Formation;
 use App\Models\Student;
-use App\Models\User;
 use App\Support\DomainRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -75,8 +74,9 @@ class StudentController extends Controller
     }
 
     /**
-     * Formulaire de création d'un élève (centralisé depuis la page Domaines).
-     * Cascade : centre (Super Admin uniquement) → domaine → formation → dossier.
+     * Formulaire de création indépendante d'un élève (centralisé depuis la page
+     * Domaines). Aucun compte de connexion n'est requis : le dossier est créé
+     * directement. Cascade : centre (Super Admin) → domaine → formation → dossier.
      */
     public function create(Request $request): View
     {
@@ -84,21 +84,8 @@ class StudentController extends Controller
 
         $authUser = $request->user();
 
-        // Récupérer les utilisateurs ayant le rôle 'student' sans dossier étudiant existant
-        $usersQuery = User::where('role', User::ROLE_STUDENT)
-            ->whereDoesntHave('student')
-            ->with('center')
-            ->orderBy('name');
-
-        if ($authUser->isCenterAdmin()) {
-            $usersQuery->where('center_id', $authUser->center_id);
-            $centers = collect();
-        } else {
-            // Super Admin
-            $centers = Center::orderBy('name')->get();
-        }
-
-        $availableUsers = $usersQuery->get();
+        // Liste des centres : sélectionnable uniquement par le Super Admin.
+        $centers = $authUser->isCenterAdmin() ? collect() : Center::orderBy('name')->get();
 
         // Catalogue des domaines (commun aux centres, source de vérité `domains`).
         $domains = $authUser->isCenterAdmin()
@@ -125,24 +112,10 @@ class StudentController extends Controller
             ])
             ->values();
 
-        // Comptes élèves disponibles, avec centre pour le filtrage dynamique (Super Admin).
-        $usersData = $availableUsers
-            ->map(fn (User $user): array => [
-                'id'          => $user->id,
-                'name'        => $user->name,
-                'email'       => $user->email,
-                'phone'       => $user->phone,
-                'center_id'   => $user->center_id,
-                'center_name' => $user->center ? $user->center->translated('name') : '',
-            ])
-            ->values();
-
         return view('students.create', compact(
-            'availableUsers',
             'centers',
             'domains',
             'formationsData',
-            'usersData',
         ));
     }
 
@@ -153,19 +126,24 @@ class StudentController extends Controller
     public function store(StoreStudentRequest $request): RedirectResponse
     {
         $authUser = $request->user();
-        $targetUser = User::findOrFail($request->validated('user_id'));
 
-        // Détermination stricte du center_id côté serveur
-        $centerId = $authUser->isCenterAdmin() ? $authUser->center_id : $targetUser->center_id;
+        // Détermination stricte du center_id côté serveur. Le compte utilisateur
+        // n'entre plus en compte : Super Admin = centre choisi (obligatoire à la
+        // validation), Admin Centre = son propre centre, quelle que soit la requête.
+        $centerId = $authUser->isCenterAdmin()
+            ? $authUser->center_id
+            : $request->validated('center_id');
         $center = Center::findOrFail($centerId);
 
         // Génération automatique du student_number côté serveur
         $studentNumber = Student::generateStudentNumber($center);
 
         $data = $request->validated();
-        unset($data['domain'], $data['formation_id']);
+        unset($data['domain'], $data['formation_id'], $data['center_id']);
         $data['center_id'] = $centerId;
         $data['student_number'] = $studentNumber;
+        // user_id est facultatif : null = dossier créé sans compte de connexion.
+        $data['user_id'] = $data['user_id'] ?? null;
 
         $formationId = $request->validated('formation_id');
 

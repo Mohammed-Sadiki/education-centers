@@ -31,8 +31,13 @@ class StoreStudentRequest extends FormRequest
         $authUser = $this->user();
 
         return [
+            // Le compte de connexion est désormais FACULTATIF : un dossier élève
+            // peut être créé directement par un administrateur, sans préinscription.
+            // Grâce à « nullable », les règles suivantes (role, centre, unicité) ne
+            // s'appliquent que lorsqu'un user_id est effectivement transmis — ce qui
+            // préserve le comportement pour les comptes déjà liés.
             'user_id' => [
-                'required',
+                'nullable',
                 'integer',
                 'exists:users,id',
                 'unique:students,user_id',
@@ -113,11 +118,12 @@ class StoreStudentRequest extends FormRequest
                 return; // Déjà traité par la règle exists.
             }
 
-            // Centre effectif, déterminé côté serveur.
-            $targetUser = User::find($this->input('user_id'));
+            // Centre effectif, déterminé côté serveur (jamais le center_id brut
+            // d'un Admin Centre). Le compte utilisateur n'entre plus en ligne de
+            // compte : pour un Super Admin, c'est le center_id choisi qui fait foi.
             $centerId = $authUser->isCenterAdmin()
                 ? (int) $authUser->center_id
-                : (int) ($targetUser?->center_id ?? $this->input('center_id'));
+                : (int) $this->input('center_id');
 
             if (! $formation->isActive()) {
                 $validator->errors()->add('formation_id', __('La formation sélectionnée est inactive.'));

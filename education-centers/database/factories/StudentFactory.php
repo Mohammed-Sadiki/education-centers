@@ -60,6 +60,17 @@ class StudentFactory extends Factory
         ]);
     }
 
+    /**
+     * Dossier élève créé sans compte de connexion (user_id null).
+     * À combiner avec forCenter() pour cibler un centre donné.
+     */
+    public function withoutAccount(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'user_id' => null,
+        ]);
+    }
+
     public function inactive(): static
     {
         return $this->state(fn (array $attributes) => [
