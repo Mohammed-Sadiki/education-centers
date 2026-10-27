@@ -1,376 +1,431 @@
-@extends('layouts.app')
+@extends('layouts.standalone')
 
-@section('title', __('Nouveau dossier élève') . ' — ' . config('app.name'))
-@section('description', __('Création d’un dossier administratif étudiant'))
+@section('title', __('Ajouter un élève') . ' — ' . config('app.name'))
+@section('description', __('Création d\'un dossier élève avec inscription à une formation.'))
+@section('standalone_title', __('Ajouter un élève'))
 
-@section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('students.index') }}">{{ __('Élèves') }}</a></li>
-    <li class="breadcrumb-item active" aria-current="page">{{ __('Nouveau dossier') }}</li>
-@endsection
+@php
+    $authUser = auth()->user();
+    $isCenterAdmin = $authUser->isCenterAdmin();
+    $forcedCenter = $isCenterAdmin ? $authUser->center : null;
+    $backUrl = $isCenterAdmin ? route('center-admin.domaines') : route('super-admin.domaines');
+@endphp
+
+@section('standalone_back_url', $backUrl)
+@section('standalone_back_label', __('Retour aux domaines'))
 
 @section('content')
-<div class="container-fluid px-4 py-4">
+<div class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6"
+     x-data="studentFormApp({
+         formations: @js($formationsData),
+         users: @js($usersData),
+         isCenterAdmin: @js($isCenterAdmin),
+         forcedCenterId: @js($isCenterAdmin ? (int) $authUser->center_id : null),
+     })">
 
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
+    {{-- Titre de la page (le retour aux domaines est dans la topbar) --}}
+    <x-ui.page-header :title="__('Ajouter un élève')" :description="__('Rattachement au centre, choix du domaine et de la formation, puis informations de l\'élève.')" />
 
-            {{-- En-tête --}}
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <div>
-                    <h1 class="h3 fw-bold mb-0">
-                        <i class="bi bi-person-plus-fill text-primary me-2"></i>{{ __('Nouveau Dossier Élève') }}
-                    </h1>
-                    <p class="text-muted small mb-0 mt-1">
-                        {{ __('Associez un compte utilisateur étudiant à un dossier administratif.') }}
-                    </p>
-                </div>
-                <a href="{{ route('students.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i>{{ __('Retour') }}
-                </a>
+    {{-- Bandeau centre automatique (Admin Centre) : le centre n'est pas modifiable --}}
+    @if($isCenterAdmin)
+        <div class="mb-4 flex items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-800 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-200">
+            <x-icon name="building" class="h-5 w-5 shrink-0" />
+            <div>
+                {{ __('Centre') }} : <strong>{{ $forcedCenter?->translated('name') ?? $forcedCenter?->name }}</strong>
+                — {{ __('Le centre est déterminé automatiquement à partir de votre compte et ne peut pas être modifié.') }}
             </div>
-
-            @if($availableUsers->isEmpty())
-                <div class="alert alert-warning border-0 shadow-sm mb-4">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-exclamation-triangle-fill fs-3 me-3 text-warning"></i>
-                        <div>
-                            <h5 class="alert-heading mb-1 fw-bold">{{ __('Aucun compte élève disponible') }}</h5>
-                            <p class="mb-0 small">
-                                {{ __('Tous les comptes ayant le rôle') }} <em>{{ __('Élève (student)') }}</em> {{ __('possèdent déjà un dossier étudiant, ou aucun compte élève n\'a été créé dans votre périmètre.') }}
-                            </p>
-                            @can('create', \App\Models\User::class)
-                                <a href="{{ route('users.create') }}" class="btn btn-warning btn-sm mt-2 fw-semibold">
-                                    <i class="bi bi-person-plus-fill me-1"></i>{{ __('Créer un compte utilisateur d\'abord') }}
-                                </a>
-                            @endcan
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            <form method="POST" action="{{ route('students.store') }}" id="form-create-student">
-                @csrf
-
-                {{-- Bloc 1 : Rattachement Compte Utilisateur & Centre --}}
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="card-title mb-0 fw-bold text-primary">
-                            <i class="bi bi-person-badge me-2"></i>{{ __('1. Rattachement du compte') }}
-                        </h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row g-3">
-                            {{-- Sélection du compte étudiant --}}
-                            <div class="col-md-{{ auth()->user()->isSuperAdmin() ? '6' : '12' }}">
-                                <label for="user_id" class="form-label fw-semibold">
-                                    {{ __('Compte utilisateur élève') }} <span class="text-danger">*</span>
-                                </label>
-                                <select id="user_id" name="user_id" class="form-select @error('user_id') is-invalid @enderror" required>
-                                    <option value="">{{ __('-- Sélectionner un compte élève --') }}</option>
-                                    @foreach($availableUsers as $user)
-                                        <option value="{{ $user->id }}"
-                                                data-center-id="{{ $user->center_id }}"
-                                                data-name="{{ $user->name }}"
-                                                data-phone="{{ $user->phone }}"
-                                                {{ old('user_id') == $user->id ? 'selected' : '' }}>
-                                            {{ $user->name }} ({{ $user->email }})
-                                            @if(auth()->user()->isSuperAdmin() && $user->center)
-                                                — [{{ $user->center->name }}]
-                                            @endif
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('user_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <div class="form-text">
-                                    {{ __('Seuls les utilisateurs avec le rôle') }} <em>{{ __('Élève') }}</em> {{ __('sans dossier existant sont listés.') }}
-                                </div>
-                            </div>
-
-                            {{-- Super Admin : filtre de centre d'affectation si souhaité --}}
-                            @if(auth()->user()->isSuperAdmin())
-                                <div class="col-md-6">
-                                    <label for="center_id" class="form-label fw-semibold">
-                                        {{ __('Centre éducatif') }} <span class="text-danger">*</span>
-                                    </label>
-                                    <select id="center_id" name="center_id" class="form-select @error('center_id') is-invalid @enderror" required>
-                                        <option value="">{{ __('-- Sélectionner le centre --') }}</option>
-                                        @foreach($centers as $center)
-                                            <option value="{{ $center->id }}" {{ old('center_id') == $center->id ? 'selected' : '' }}>
-                                                {{ $center->translated('name') }} ({{ $center->code }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('center_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    <div class="form-text">
-                                        {{ __('Le numéro étudiant sera automatiquement préfixé par le code du centre (ex: BER-000001).') }}
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Bloc 2 : Informations personnelles --}}
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="card-title mb-0 fw-bold text-primary">
-                            <i class="bi bi-person-lines-fill me-2"></i>{{ __('2. Informations personnelles') }}
-                        </h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="first_name" class="form-label fw-semibold">
-                                    {{ __('Prénom') }} <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" id="first_name" name="first_name"
-                                       class="form-control @error('first_name') is-invalid @enderror"
-                                       value="{{ old('first_name') }}" required>
-                                @error('first_name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="last_name" class="form-label fw-semibold">
-                                    {{ __('Nom') }} <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" id="last_name" name="last_name"
-                                       class="form-control @error('last_name') is-invalid @enderror"
-                                       value="{{ old('last_name') }}" required>
-                                @error('last_name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="date_of_birth" class="form-label fw-semibold">{{ __('Date de naissance') }}</label>
-                                <input type="date" id="date_of_birth" name="date_of_birth"
-                                       class="form-control @error('date_of_birth') is-invalid @enderror"
-                                       value="{{ old('date_of_birth') }}">
-                                @error('date_of_birth')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="place_of_birth" class="form-label fw-semibold">{{ __('Lieu de naissance') }}</label>
-                                <input type="text" id="place_of_birth" name="place_of_birth"
-                                       class="form-control @error('place_of_birth') is-invalid @enderror"
-                                       value="{{ old('place_of_birth') }}" placeholder="{{ __('Ex: Berlin') }}">
-                                @error('place_of_birth')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="gender" class="form-label fw-semibold">{{ __('Genre') }}</label>
-                                <select id="gender" name="gender" class="form-select @error('gender') is-invalid @enderror">
-                                    <option value="">{{ __('Non précisé') }}</option>
-                                    <option value="male"   {{ old('gender') === 'male'   ? 'selected' : '' }}>{{ __('Masculin') }}</option>
-                                    <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>{{ __('Féminin') }}</option>
-                                    <option value="other"  {{ old('gender') === 'other'  ? 'selected' : '' }}>{{ __('Autre') }}</option>
-                                </select>
-                                @error('gender')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="nationality" class="form-label fw-semibold">{{ __('Nationalité') }}</label>
-                                <input type="text" id="nationality" name="nationality"
-                                       class="form-control @error('nationality') is-invalid @enderror"
-                                       value="{{ old('nationality', 'Allemande') }}">
-                                @error('nationality')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="phone" class="form-label fw-semibold">{{ __('Numéro de téléphone') }}</label>
-                                <input type="text" id="phone" name="phone"
-                                       class="form-control @error('phone') is-invalid @enderror"
-                                       value="{{ old('phone') }}" placeholder="+49 30 1234567">
-                                @error('phone')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Bloc 3 : Adresse & Coordonnées --}}
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="card-title mb-0 fw-bold text-primary">
-                            <i class="bi bi-geo-alt me-2"></i>{{ __('3. Coordonnées & Adresse') }}
-                        </h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label for="address" class="form-label fw-semibold">{{ __('Adresse postale') }}</label>
-                                <input type="text" id="address" name="address"
-                                       class="form-control @error('address') is-invalid @enderror"
-                                       value="{{ old('address') }}" placeholder="{{ __('Ex: Friedrichstraße 42') }}">
-                                @error('address')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="postal_code" class="form-label fw-semibold">{{ __('Code postal') }}</label>
-                                <input type="text" id="postal_code" name="postal_code"
-                                       class="form-control @error('postal_code') is-invalid @enderror"
-                                       value="{{ old('postal_code') }}" placeholder="{{ __('Ex: 10117') }}">
-                                @error('postal_code')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="city" class="form-label fw-semibold">{{ __('Ville') }}</label>
-                                <input type="text" id="city" name="city"
-                                       class="form-control @error('city') is-invalid @enderror"
-                                       value="{{ old('city') }}" placeholder="{{ __('Ex: Berlin') }}">
-                                @error('city')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="country" class="form-label fw-semibold">{{ __('Pays') }}</label>
-                                <input type="text" id="country" name="country"
-                                       class="form-control @error('country') is-invalid @enderror"
-                                       value="{{ old('country', 'Germany') }}">
-                                @error('country')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Bloc 4 : Contact d'urgence & Notes --}}
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="card-title mb-0 fw-bold text-primary">
-                            <i class="bi bi-telephone-plus me-2"></i>{{ __('4. Contact d\'urgence & Statut') }}
-                        </h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label for="emergency_contact_name" class="form-label fw-semibold">{{ __('Nom du contact') }}</label>
-                                <input type="text" id="emergency_contact_name" name="emergency_contact_name"
-                                       class="form-control @error('emergency_contact_name') is-invalid @enderror"
-                                       value="{{ old('emergency_contact_name') }}" placeholder="{{ __('Ex: Klaus Müller') }}">
-                                @error('emergency_contact_name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="emergency_contact_phone" class="form-label fw-semibold">{{ __('Téléphone d\'urgence') }}</label>
-                                <input type="text" id="emergency_contact_phone" name="emergency_contact_phone"
-                                       class="form-control @error('emergency_contact_phone') is-invalid @enderror"
-                                       value="{{ old('emergency_contact_phone') }}" placeholder="+49 170 9876543">
-                                @error('emergency_contact_phone')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="emergency_contact_relation" class="form-label fw-semibold">{{ __('Lien de parenté / relation') }}</label>
-                                <input type="text" id="emergency_contact_relation" name="emergency_contact_relation"
-                                       class="form-control @error('emergency_contact_relation') is-invalid @enderror"
-                                       value="{{ old('emergency_contact_relation') }}" placeholder="{{ __('Ex: Père, Mère, Conjoint') }}">
-                                @error('emergency_contact_relation')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-12">
-                                <label for="notes" class="form-label fw-semibold">{{ __('Notes & Observations administratives') }}</label>
-                                <textarea id="notes" name="notes" rows="3"
-                                          class="form-control @error('notes') is-invalid @enderror"
-                                          placeholder="{{ __('Notes internes éventuelles...') }}">{{ old('notes') }}</textarea>
-                                @error('notes')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="status" class="form-label fw-semibold">
-                                    {{ __('Statut initial du dossier') }} <span class="text-danger">*</span>
-                                </label>
-                                <select id="status" name="status" class="form-select @error('status') is-invalid @enderror" required>
-                                    <option value="active"   {{ old('status', 'active') === 'active'   ? 'selected' : '' }}>{{ __('Actif') }}</option>
-                                    <option value="inactive" {{ old('status') === 'inactive' ? 'selected' : '' }}>{{ __('Inactif') }}</option>
-                                </select>
-                                @error('status')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Boutons d'action --}}
-                <div class="d-flex justify-content-end gap-3 mb-5">
-                    <a href="{{ route('students.index') }}" class="btn btn-outline-secondary px-4">{{ __('Annuler') }}</a>
-                    <button type="submit" class="btn btn-primary px-5 shadow-sm" id="btn-submit-student">
-                        <i class="bi bi-check-circle-fill me-1"></i>{{ __('Enregistrer le dossier élève') }}
-                    </button>
-                </div>
-            </form>
-
         </div>
-    </div>
+    @endif
 
+    @if($availableUsers->isEmpty())
+        <div class="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+            <x-icon name="warning" class="h-5 w-5 shrink-0" />
+            <div>
+                <div class="font-semibold">{{ __('Aucun compte élève disponible') }}</div>
+                <p class="mt-0.5">
+                    {{ __('Tous les comptes ayant le rôle Élève possèdent déjà un dossier, ou aucun compte élève n\'a été créé dans votre périmètre.') }}
+                    @can('create', \App\Models\User::class)
+                        <a href="{{ route('users.create') }}" class="font-semibold underline">{{ __('Créer un compte utilisateur d\'abord') }}</a>
+                    @endcan
+                </p>
+            </div>
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('students.store') }}" id="form-create-student" class="space-y-4">
+        @csrf
+
+        {{-- Bloc 1 : Centre & Domaine --}}
+        <x-ui.card>
+            <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+                <h2 class="flex items-center gap-2 text-base font-bold text-brand-700 dark:text-brand-300">
+                    <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-xs font-extrabold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">1</span>
+                    <x-icon name="building" class="h-5 w-5" />
+                    {{ __('Centre & domaine de formation') }}
+                </h2>
+            </div>
+            <div class="grid gap-4 p-5 sm:grid-cols-2">
+                @if($isCenterAdmin)
+                    {{-- Aucun champ de sélection du centre : rattachement automatique --}}
+                    <div class="sm:col-span-2">
+                        <label class="ec-label">{{ __('Centre de formation') }}</label>
+                        <div class="ec-input flex items-center justify-between bg-slate-50 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+                            <span>{{ $forcedCenter?->translated('name') ?? $forcedCenter?->name }}</span>
+                            <span class="ec-badge bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">{{ __('Automatique') }}</span>
+                        </div>
+                        <p class="ec-help">{{ __('L\'élève sera rattaché exclusivement à ce centre.') }}</p>
+                    </div>
+                @else
+                    <div>
+                        <label for="center_id" class="ec-label">{{ __('Centre de formation') }} <span class="text-red-500">*</span></label>
+                        <select id="center_id" name="center_id" class="ec-select @error('center_id') is-invalid @enderror" required>
+                            <option value="">{{ __('— Sélectionner le centre —') }}</option>
+                            @foreach($centers as $center)
+                                <option value="{{ $center->id }}" @selected(old('center_id') == $center->id)>
+                                    {{ $center->translated('name') }} ({{ $center->code }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('center_id') <p class="ec-error">{{ $message }}</p> @enderror
+                        <p class="ec-help">{{ __('Le numéro étudiant sera automatiquement préfixé par le code du centre (ex : BER-000001).') }}</p>
+                    </div>
+                @endif
+
+                <div class="sm:col-span-2">
+                    <label for="domain" class="ec-label">{{ __('Domaine de formation') }} <span class="text-red-500">*</span></label>
+                    <select id="domain" name="domain" class="ec-select @error('domain') is-invalid @enderror" required>
+                        <option value="">{{ __('— Sélectionner le domaine —') }}</option>
+                        @foreach($domains as $domain)
+                            <option value="{{ $domain->slug }}" @selected(old('domain') === $domain->slug)>{{ $domain->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('domain') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+            </div>
+        </x-ui.card>
+
+        {{-- Bloc 2 : Formation --}}
+        <x-ui.card>
+            <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+                <h2 class="flex items-center gap-2 text-base font-bold text-brand-700 dark:text-brand-300">
+                    <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-xs font-extrabold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">2</span>
+                    <x-icon name="book" class="h-5 w-5" />
+                    {{ __('Formation') }}
+                </h2>
+            </div>
+            <div class="p-5">
+                <label for="formation_id" class="ec-label">{{ __('Formation souhaitée') }}</label>
+                <select id="formation_id" name="formation_id" class="ec-select @error('formation_id') is-invalid @enderror">
+                    <option value="">{{ __('— Aucune inscription (créer seulement le dossier) —') }}</option>
+                    @foreach($formationsData as $formation)
+                        <option value="{{ $formation['id'] }}"
+                                data-center-id="{{ $formation['center_id'] }}"
+                                data-domain="{{ $formation['domain'] }}"
+                                @selected(old('formation_id') == $formation['id'])>
+                            {{ $formation['name'] }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('formation_id') <p class="ec-error">{{ $message }}</p> @enderror
+
+                {{-- États dynamiques --}}
+                <p x-show="!needCenterDomain" class="ec-help">
+                    {{ __('Sélectionnez d\'abord le centre et le domaine : seules les formations correspondantes seront proposées.') }}
+                </p>
+                <div x-show="noFormation" x-cloak class="mt-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400">
+                    {{ __('Aucune formation n\'est disponible pour ce centre et ce domaine. Le dossier élève sera créé sans inscription à une formation.') }}
+                </div>
+                <p x-show="formationOk" x-cloak class="ec-help">
+                    <span x-text="visibleFormationCount"></span> {{ __('formation(s) disponible(s) pour ce centre et ce domaine.') }}
+                </p>
+            </div>
+        </x-ui.card>
+
+        {{-- Bloc 3 : Compte utilisateur & informations personnelles --}}
+        <x-ui.card>
+            <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+                <h2 class="flex items-center gap-2 text-base font-bold text-brand-700 dark:text-brand-300">
+                    <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-xs font-extrabold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">3</span>
+                    <x-icon name="user" class="h-5 w-5" />
+                    {{ __('Compte & informations de l\'élève') }}
+                </h2>
+            </div>
+            <div class="grid gap-4 p-5 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                    <label for="user_id" class="ec-label">{{ __('Compte utilisateur élève') }} <span class="text-red-500">*</span></label>
+                    <select id="user_id" name="user_id" class="ec-select @error('user_id') is-invalid @enderror" required>
+                        <option value="">{{ __('— Sélectionner un compte élève —') }}</option>
+                        @foreach($availableUsers as $user)
+                            <option value="{{ $user->id }}"
+                                    data-center-id="{{ $user->center_id }}"
+                                    data-name="{{ $user->name }}"
+                                    data-phone="{{ $user->phone }}"
+                                    @selected(old('user_id') == $user->id)>
+                                {{ $user->name }} ({{ $user->email }})@if(!$isCenterAdmin && $user->center) — [{{ $user->center->translated('name') }}]@endif
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('user_id') <p class="ec-error">{{ $message }}</p> @enderror
+                    <p class="ec-help">{{ __('Seuls les utilisateurs avec le rôle Élève sans dossier existant sont listés.') }}</p>
+                </div>
+
+                <div>
+                    <label for="first_name" class="ec-label">{{ __('Prénom') }} <span class="text-red-500">*</span></label>
+                    <input type="text" id="first_name" name="first_name" class="ec-input @error('first_name') is-invalid @enderror"
+                           value="{{ old('first_name') }}" required>
+                    @error('first_name') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="last_name" class="ec-label">{{ __('Nom') }} <span class="text-red-500">*</span></label>
+                    <input type="text" id="last_name" name="last_name" class="ec-input @error('last_name') is-invalid @enderror"
+                           value="{{ old('last_name') }}" required>
+                    @error('last_name') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="date_of_birth" class="ec-label">{{ __('Date de naissance') }}</label>
+                    <input type="date" id="date_of_birth" name="date_of_birth" class="ec-input @error('date_of_birth') is-invalid @enderror"
+                           value="{{ old('date_of_birth') }}">
+                    @error('date_of_birth') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="place_of_birth" class="ec-label">{{ __('Lieu de naissance') }}</label>
+                    <input type="text" id="place_of_birth" name="place_of_birth" class="ec-input @error('place_of_birth') is-invalid @enderror"
+                           value="{{ old('place_of_birth') }}" placeholder="{{ __('Ex : Berlin') }}">
+                    @error('place_of_birth') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="gender" class="ec-label">{{ __('Genre') }}</label>
+                    <select id="gender" name="gender" class="ec-select @error('gender') is-invalid @enderror">
+                        <option value="">{{ __('Non précisé') }}</option>
+                        <option value="male" @selected(old('gender') === 'male')>{{ __('Masculin') }}</option>
+                        <option value="female" @selected(old('gender') === 'female')>{{ __('Féminin') }}</option>
+                        <option value="other" @selected(old('gender') === 'other')>{{ __('Autre') }}</option>
+                    </select>
+                    @error('gender') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="nationality" class="ec-label">{{ __('Nationalité') }}</label>
+                    <input type="text" id="nationality" name="nationality" class="ec-input @error('nationality') is-invalid @enderror"
+                           value="{{ old('nationality', 'Allemande') }}">
+                    @error('nationality') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div class="sm:col-span-2">
+                    <label for="phone" class="ec-label">{{ __('Numéro de téléphone') }}</label>
+                    <input type="text" id="phone" name="phone" class="ec-input @error('phone') is-invalid @enderror"
+                           value="{{ old('phone') }}" placeholder="+49 30 1234567">
+                    @error('phone') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+            </div>
+        </x-ui.card>
+
+        {{-- Bloc 4 : Adresse, contact d'urgence & statut --}}
+        <x-ui.card>
+            <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+                <h2 class="flex items-center gap-2 text-base font-bold text-brand-700 dark:text-brand-300">
+                    <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-xs font-extrabold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">4</span>
+                    <x-icon name="map" class="h-5 w-5" />
+                    {{ __('Adresse, contact d\'urgence & statut') }}
+                </h2>
+            </div>
+            <div class="grid gap-4 p-5 sm:grid-cols-3">
+                <div class="sm:col-span-3">
+                    <label for="address" class="ec-label">{{ __('Adresse postale') }}</label>
+                    <input type="text" id="address" name="address" class="ec-input @error('address') is-invalid @enderror"
+                           value="{{ old('address') }}" placeholder="{{ __('Ex : Friedrichstraße 42') }}">
+                    @error('address') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="postal_code" class="ec-label">{{ __('Code postal') }}</label>
+                    <input type="text" id="postal_code" name="postal_code" class="ec-input @error('postal_code') is-invalid @enderror"
+                           value="{{ old('postal_code') }}" placeholder="{{ __('Ex : 10117') }}">
+                    @error('postal_code') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="city" class="ec-label">{{ __('Ville') }}</label>
+                    <input type="text" id="city" name="city" class="ec-input @error('city') is-invalid @enderror"
+                           value="{{ old('city') }}" placeholder="{{ __('Ex : Berlin') }}">
+                    @error('city') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="country" class="ec-label">{{ __('Pays') }}</label>
+                    <input type="text" id="country" name="country" class="ec-input @error('country') is-invalid @enderror"
+                           value="{{ old('country', 'Germany') }}">
+                    @error('country') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="emergency_contact_name" class="ec-label">{{ __('Nom du contact d\'urgence') }}</label>
+                    <input type="text" id="emergency_contact_name" name="emergency_contact_name" class="ec-input @error('emergency_contact_name') is-invalid @enderror"
+                           value="{{ old('emergency_contact_name') }}" placeholder="{{ __('Ex : Klaus Müller') }}">
+                    @error('emergency_contact_name') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="emergency_contact_phone" class="ec-label">{{ __('Téléphone d\'urgence') }}</label>
+                    <input type="text" id="emergency_contact_phone" name="emergency_contact_phone" class="ec-input @error('emergency_contact_phone') is-invalid @enderror"
+                           value="{{ old('emergency_contact_phone') }}" placeholder="+49 170 9876543">
+                    @error('emergency_contact_phone') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="emergency_contact_relation" class="ec-label">{{ __('Lien avec le contact d\'urgence') }}</label>
+                    <input type="text" id="emergency_contact_relation" name="emergency_contact_relation" class="ec-input @error('emergency_contact_relation') is-invalid @enderror"
+                           value="{{ old('emergency_contact_relation') }}" placeholder="{{ __('Ex : Père, Mère, Conjoint') }}">
+                    @error('emergency_contact_relation') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div class="sm:col-span-2">
+                    <label for="notes" class="ec-label">{{ __('Notes & observations administratives') }}</label>
+                    <textarea id="notes" name="notes" rows="2" class="ec-textarea @error('notes') is-invalid @enderror"
+                              placeholder="{{ __('Notes internes éventuelles…') }}">{{ old('notes') }}</textarea>
+                    @error('notes') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="status" class="ec-label">{{ __('Statut initial du dossier') }} <span class="text-red-500">*</span></label>
+                    <select id="status" name="status" class="ec-select @error('status') is-invalid @enderror" required>
+                        <option value="active" @selected(old('status', 'active') === 'active')>{{ __('Actif') }}</option>
+                        <option value="inactive" @selected(old('status') === 'inactive')>{{ __('Inactif') }}</option>
+                    </select>
+                    @error('status') <p class="ec-error">{{ $message }}</p> @enderror
+                </div>
+            </div>
+        </x-ui.card>
+
+        {{-- Actions --}}
+        <div class="flex flex-wrap items-center justify-end gap-3 pb-6">
+            <a href="{{ route('students.index') }}" class="ec-btn-secondary">{{ __('Annuler') }}</a>
+            <button type="submit" class="ec-btn-primary px-6" id="btn-submit-student">
+                <x-icon name="check" class="h-4 w-4" />
+                {{ __('Enregistrer l\'élève') }}
+            </button>
+        </div>
+    </form>
 </div>
+@endsection
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const userSelect = document.getElementById('user_id');
-        const centerSelect = document.getElementById('center_id');
-        const firstNameInput = document.getElementById('first_name');
-        const lastNameInput = document.getElementById('last_name');
-        const phoneInput = document.getElementById('phone');
+    function studentFormApp(config) {
+        return {
+            formations: config.formations,
+            users: config.users,
+            isCenterAdmin: config.isCenterAdmin,
+            forcedCenterId: config.forcedCenterId,
+            centerId: document.getElementById('center_id')?.value || (config.isCenterAdmin ? String(config.forcedCenterId) : ''),
+            domain: document.getElementById('domain')?.value || '',
+            visibleFormationCount: 0,
 
-        // Pré-remplir automatiquement prénom / nom / centre si sélection d'un compte
-        userSelect.addEventListener('change', function () {
-            const selected = userSelect.options[userSelect.selectedIndex];
-            if (!selected || !selected.value) return;
+            get effectiveCenterId() {
+                return this.isCenterAdmin ? String(this.forcedCenterId) : String(this.centerId || '');
+            },
 
-            const fullName = selected.getAttribute('data-name') || '';
-            const userPhone = selected.getAttribute('data-phone') || '';
-            const centerId = selected.getAttribute('data-center-id');
+            get needCenterDomain() {
+                return this.effectiveCenterId !== '' && this.domain !== '';
+            },
 
-            if (fullName && (!firstNameInput.value && !lastNameInput.value)) {
-                const parts = fullName.trim().split(' ');
-                if (parts.length > 1) {
-                    firstNameInput.value = parts[0];
-                    lastNameInput.value = parts.slice(1).join(' ');
-                } else {
-                    firstNameInput.value = parts[0];
+            get availableFormations() {
+                if (!this.needCenterDomain) return [];
+                return this.formations.filter(f =>
+                    String(f.center_id) === this.effectiveCenterId && f.domain === this.domain
+                );
+            },
+
+            get noFormation() {
+                return this.needCenterDomain && this.availableFormations.length === 0;
+            },
+
+            get formationOk() {
+                return this.needCenterDomain && this.availableFormations.length > 0;
+            },
+
+            init() {
+                const centerSelect = document.getElementById('center_id');
+                const domainSelect = document.getElementById('domain');
+                const formationSelect = document.getElementById('formation_id');
+                const userSelect = document.getElementById('user_id');
+
+                // Synchronise l'état Alpine avec les selects (natifs, compatibles sans JS).
+                centerSelect?.addEventListener('change', () => { this.centerId = centerSelect.value; this.applyCascade(); });
+                domainSelect?.addEventListener('change', () => { this.domain = domainSelect.value; this.applyCascade(); });
+
+                // Super Admin : le centre choisi filtre les comptes élèves disponibles ;
+                // changer de centre réinitialise une sélection devenue invalide.
+                userSelect?.addEventListener('change', () => { this.prefillFromUser(userSelect); this.applyCascade(); });
+
+                // Centre pré-sélectionné (Admin Centre ou old() du Super Admin).
+                if (this.isCenterAdmin && centerSelect) this.centerId = this.forcedCenterId;
+                this.applyCascade();
+            },
+
+            applyCascade() {
+                const center = this.effectiveCenterId;
+
+                // Filtrage des options de formation (centre + domaine).
+                const formationSelect = document.getElementById('formation_id');
+                let visible = 0;
+                formationSelect.querySelectorAll('option[data-center-id]').forEach((option) => {
+                    const match = center !== '' && option.dataset.centerId === center
+                        && (this.domain === '' || option.dataset.domain === this.domain);
+                    option.hidden = !match;
+                    option.disabled = !match;
+                    if (match) visible++;
+                });
+                this.visibleFormationCount = visible;
+
+                // Réinitialiser la formation si elle n'est plus valide.
+                const selectedFormation = formationSelect.selectedOptions[0];
+                if (selectedFormation && selectedFormation.dataset.centerId
+                    && (selectedFormation.hidden || selectedFormation.disabled)) {
+                    formationSelect.value = '';
                 }
-            }
+                // Sans centre/domaine choisis, aucune inscription ne peut être transmise.
+                if (this.domain === '' && selectedFormation?.dataset?.centerId) {
+                    formationSelect.value = '';
+                }
 
-            if (userPhone && !phoneInput.value) {
-                phoneInput.value = userPhone;
-            }
+                // Super Admin : filtrer les comptes élèves selon le centre.
+                if (!this.isCenterAdmin && center !== '') {
+                    const userSelect = document.getElementById('user_id');
+                    userSelect.querySelectorAll('option[data-center-id]').forEach((option) => {
+                        const match = option.dataset.centerId === center;
+                        option.hidden = !match;
+                        option.disabled = !match;
+                    });
+                    const selectedUser = userSelect.selectedOptions[0];
+                    if (selectedUser?.dataset?.centerId && (selectedUser.hidden || selectedUser.disabled)) {
+                        userSelect.value = '';
+                    }
+                }
+            },
 
-            if (centerSelect && centerId) {
-                centerSelect.value = centerId;
-            }
-        });
-    });
+            prefillFromUser(userSelect) {
+                const selected = userSelect.selectedOptions[0];
+                if (!selected || !selected.value) return;
+
+                const centerSelect = document.getElementById('center_id');
+                const firstNameInput = document.getElementById('first_name');
+                const lastNameInput = document.getElementById('last_name');
+                const phoneInput = document.getElementById('phone');
+
+                // Le compte impose son centre (garanti aussi côté serveur).
+                if (selected.dataset.centerId) {
+                    if (centerSelect) {
+                        centerSelect.value = selected.dataset.centerId;
+                        this.centerId = selected.dataset.centerId;
+                    }
+                }
+
+                const fullName = selected.dataset.name || '';
+                if (fullName && !firstNameInput.value && !lastNameInput.value) {
+                    const parts = fullName.trim().split(' ');
+                    if (parts.length > 1) {
+                        firstNameInput.value = parts[0];
+                        lastNameInput.value = parts.slice(1).join(' ');
+                    } else {
+                        firstNameInput.value = parts[0];
+                    }
+                }
+                if (selected.dataset.phone && !phoneInput.value) {
+                    phoneInput.value = selected.dataset.phone;
+                }
+            },
+        };
+    }
 </script>
 @endpush
-@endsection

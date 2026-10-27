@@ -1,0 +1,440 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Center;
+use App\Models\Enrollment;
+use App\Models\Formation;
+use App\Models\Student;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+/**
+ * Centralisation de la création des élèves dans la page « Domaines de formation ».
+ *
+ * Vérifie : bouton déplacé (pages internes sans bouton, page Domaines avec),
+ * terminologie « Élèves », cascade centre → domaine → formation, et isolation
+ * multi-centres strictement appliquée côté serveur (non contournable par une
+ * requête HTTP modifiée).
+ */
+class StudentCreationCentralizationTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected Center $centerBerlin;
+    protected Center $centerMunich;
+    protected User $superAdmin;
+    protected User $adminBerlin;
+    protected User $adminMunich;
+    protected Formation $formationSanteBerlin;
+    protected Formation $formationSanteMunich;
+    protected Formation $formationInfoBerlin;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->centerBerlin = Center::factory()->create(['name' => 'Centre Berlin', 'code' => 'BER']);
+        $this->centerMunich = Center::factory()->create(['name' => 'Centre Munich', 'code' => 'MUN']);
+
+        $this->superAdmin = User::factory()->superAdmin()->create(['email' => 'sa@test.de']);
+        $this->adminBerlin = User::factory()->centerAdmin($this->centerBerlin->id)->create(['email' => 'ab@test.de']);
+        $this->adminMunich = User::factory()->centerAdmin($this->centerMunich->id)->create(['email' => 'am@test.de']);
+
+        $this->formationSanteBerlin = Formation::factory()->forCenter($this->centerBerlin)->forDomain('sante')->create();
+        $this->formationSanteMunich = Formation::factory()->forCenter($this->centerMunich)->forDomain('sante')->create();
+        $this->formationInfoBerlin = Formation::factory()->forCenter($this->centerBerlin)->forDomain('informatique')->create();
+    }
+
+    private function newStudentUser(Center $center, string $name, string $email): User
+    {
+        return User::factory()->student($center->id)->create(['name' => $name, 'email' => $email]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Déplacement du bouton + terminologie
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function test_super_admin_sees_add_student_button_on_domaines_page(): void
+    {
+        $this->actingAs($this->superAdmin)
+            ->get(route('super-admin.domaines'))
+            ->assertOk()
+            ->assertSee('btn-add-student-domaines', false)
+            ->assertSee('Ajouter un élève')
+            ->assertSee(route('students.create'), false);
+    }
+
+    public function test_center_admin_sees_add_student_button_on_domaines_page(): void
+    {
+        foreach ([$this->adminBerlin, $this->adminMunich] as $admin) {
+            $this->actingAs($admin)
+                ->get(route('center-admin.domaines'))
+                ->assertOk()
+                ->assertSee('btn-add-student-ca-domaines', false)
+                ->assertSee('Ajouter un élève');
+        }
+    }
+
+    public function test_domaines_page_still_shows_the_six_domain_cards(): void
+    {
+        $response = $this->actingAs($this->superAdmin)
+            ->get(route('super-admin.domaines'))
+            ->assertOk();
+
+        foreach (['sante', 'informatique', 'hotellerie', 'maconnerie', 'design-interieur', 'design-graphique'] as $slug) {
+            $response->assertSee($slug, false);
+        }
+    }
+
+    public function test_students_list_no_longer_shows_create_button(): void
+    {
+        foreach ([$this->superAdmin, $this->adminBerlin] as $admin) {
+            $this->actingAs($admin)
+                ->get(route('students.index'))
+                ->assertOk()
+                ->assertDontSee('btn-create-student', false)
+                ->assertDontSee('Nouveau dossier élève');
+        }
+    }
+
+    public function test_students_list_title_is_renamed_to_eleves(): void
+    {
+        $this->actingAs($this->superAdmin)
+            ->get(route('students.index'))
+            ->assertOk()
+            ->assertSee('Élèves')
+            ->assertDontSee('Dossiers Élèves');
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Formulaire : contexte selon le rôle
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function test_super_admin_create_form_shows_center_selection(): void
+    {
+        $this->actingAs($this->superAdmin)
+            ->get(route('students.create'))
+            ->assertOk()
+            ->assertSee('name="center_id"', false)
+            ->assertSee('name="domain"', false)
+            ->assertSee('name="formation_id"', false)
+            ->assertSee('Centre Berlin')
+            ->assertSee('Centre Munich');
+    }
+
+    public function test_center_admin_create_form_hides_center_selection(): void
+    {
+        foreach ([[$this->adminBerlin, 'Centre Berlin'], [$this->adminMunich, 'Centre Munich']] as [$admin, $centerName]) {
+            $this->actingAs($admin)
+                ->get(route('students.create'))
+                ->assertOk()
+                ->assertDontSee('name="center_id"', false)
+                ->assertSee('Automatique', false)
+                ->assertSee($centerName);
+        }
+    }
+
+    public function test_center_admin_create_form_only_lists_own_center_formations(): void
+    {
+        $response = $this->actingAs($this->adminBerlin)
+            ->get(route('students.create'))
+            ->assertOk();
+
+        // Options serveur : uniquement les formations de Berlin.
+        $content = $response->getContent();
+        $this->assertStringContainsString('value="'.$this->formationSanteBerlin->id.'"', $content);
+        $this->assertStringNotContainsString('value="'.$this->formationSanteMunich->id.'"', $content);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Enregistrement : cascade + inscription à la formation
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function test_super_admin_can_create_student_with_valid_center_domain_formation(): void
+    {
+        $user = $this->newStudentUser($this->centerMunich, 'Sophie Test', 'sophie@test.de');
+
+        $response = $this->actingAs($this->superAdmin)->post(route('students.store'), [
+            'user_id' => $user->id,
+            'center_id' => $this->centerMunich->id,
+            'domain' => 'sante',
+            'formation_id' => $this->formationSanteMunich->id,
+            'first_name' => 'Sophie',
+            'last_name' => 'Test',
+            'status' => 'active',
+        ]);
+
+        $response->assertRedirect();
+
+        $student = Student::where('user_id', $user->id)->first();
+        $this->assertNotNull($student);
+        $this->assertSame($this->centerMunich->id, $student->center_id);
+
+        $enrollment = Enrollment::where('student_id', $student->id)->first();
+        $this->assertNotNull($enrollment);
+        $this->assertSame($this->formationSanteMunich->id, $enrollment->formation_id);
+        $this->assertSame($this->centerMunich->id, $enrollment->center_id);
+        $this->assertSame(Enrollment::STATUS_PENDING, $enrollment->status);
+        $this->assertStringStartsWith('MUN-INS-', $enrollment->registration_number);
+    }
+
+    public function test_student_can_still_be_created_without_formation(): void
+    {
+        $user = $this->newStudentUser($this->centerBerlin, 'Jean Test', 'jean@test.de');
+
+        $response = $this->actingAs($this->superAdmin)->post(route('students.store'), [
+            'user_id' => $user->id,
+            'center_id' => $this->centerBerlin->id,
+            'first_name' => 'Jean',
+            'last_name' => 'Test',
+            'status' => 'active',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('students', ['user_id' => $user->id, 'center_id' => $this->centerBerlin->id]);
+        $this->assertSame(0, Enrollment::count());
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Sécurité : rien ne vient du navigateur sans vérification serveur
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function test_center_admin_can_create_student_auto_enrolled_in_own_center(): void
+    {
+        $user = $this->newStudentUser($this->centerBerlin, 'Mia Berlin', 'mia@test.de');
+
+        // Aucun center_id transmis : le centre Berlin est déduit du compte connecté.
+        $response = $this->actingAs($this->adminBerlin)->post(route('students.store'), [
+            'user_id' => $user->id,
+            'domain' => 'sante',
+            'formation_id' => $this->formationSanteBerlin->id,
+            'first_name' => 'Mia',
+            'last_name' => 'Berlin',
+            'status' => 'active',
+        ]);
+
+        $response->assertRedirect();
+
+        $student = Student::where('user_id', $user->id)->first();
+        $this->assertNotNull($student);
+        $this->assertSame($this->centerBerlin->id, $student->center_id);
+        $this->assertStringStartsWith('BER-', $student->student_number);
+
+        $enrollment = Enrollment::where('student_id', $student->id)->first();
+        $this->assertNotNull($enrollment);
+        $this->assertSame($this->formationSanteBerlin->id, $enrollment->formation_id);
+        $this->assertSame($this->centerBerlin->id, $enrollment->center_id);
+        $this->assertStringStartsWith('BER-INS-', $enrollment->registration_number);
+    }
+
+    public function test_center_admin_cannot_use_formation_of_another_center(): void
+    {
+        $user = $this->newStudentUser($this->centerBerlin, 'Clara Test', 'clara@test.de');
+
+        // Admin Berlin tente d'inscrire à une formation de Munich (requête modifiée).
+        $response = $this->actingAs($this->adminBerlin)->post(route('students.store'), [
+            'user_id' => $user->id,
+            'center_id' => $this->centerMunich->id, // tentative d'injection
+            'domain' => 'sante',
+            'formation_id' => $this->formationSanteMunich->id,
+            'first_name' => 'Clara',
+            'last_name' => 'Test',
+            'status' => 'active',
+        ]);
+
+        $response->assertSessionHasErrors('formation_id');
+        $this->assertDatabaseMissing('students', ['user_id' => $user->id]);
+        $this->assertSame(0, Enrollment::count());
+    }
+
+    public function test_center_admin_create_is_forced_to_own_center(): void
+    {
+        $user = $this->newStudentUser($this->centerMunich, 'Lukas Test', 'lukas@test.de');
+
+        // Admin Munich tente de créer le dossier en injectant le centre Berlin.
+        $response = $this->actingAs($this->adminMunich)->post(route('students.store'), [
+            'user_id' => $user->id,
+            'center_id' => $this->centerBerlin->id,
+            'domain' => 'sante',
+            'formation_id' => $this->formationSanteBerlin->id,
+            'first_name' => 'Lukas',
+            'last_name' => 'Test',
+            'status' => 'active',
+        ]);
+
+        // Le center_id injecté est ignoré : le centre effectif reste Munich.
+        // La formation de Berlin est donc refusée, et aucune création ne passe.
+        $response->assertSessionHasErrors('formation_id');
+        $this->assertDatabaseMissing('students', ['user_id' => $user->id]);
+    }
+
+    public function test_super_admin_cannot_use_formation_outside_selected_center(): void
+    {
+        $user = $this->newStudentUser($this->centerBerlin, 'Anna Test', 'anna2@test.de');
+
+        // Formation de Munich transmise avec un compte/centre Berlin.
+        $response = $this->actingAs($this->superAdmin)->post(route('students.store'), [
+            'user_id' => $user->id,
+            'center_id' => $this->centerBerlin->id,
+            'domain' => 'sante',
+            'formation_id' => $this->formationSanteMunich->id,
+            'first_name' => 'Anna',
+            'last_name' => 'Test',
+            'status' => 'active',
+        ]);
+
+        $response->assertSessionHasErrors('formation_id');
+        $this->assertDatabaseMissing('students', ['user_id' => $user->id]);
+    }
+
+    public function test_formation_domain_mismatch_is_rejected(): void
+    {
+        $user = $this->newStudentUser($this->centerBerlin, 'Bob Test', 'bob@test.de');
+
+        // Domaine « informatique » associé à une formation Santé.
+        $response = $this->actingAs($this->superAdmin)->post(route('students.store'), [
+            'user_id' => $user->id,
+            'center_id' => $this->centerBerlin->id,
+            'domain' => 'informatique',
+            'formation_id' => $this->formationSanteBerlin->id,
+            'first_name' => 'Bob',
+            'last_name' => 'Test',
+            'status' => 'active',
+        ]);
+
+        $response->assertSessionHasErrors('formation_id');
+        $this->assertDatabaseMissing('students', ['user_id' => $user->id]);
+    }
+
+    public function test_inactive_formation_is_rejected(): void
+    {
+        $inactive = Formation::factory()->forCenter($this->centerBerlin)->forDomain('sante')->inactive()->create();
+        $user = $this->newStudentUser($this->centerBerlin, 'Eve Test', 'eve@test.de');
+
+        $response = $this->actingAs($this->adminBerlin)->post(route('students.store'), [
+            'user_id' => $user->id,
+            'domain' => 'sante',
+            'formation_id' => $inactive->id,
+            'first_name' => 'Eve',
+            'last_name' => 'Test',
+            'status' => 'active',
+        ]);
+
+        $response->assertSessionHasErrors('formation_id');
+        $this->assertDatabaseMissing('students', ['user_id' => $user->id]);
+    }
+
+    public function test_unknown_domain_slug_is_rejected(): void
+    {
+        $user = $this->newStudentUser($this->centerBerlin, 'Tom Test', 'tom@test.de');
+
+        $response = $this->actingAs($this->adminBerlin)->post(route('students.store'), [
+            'user_id' => $user->id,
+            'domain' => 'domaine-inexistant',
+            'first_name' => 'Tom',
+            'last_name' => 'Test',
+            'status' => 'active',
+        ]);
+
+        $response->assertSessionHasErrors('domain');
+        $this->assertDatabaseMissing('students', ['user_id' => $user->id]);
+    }
+
+    public function test_teacher_and_student_cannot_reach_centralized_creation(): void
+    {
+        $teacher = User::factory()->teacher($this->centerBerlin->id)->create(['email' => 't@test.de']);
+        $studentUser = $this->newStudentUser($this->centerBerlin, 'Kid Test', 'kid@test.de');
+
+        $this->actingAs($teacher)->get(route('students.create'))->assertForbidden();
+        $this->actingAs($studentUser)->get(route('students.create'))->assertForbidden();
+        $this->actingAs($teacher)->post(route('students.store'), [])->assertForbidden();
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    //  Page « Ajouter un élève » indépendante (aucune sidebar pédagogique)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function test_super_admin_create_page_has_no_pedagogical_sidebar(): void
+    {
+        // Contexte domaine actif : même en étant « dans » Santé, la page dédiée
+        // ne doit rendre aucun élément du dashboard pédagogique.
+        session(['active_domain' => 'sante']);
+
+        $response = $this->actingAs($this->superAdmin)
+            ->get(route('students.create'))
+            ->assertOk()
+            ->assertSee('standalone-layout', false)
+            ->assertSee('btn-back-domaines', false);
+
+        // Note : « users.index » est exclu car son URI (/users) est un sous-ensemble
+        // de celle de users.create, lien légitime de l'alerte « aucun compte élève ».
+        foreach (['teachers.index', 'classes.index', 'payments.index', 'attendances.index', 'schedules.index', 'centers.index'] as $name) {
+            $response->assertDontSee(route($name), false);
+        }
+        $response->assertDontSee('Pédagogie');
+    }
+
+    public function test_center_admin_create_page_has_no_pedagogical_sidebar(): void
+    {
+        session(['active_domain' => 'sante']);
+
+        foreach ([$this->adminBerlin, $this->adminMunich] as $admin) {
+            $response = $this->actingAs($admin)
+                ->get(route('students.create'))
+                ->assertOk();
+
+            $response->assertSee('standalone-layout', false)
+                ->assertSee('btn-back-domaines', false)
+                ->assertDontSee(route('teachers.index'), false)
+                ->assertDontSee(route('centers.index'), false)
+                ->assertDontSee('Pédagogie');
+        }
+    }
+
+    public function test_back_to_domaines_button_targets_the_right_portal_per_role(): void
+    {
+        $this->actingAs($this->superAdmin)
+            ->get(route('students.create'))
+            ->assertOk()
+            ->assertSee(route('super-admin.domaines'), false)
+            ->assertSee('Retour aux domaines');
+
+        $this->actingAs($this->adminBerlin)
+            ->get(route('students.create'))
+            ->assertOk()
+            ->assertSee(route('center-admin.domaines'), false)
+            ->assertDontSee(route('super-admin.domaines'), false);
+    }
+
+    public function test_no_add_student_link_anywhere_in_dashboard_navigation(): void
+    {
+        // La liste des élèves (avec sa sidebar) ne doit plus contenir de lien
+        // vers la création ; le point d'entrée unique reste la page Domaines.
+        $this->actingAs($this->superAdmin)
+            ->get(route('students.index'))
+            ->assertOk()
+            ->assertDontSee(route('students.create'), false);
+
+        $this->actingAs($this->adminBerlin)
+            ->get(route('students.index'))
+            ->assertOk()
+            ->assertDontSee(route('students.create'), false);
+    }
+
+    public function test_students_list_link_still_functional_in_sidebar(): void
+    {
+        // Le module « Étudiants » reste accessible depuis la sidebar des dashboards.
+        $this->actingAs($this->superAdmin)
+            ->get(route('students.index'))
+            ->assertOk()
+            ->assertSee(route('students.index'), false)
+            ->assertSee('Étudiants');
+
+        $this->actingAs($this->adminBerlin)
+            ->get(route('teachers.index'))
+            ->assertOk()
+            ->assertSee(route('students.index'), false);
+    }
+}

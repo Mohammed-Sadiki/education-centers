@@ -1,12 +1,8 @@
 @extends('layouts.app')
-@section('title', __('Dossiers Élèves') . ' — ' . config('app.name'))
+@section('title', __('Élèves') . ' — ' . config('app.name'))
 
 @section('content')
-<x-ui.page-header :title="__('Dossiers Élèves')" :description="auth()->user()->isSuperAdmin() ? __('Tous les centres') : __('Centre :') . ' ' . auth()->user()->center?->name">
-    @can('create', \App\Models\Student::class)
-        <a href="{{ route('students.create') }}" class="ec-btn-primary" id="btn-create-student"><x-icon name="plus" class="h-4 w-4" /> {{ __('Nouveau dossier élève') }}</a>
-    @endcan
-</x-ui.page-header>
+<x-ui.page-header :title="__('Élèves')" :description="auth()->user()->isSuperAdmin() ? __('Tous les centres') : __('Centre :') . ' ' . auth()->user()->center?->name" />
 
 <x-ui.card class="mb-4">
     <form method="GET" action="{{ route('students.index') }}" id="form-filter-students" class="grid gap-3 md:grid-cols-6">
@@ -65,7 +61,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6"><x-ui.empty :title="__('Aucun dossier élève trouvé.')" /></td></tr>
+                <tr><td colspan="6"><x-ui.empty :title="__('Aucun élève trouvé.')" /></td></tr>
             @endforelse
         </tbody>
     </table>

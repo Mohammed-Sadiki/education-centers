@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Models\Center;
+use App\Models\Enrollment;
+use App\Models\Formation;
 use App\Models\Student;
 use App\Models\User;
+use App\Support\DomainRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
@@ -71,7 +75,8 @@ class StudentController extends Controller
     }
 
     /**
-     * Formulaire de création d'un dossier étudiant.
+     * Formulaire de création d'un élève (centralisé depuis la page Domaines).
+     * Cascade : centre (Super Admin uniquement) → domaine → formation → dossier.
      */
     public function create(Request $request): View
     {
@@ -82,6 +87,7 @@ class StudentController extends Controller
         // Récupérer les utilisateurs ayant le rôle 'student' sans dossier étudiant existant
         $usersQuery = User::where('role', User::ROLE_STUDENT)
             ->whereDoesntHave('student')
+            ->with('center')
             ->orderBy('name');
 
         if ($authUser->isCenterAdmin()) {
@@ -94,11 +100,55 @@ class StudentController extends Controller
 
         $availableUsers = $usersQuery->get();
 
-        return view('students.create', compact('availableUsers', 'centers'));
+        // Catalogue des domaines (commun aux centres, source de vérité `domains`).
+        $domains = $authUser->isCenterAdmin()
+            ? DomainRegistry::visibleForCenter((int) $authUser->center_id)
+            : DomainRegistry::visible();
+
+        // Catalogue des formations actives, restreint au centre pour un Admin Centre.
+        $formationsQuery = Formation::query()
+            ->where('status', 'active')
+            ->orderBy('name');
+
+        if ($authUser->isCenterAdmin()) {
+            $formationsQuery->where('center_id', $authUser->center_id);
+        }
+
+        // Données plates pour la cascade dynamique (Alpine) centre → domaine → formation.
+        $formationsData = $formationsQuery
+            ->get(['id', 'center_id', 'domain', 'name'])
+            ->map(fn (Formation $formation): array => [
+                'id'        => $formation->id,
+                'center_id' => $formation->center_id,
+                'domain'    => $formation->domain,
+                'name'      => $formation->translated('name'),
+            ])
+            ->values();
+
+        // Comptes élèves disponibles, avec centre pour le filtrage dynamique (Super Admin).
+        $usersData = $availableUsers
+            ->map(fn (User $user): array => [
+                'id'          => $user->id,
+                'name'        => $user->name,
+                'email'       => $user->email,
+                'phone'       => $user->phone,
+                'center_id'   => $user->center_id,
+                'center_name' => $user->center ? $user->center->translated('name') : '',
+            ])
+            ->values();
+
+        return view('students.create', compact(
+            'availableUsers',
+            'centers',
+            'domains',
+            'formationsData',
+            'usersData',
+        ));
     }
 
     /**
-     * Enregistrer un nouveau dossier étudiant.
+     * Enregistrer un nouveau dossier étudiant (+ inscription à la formation
+     * sélectionnée, avec la logique métier existante des inscriptions).
      */
     public function store(StoreStudentRequest $request): RedirectResponse
     {
@@ -113,14 +163,45 @@ class StudentController extends Controller
         $studentNumber = Student::generateStudentNumber($center);
 
         $data = $request->validated();
+        unset($data['domain'], $data['formation_id']);
         $data['center_id'] = $centerId;
         $data['student_number'] = $studentNumber;
 
-        $student = Student::create($data);
+        $formationId = $request->validated('formation_id');
+
+        [$student, $enrollment] = DB::transaction(function () use ($data, $formationId, $center, $centerId): array {
+            $student = Student::create($data);
+
+            $enrollment = null;
+            if ($formationId) {
+                // Logique d'inscription existante : numéro généré, statut initial « en attente ».
+                $enrollment = Enrollment::create([
+                    'center_id'           => $centerId,
+                    'student_id'          => $student->id,
+                    'formation_id'        => $formationId,
+                    'application_date'    => now()->toDateString(),
+                    'status'              => Enrollment::STATUS_PENDING,
+                    'registration_number' => Enrollment::generateRegistrationNumber($center),
+                ]);
+            }
+
+            return [$student, $enrollment];
+        });
+
+        $message = __('Le dossier étudiant :student_number (:full_name) a été créé avec succès.', [
+            'student_number' => $student->student_number,
+            'full_name'      => $student->full_name,
+        ]);
+
+        if ($enrollment) {
+            $message .= ' ' . __('Inscription :registration_number créée en attente de traitement.', [
+                'registration_number' => $enrollment->registration_number,
+            ]);
+        }
 
         return redirect()
             ->route('students.show', $student)
-            ->with('success', __('Le dossier étudiant :student_number (:full_name) a été créé avec succès.', ['student_number' => $student->student_number, 'full_name' => $student->full_name]));
+            ->with('success', $message);
     }
 
     /**

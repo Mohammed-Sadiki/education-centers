@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Formation;
 use App\Models\Student;
 use App\Models\User;
+use App\Support\DomainRegistry;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreStudentRequest extends FormRequest
 {
@@ -67,6 +70,11 @@ class StoreStudentRequest extends FormRequest
                 $authUser->isSuperAdmin() ? 'required' : 'nullable',
                 'exists:centers,id',
             ],
+            // Cascade centralisée (page Domaines) : domaine puis formation.
+            // Facultatifs pour rester compatibles avec les appels existants,
+            // mais vérifiés côté serveur dès qu'ils sont fournis (cf. withValidator).
+            'domain' => ['nullable', 'string', Rule::in(DomainRegistry::slugs())],
+            'formation_id' => ['nullable', 'integer', 'exists:formations,id'],
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'date_of_birth' => ['nullable', 'date', 'before:today'],
@@ -87,6 +95,47 @@ class StoreStudentRequest extends FormRequest
     }
 
     /**
+     * Contrôles croisés de la cascade centre → domaine → formation.
+     * Jamais confiance au center_id transmis par le navigateur pour un Admin
+     * Centre : le centre effectif est celui du compte connecté.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $authUser = $this->user();
+
+            if (! $this->filled('formation_id')) {
+                return;
+            }
+
+            $formation = Formation::find($this->input('formation_id'));
+            if (! $formation) {
+                return; // Déjà traité par la règle exists.
+            }
+
+            // Centre effectif, déterminé côté serveur.
+            $targetUser = User::find($this->input('user_id'));
+            $centerId = $authUser->isCenterAdmin()
+                ? (int) $authUser->center_id
+                : (int) ($targetUser?->center_id ?? $this->input('center_id'));
+
+            if (! $formation->isActive()) {
+                $validator->errors()->add('formation_id', __('La formation sélectionnée est inactive.'));
+            }
+
+            // Isolation multi-centres : la formation doit appartenir au centre retenu.
+            if ((int) $formation->center_id !== $centerId) {
+                $validator->errors()->add('formation_id', __('La formation sélectionnée n\'appartient pas au centre choisi.'));
+            }
+
+            // Cohérence domaine / formation (le domaine est celui de la formation).
+            if ($this->filled('domain') && $formation->domain !== $this->input('domain')) {
+                $validator->errors()->add('formation_id', __('La formation sélectionnée n\'appartient pas au domaine choisi.'));
+            }
+        });
+    }
+
+    /**
      * Custom attribute names.
      */
     public function attributes(): array
@@ -94,6 +143,8 @@ class StoreStudentRequest extends FormRequest
         return [
             'user_id' => __('compte utilisateur élève'),
             'center_id' => __('centre éducatif'),
+            'domain' => __('domaine de formation'),
+            'formation_id' => __('formation'),
             'first_name' => __('prénom'),
             'last_name' => __('nom'),
             'date_of_birth' => __('date de naissance'),
