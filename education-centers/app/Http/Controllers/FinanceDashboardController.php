@@ -24,6 +24,7 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -247,73 +248,23 @@ class FinanceDashboardController extends Controller
     }
 
     /**
-     * Vue dédiée : Salaires professeurs
+     * Vue dédiée : Salaires professeurs.
+     *
+     * La gestion des salaires est désormais intégrée à « Dépenses » comme une
+     * catégorie de charge. Cette rubrique autonome n'existe plus : on redirige
+     * vers Dépenses (filtrée sur la catégorie « Salaires des professeurs ») pour
+     * ne laisser qu'une seule interface de gestion, sans casser les anciens liens.
      */
-    public function teachers(Request $request): View
+    public function teachers(Request $request): RedirectResponse
     {
-        $domain = $this->resolveDomain($request);
-        $schoolYear = $request->query('school_year', '2026/2027');
-        $month = (int) $request->query('month', (int) now()->format('n'));
-        if ($month < 1 || $month > 12) {
-            $month = 10;
-        }
-        $year = (int) $request->query('year', 2026);
-        $status = $request->query('status', 'all');
-        $centerId = $this->resolveCenterScope($request);
-        $search = trim((string) $request->query('search', ''));
+        $params = array_filter([
+            'category_id' => $this->salaryCategoryId(),
+            'school_year' => $request->query('school_year'),
+            'center_id' => $request->query('center_id'),
+        ], fn ($v) => $v !== null && $v !== '');
 
-        $allTeacherRows = $this->financeService->getTeacherSalaryRows($domain, $month, $year, $schoolYear, $centerId);
-
-        $teacherRows = $allTeacherRows;
-
-        if ($status !== 'all') {
-            $teacherRows = $teacherRows->where('status', $status);
-        }
-
-        if ($search !== '') {
-            $searchLower = mb_strtolower($search);
-            $teacherRows = $teacherRows->filter(function ($row) use ($searchLower) {
-                return str_contains(mb_strtolower($row->teacher->full_name), $searchLower)
-                    || str_contains(mb_strtolower($row->teacher->teacher_number ?? ''), $searchLower);
-            });
-        }
-
-        // Statistiques globales du mois
-        $stats = [
-            'total_attendus' => (float) $allTeacherRows->sum('monthly_salary'),
-            'total_payes' => (float) $allTeacherRows->sum('paid_amount'),
-            'total_restant' => (float) $allTeacherRows->sum('remaining_amount'),
-            'count_teachers' => $allTeacherRows->count(),
-            'count_paid' => $allTeacherRows->where('status', 'paid')->count(),
-            'count_partial' => $allTeacherRows->where('status', 'partial')->count(),
-            'count_unpaid' => $allTeacherRows->where('status', 'unpaid')->count(),
-            'rate_paid' => $allTeacherRows->sum('monthly_salary') > 0
-                ? round(($allTeacherRows->sum('paid_amount') / $allTeacherRows->sum('monthly_salary')) * 100, 1)
-                : 0.0,
-        ];
-
-        $domains = FinanceService::getDomains();
-        $schoolYears = FinanceService::SCHOOL_YEARS;
-        $centers = Center::orderBy('name')->get();
-        $teachersList = Teacher::with('center')->where('status', 'active')->orderBy('last_name')->get();
-        $monthsNames = FinanceService::monthNames();
-
-        return view('super-admin.finance.teachers', compact(
-            'teacherRows',
-            'stats',
-            'domain',
-            'schoolYear',
-            'month',
-            'year',
-            'status',
-            'centerId',
-            'search',
-            'domains',
-            'schoolYears',
-            'centers',
-            'teachersList',
-            'monthsNames'
-        ));
+        return redirect()->route('super-admin.finance.expenses', $params)
+            ->with('info', __('La gestion des salaires des professeurs est désormais intégrée aux Dépenses.'));
     }
 
     /**
@@ -591,25 +542,85 @@ class FinanceDashboardController extends Controller
         $categoryId = $request->query('category_id') ? (int) $request->query('category_id') : null;
         $search = $request->query('search');
 
-        $query = Expense::with(['category', 'center', 'recorder', 'items'])
-            ->where('school_year', $schoolYear);
+        $salaryCategoryId = $this->salaryCategoryId();
 
-        if ($centerId) {
-            $query->where('center_id', $centerId);
-        }
-        if ($categoryId) {
-            $query->where('category_id', $categoryId);
-        }
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('supplier', 'like', "%{$search}%")
-                    ->orWhere('reference', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
+        // Catégorie sélectionnée = « Salaires » ⇒ on n'affiche que les salaires ;
+        // autre catégorie ⇒ uniquement les dépenses de cette catégorie ;
+        // aucune catégorie ⇒ vue unifiée dépenses + salaires.
+        $isSalaryFilter = $categoryId === $salaryCategoryId;
+        $showExpenses = ! $categoryId || ! $isSalaryFilter;
+        $showSalaries = ! $categoryId || $isSalaryFilter;
+
+        // ── Dépenses classiques ────────────────────────────────────────────
+        $chargeRows = collect();
+
+        if ($showExpenses) {
+            $query = Expense::with(['category', 'center', 'recorder', 'items'])
+                ->where('school_year', $schoolYear);
+
+            if ($centerId) {
+                $query->where('center_id', $centerId);
+            }
+            if ($categoryId) {
+                $query->where('category_id', $categoryId);
+            }
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                        ->orWhere('supplier', 'like', "%{$search}%")
+                        ->orWhere('reference', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+
+            foreach ($query->get() as $expense) {
+                $chargeRows->push($this->expenseChargeRow($expense));
+            }
         }
 
-        $expenses = $query->orderByDesc('expense_date')->get();
+        // ── Salaires des professeurs (source unique : table teacher_salaries) ─
+        $salaryStats = ['expected' => 0.0, 'paid' => 0.0, 'due' => 0.0, 'count' => 0];
+
+        if ($showSalaries) {
+            $salaryQuery = TeacherSalary::with(['teacher', 'center'])
+                ->where('school_year', $schoolYear);
+
+            if ($centerId) {
+                $salaryQuery->where('center_id', $centerId);
+            }
+
+            foreach ($salaryQuery->get() as $salary) {
+                if ($search) {
+                    $hay = mb_strtolower(
+                        ($salary->teacher?->full_name ?? '').' '.
+                        ($salary->reference ?? '').' '.
+                        ($salary->notes ?? '')
+                    );
+                    if (! str_contains($hay, mb_strtolower($search))) {
+                        continue;
+                    }
+                }
+
+                $row = $this->salaryChargeRow($salary);
+                $chargeRows->push($row);
+
+                $salaryStats['expected'] += $row->amount;
+                $salaryStats['paid'] += $row->realized_amount;
+                $salaryStats['due'] += $row->due_amount;
+                $salaryStats['count']++;
+            }
+        }
+
+        // Tri chronologique inverse (charge la plus récente en tête)
+        $chargeRows = $chargeRows->sortByDesc(fn ($r) => optional($r->date)->getTimestamp() ?? 0)->values();
+
+        // ── Totaux cohérents : engagé (commité) vs réalisé (sortie trésorerie) ─
+        // Un salaire n'est JAMAIS présent dans la table des dépenses : il n'est
+        // donc compté qu'une seule fois. Le « réalisé » n'inclut que ce qui a été
+        // effectivement payé (dépense de statut payé / montant versé du salaire).
+        $totalExpenses = (float) $chargeRows->sum('amount');          // charges engagées
+        $realizedTotal = (float) $chargeRows->sum('realized_amount');  // sorties réalisées
+        $dueTotal = (float) $chargeRows->sum('due_amount');            // reste à payer
 
         // Budget annuel
         $budgetQuery = CenterBudget::where('school_year', $schoolYear);
@@ -621,34 +632,30 @@ class FinanceDashboardController extends Controller
             $annualBudget = 500000.00; // Seuil de référence par défaut
         }
 
-        // Seules les dépenses non annulées sont engagées sur le budget
-        $totalExpenses = (float) $expenses->where('status', '!=', 'cancelled')->sum('amount');
         $remainingBudget = max(0, $annualBudget - $totalExpenses);
         $consumptionRate = $annualBudget > 0 ? round(($totalExpenses / $annualBudget) * 100, 1) : 0;
 
         // Groupement par mois pour les accordéons Cad Syndic
         $monthsNames = FinanceService::monthNames();
-        $groupedExpenses = $expenses->groupBy(function ($exp) {
-            return $exp->expense_date ? $exp->expense_date->format('Y-m') : 'Sans date';
-        })->map(function ($items, $key) use ($monthsNames) {
-            $date = Carbon::parse($key.'-01');
-            $mNum = (int) $date->format('n');
-            $mLabel = ($monthsNames[$mNum] ?? '').' '.$date->format('Y');
-
-            $cashTotal = (float) $items->where('payment_method', 'cash')->sum('amount');
-            $checkTotal = (float) $items->where('payment_method', 'check')->sum('amount');
-            $transferTotal = (float) $items->where('payment_method', 'bank_transfer')->sum('amount');
-            $monthTotal = (float) $items->sum('amount');
+        $groupedExpenses = $chargeRows->groupBy(fn ($r) => $r->period_key)->map(function ($items, $key) use ($monthsNames) {
+            $hasDate = (bool) preg_match('/^\d{4}-\d{2}$/', (string) $key);
+            $date = $hasDate ? Carbon::parse($key.'-01') : null;
+            $mNum = $date ? (int) $date->format('n') : 0;
+            $mLabel = $date
+                ? ($monthsNames[$mNum] ?? '').' '.$date->format('Y')
+                : __('Sans date');
 
             return (object) [
                 'period_key' => $key,
                 'period_label' => $mLabel,
-                'badge' => strtoupper(substr($monthsNames[$mNum] ?? 'MOIS', 0, 3)),
+                'badge' => $date ? strtoupper(substr($monthsNames[$mNum] ?? 'MOIS', 0, 3)) : '—',
                 'expenses_count' => $items->count(),
-                'total_amount' => $monthTotal,
-                'cash_total' => $cashTotal,
-                'check_total' => $checkTotal,
-                'transfer_total' => $transferTotal,
+                'total_amount' => (float) $items->sum('amount'),
+                'realized_amount' => (float) $items->sum('realized_amount'),
+                'due_amount' => (float) $items->sum('due_amount'),
+                'cash_total' => (float) $items->where('method', 'cash')->sum('amount'),
+                'check_total' => (float) $items->where('method', 'check')->sum('amount'),
+                'transfer_total' => (float) $items->where('method', 'bank_transfer')->sum('amount'),
                 'items' => $items,
             ];
         });
@@ -656,12 +663,19 @@ class FinanceDashboardController extends Controller
         $categories = ExpenseCategory::orderBy('name')->get();
         $centers = Center::orderBy('name')->get();
         $schoolYears = FinanceService::SCHOOL_YEARS;
+        $teachersList = Teacher::with('center')->where('status', 'active')
+            ->when($centerId, fn ($q) => $q->where('center_id', $centerId))
+            ->orderBy('last_name')->get();
+        $monthsNames = FinanceService::monthNames();
 
         return view('super-admin.finance.expenses', compact(
-            'expenses',
+            'chargeRows',
             'groupedExpenses',
             'annualBudget',
             'totalExpenses',
+            'realizedTotal',
+            'dueTotal',
+            'salaryStats',
             'remainingBudget',
             'consumptionRate',
             'categories',
@@ -670,8 +684,112 @@ class FinanceDashboardController extends Controller
             'schoolYear',
             'centerId',
             'categoryId',
-            'search'
+            'salaryCategoryId',
+            'search',
+            'teachersList',
+            'monthsNames'
         ));
+    }
+
+    /**
+     * Normalise une dépense classique en ligne de charge unifiée.
+     */
+    private function expenseChargeRow(Expense $expense): object
+    {
+        $isCancelled = $expense->status === 'cancelled';
+        $amount = (float) $expense->amount;
+        $realized = (! $isCancelled && $expense->status === 'paid') ? $amount : 0.0;
+
+        return (object) [
+            'type' => 'expense',
+            'id' => $expense->id,
+            'date' => $expense->expense_date,
+            'period_key' => $expense->expense_date ? $expense->expense_date->format('Y-m') : 'sans-date',
+            'nature' => $expense->translated('title'),
+            'party' => $expense->supplier,
+            'teacher_name' => null,
+            'category_label' => $expense->category?->translated('name') ?? __('Générale'),
+            'is_salary' => false,
+            'amount' => $isCancelled ? 0.0 : $amount,       // engagée = 0 si annulée
+            'realized_amount' => $realized,
+            'due_amount' => $isCancelled ? 0.0 : max(0, $amount - $realized),
+            'method' => $expense->payment_method,
+            'status' => $expense->status,
+            'status_label' => $this->expenseStatusLabel($expense->status),
+            'reference' => $expense->reference,
+            'has_receipt' => (bool) $expense->receipt_path,
+            'items' => $expense->items,
+            'can_cancel' => ! $isCancelled,
+            'can_delete' => true,
+            'model' => $expense,
+        ];
+    }
+
+    /**
+     * Normalise un salaire professeur en ligne de charge unifiée.
+     */
+    private function salaryChargeRow(TeacherSalary $salary): object
+    {
+        $expected = (float) $salary->expected_amount;
+        $paid = (float) $salary->paid_amount;
+        $due = max(0.0, $expected - $paid);
+
+        // Date de rattachement : date de versement sinon premier jour de la période.
+        $date = $salary->payment_date
+            ?: Carbon::create($salary->year, $salary->month, 1)->startOfMonth();
+
+        return (object) [
+            'type' => 'salary',
+            'id' => $salary->id,
+            'date' => $date,
+            'period_key' => $date->format('Y-m'),
+            'nature' => __('Salaire — :teacher', ['teacher' => $salary->teacher?->full_name ?? '—']),
+            'party' => $salary->teacher?->full_name ?? '—',
+            'teacher_name' => $salary->teacher?->full_name,
+            'category_label' => __('Salaires des professeurs'),
+            'is_salary' => true,
+            'amount' => $expected,          // charge engagée
+            'realized_amount' => $paid,     // sortie de trésorerie réelle
+            'due_amount' => $due,           // reste dû (non présenté comme payé)
+            'method' => $salary->payment_method,
+            'status' => $salary->status,
+            'status_label' => $salary->status_label,
+            'reference' => $salary->reference,
+            'period_label' => $salary->month_name.' '.$salary->year,
+            'has_receipt' => false,
+            'items' => collect(),
+            'can_cancel' => false,
+            'can_delete' => false,
+            'model' => null,
+        ];
+    }
+
+    private function expenseStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            'paid' => __('Payé'),
+            'pending' => __('En attente'),
+            'cancelled' => __('Annulé'),
+            default => ucfirst((string) $status),
+        };
+    }
+
+    /**
+     * Id de la catégorie de charge « Salaires des professeurs ». Créée à la volée
+     * (firstOrCreate) pour les bases déjà en place, sans migration ni reset.
+     */
+    private function salaryCategoryId(): int
+    {
+        $category = ExpenseCategory::firstOrCreate(
+            ['code' => 'salaires'],
+            [
+                'name' => 'Salaires des professeurs',
+                'color' => '#8B5CF6',
+                'description' => 'Rémunérations versées aux professeurs',
+            ]
+        );
+
+        return (int) $category->id;
     }
 
     /**
@@ -679,6 +797,13 @@ class FinanceDashboardController extends Controller
      */
     public function storeExpense(Request $request): RedirectResponse
     {
+        // ── Catégorie « Salaires des professeurs » ⇒ workflow salaire intégré ──
+        // On réutilise la table TeacherSalary (source unique) : AUCUNE ligne
+        // Expense n'est créée pour un salaire → zéro doublon comptable.
+        if ((int) $request->input('category_id') === $this->salaryCategoryId()) {
+            return $this->storeSalaryExpense($request);
+        }
+
         $validated = $request->validate([
             'center_id' => 'required|exists:centers,id',
             'category_id' => 'nullable|exists:expense_categories,id',
@@ -696,6 +821,11 @@ class FinanceDashboardController extends Controller
             'items.*.unit_price' => 'required_with:items|numeric|min:0',
             'amount' => 'nullable|numeric|min:0.01',
         ]);
+
+        // Un Admin Centre ne peut pas dévier du centre : ré-ancrage serveur défensif.
+        if ($request->user()?->isCenterAdmin()) {
+            $validated['center_id'] = $request->user()->center_id;
+        }
 
         // Calcul du montant total à partir des articles s'ils sont fournis
         $itemsData = $request->input('items', []);
@@ -721,73 +851,152 @@ class FinanceDashboardController extends Controller
             $receiptPath = $request->file('receipt')->store('expenses/receipts', 'public');
         }
 
-        $expense = Expense::create([
-            'center_id' => $validated['center_id'],
-            'category_id' => $validated['category_id'] ?? null,
-            'title' => $validated['title'],
-            'amount' => $finalAmount,
-            'currency' => 'MAD',
-            'expense_date' => $validated['expense_date'],
-            'payment_method' => $validated['payment_method'],
-            'supplier' => $validated['supplier'] ?? null,
-            'reference' => $validated['reference'] ?? null,
-            'receipt_path' => $receiptPath,
-            'description' => $validated['description'] ?? null,
-            'school_year' => $validated['school_year'] ?? '2026/2027',
-            'status' => 'paid',
-            'recorded_by' => $request->user()->id,
-        ]);
-
-        // Enregistrer les articles achetés
-        if (! empty($itemsData)) {
-            foreach ($itemsData as $it) {
-                $qty = (int) ($it['quantity'] ?? 1);
-                $unitPrice = (float) ($it['unit_price'] ?? 0);
-                ExpenseItem::create([
-                    'expense_id' => $expense->id,
-                    'name' => $it['name'],
-                    'unit_price' => $unitPrice,
-                    'quantity' => $qty,
-                    'total_price' => ($qty * $unitPrice),
-                ]);
-            }
-        }
-
-        // Tracer dans le journal bancaire pour les paiements bancaires, cartes ou chèques
-        if (in_array($validated['payment_method'], ['bank_transfer', 'check', 'credit_card'])) {
-            $lastBalance = (float) BankTransaction::where('center_id', $validated['center_id'])->latest('id')->value('running_balance') ?? 0;
-            BankTransaction::create([
+        DB::transaction(function () use ($validated, $request, $finalAmount, $receiptPath, $itemsData) {
+            $expense = Expense::create([
                 'center_id' => $validated['center_id'],
-                'transaction_date' => $validated['expense_date'],
-                'label' => 'Dépense : '.$validated['title'].($expense->supplier ? " ({$expense->supplier})" : ''),
-                'origin' => 'Dépense d\'exploitation',
-                'method' => $validated['payment_method'],
-                'type' => 'withdrawal',
+                'category_id' => $validated['category_id'] ?? null,
+                'title' => $validated['title'],
                 'amount' => $finalAmount,
-                'running_balance' => $lastBalance - $finalAmount,
-                'reference' => $validated['reference'] ?? ('DEP-'.str_pad($expense->id, 5, '0', STR_PAD_LEFT)),
+                'currency' => 'MAD',
+                'expense_date' => $validated['expense_date'],
+                'payment_method' => $validated['payment_method'],
+                'supplier' => $validated['supplier'] ?? null,
+                'reference' => $validated['reference'] ?? null,
                 'receipt_path' => $receiptPath,
-                'expense_id' => $expense->id,
+                'description' => $validated['description'] ?? null,
+                'school_year' => $validated['school_year'] ?? '2026/2027',
+                'status' => 'paid',
                 'recorded_by' => $request->user()->id,
             ]);
-        }
 
-        // Écriture comptable (Débit Compte de charge 6122, Crédit Banque 5141 ou Caisse 5161)
-        AccountingEntry::create([
-            'center_id' => $validated['center_id'],
-            'piece_number' => $validated['reference'] ?? ('DEP-'.str_pad($expense->id, 5, '0', STR_PAD_LEFT)),
-            'entry_date' => $validated['expense_date'],
-            'entry_type' => 'Dépense',
-            'label' => $validated['title'],
-            'third_party' => $validated['supplier'] ?? 'Fournisseur divers',
-            'account_code' => '6122',
-            'debit' => $finalAmount,
-            'credit' => 0.00,
-            'cumulative_balance' => -$finalAmount,
-            'recorded_by' => $request->user()->id,
-        ]);
+            // Enregistrer les articles achetés
+            if (! empty($itemsData)) {
+                foreach ($itemsData as $it) {
+                    $qty = (int) ($it['quantity'] ?? 1);
+                    $unitPrice = (float) ($it['unit_price'] ?? 0);
+                    ExpenseItem::create([
+                        'expense_id' => $expense->id,
+                        'name' => $it['name'],
+                        'unit_price' => $unitPrice,
+                        'quantity' => $qty,
+                        'total_price' => ($qty * $unitPrice),
+                    ]);
+                }
+            }
+
+            // Tracer dans le journal bancaire pour les paiements bancaires, cartes ou chèques
+            if (in_array($validated['payment_method'], ['bank_transfer', 'check', 'credit_card'])) {
+                $lastBalance = (float) BankTransaction::where('center_id', $validated['center_id'])->latest('id')->value('running_balance') ?? 0;
+                BankTransaction::create([
+                    'center_id' => $validated['center_id'],
+                    'transaction_date' => $validated['expense_date'],
+                    'label' => 'Dépense : '.$validated['title'].($expense->supplier ? " ({$expense->supplier})" : ''),
+                    'origin' => 'Dépense d\'exploitation',
+                    'method' => $validated['payment_method'],
+                    'type' => 'withdrawal',
+                    'amount' => $finalAmount,
+                    'running_balance' => $lastBalance - $finalAmount,
+                    'reference' => $validated['reference'] ?? ('DEP-'.str_pad($expense->id, 5, '0', STR_PAD_LEFT)),
+                    'receipt_path' => $receiptPath,
+                    'expense_id' => $expense->id,
+                    'recorded_by' => $request->user()->id,
+                ]);
+            }
+
+            // Écriture comptable (Débit Compte de charge 6122, Crédit Banque 5141 ou Caisse 5161)
+            AccountingEntry::create([
+                'center_id' => $validated['center_id'],
+                'piece_number' => $validated['reference'] ?? ('DEP-'.str_pad($expense->id, 5, '0', STR_PAD_LEFT)),
+                'entry_date' => $validated['expense_date'],
+                'entry_type' => 'Dépense',
+                'label' => $validated['title'],
+                'third_party' => $validated['supplier'] ?? 'Fournisseur divers',
+                'account_code' => '6122',
+                'debit' => $finalAmount,
+                'credit' => 0.00,
+                'cumulative_balance' => -$finalAmount,
+                'recorded_by' => $request->user()->id,
+            ]);
+        });
 
         return back()->with('success', __('Achat de :amount enregistré avec succès.', ['amount' => format_price($finalAmount, 'MAD')]));
+    }
+
+    /**
+     * Enregistrer un salaire professeur depuis le formulaire « Dépenses ».
+     *
+     * Réutilise intégralement la logique existante (TeacherSalary::updateOrCreate,
+     * statut dérivé des montants) : pas de deuxième moteur de calcul, pas de
+     * doublon (updateOrCreate sur centre+prof+mois+année), aucune ligne Expense.
+     * Le centre est TOUJOURS celui du professeur (résolu côté serveur).
+     */
+    private function storeSalaryExpense(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'teacher_id' => ['required', 'integer', 'exists:teachers,id'],
+            'month' => ['required', 'integer', 'between:1,12'],
+            'year' => ['required', 'integer', 'min:2020', 'max:2050'],
+            'school_year' => ['nullable', 'string', 'max:20'],
+            'expected_amount' => ['nullable', 'numeric', 'min:0'],
+            'paid_amount' => ['required', 'numeric', 'min:0'],
+            'currency' => ['nullable', 'string', 'max:10'],
+            'payment_date' => ['nullable', 'date'],
+            'payment_method' => ['nullable', 'in:cash,check,bank_transfer,credit_card,other'],
+            'reference' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $teacher = Teacher::with('center')->findOrFail($validated['teacher_id']);
+
+        // Sécurité multi-centres : un Admin Centre ne peut payer qu'un professeur
+        // de son périmètre (le centre est dérivé du professeur, jamais du POST).
+        if ($request->user()?->isCenterAdmin()
+            && (int) $teacher->center_id !== (int) $request->user()->center_id) {
+            abort(403, __('Ce professeur n\'appartient pas à votre centre.'));
+        }
+
+        $expected = ! empty($validated['expected_amount']) && (float) $validated['expected_amount'] > 0
+            ? (float) $validated['expected_amount']
+            : FinanceService::getTeacherMonthlySalary($teacher);
+
+        $paid = (float) $validated['paid_amount'];
+
+        // Statut dérivé des montants réels (règle §6 : un salaire en attente
+        // n'est jamais présenté comme une sortie de trésorerie réalisée).
+        $status = match (true) {
+            $expected > 0 && $paid >= $expected => 'paid',
+            $paid > 0 => 'partial',
+            default => 'unpaid',
+        };
+
+        $salary = DB::transaction(function () use ($validated, $teacher, $expected, $paid, $status, $request) {
+            return TeacherSalary::updateOrCreate(
+                [
+                    'center_id' => $teacher->center_id,
+                    'teacher_id' => $teacher->id,
+                    'month' => $validated['month'],
+                    'year' => $validated['year'],
+                ],
+                [
+                    'domain' => $teacher->domain,
+                    'school_year' => $validated['school_year'] ?? '2026/2027',
+                    'expected_amount' => $expected,
+                    'paid_amount' => $paid,
+                    'currency' => $validated['currency'] ?? 'MAD',
+                    'status' => $status,
+                    'payment_date' => $validated['payment_date'] ?? now()->toDateString(),
+                    'payment_method' => $validated['payment_method'] ?? 'bank_transfer',
+                    'reference' => $validated['reference'] ?? null,
+                    'notes' => $validated['notes'] ?? null,
+                    'recorded_by' => $request->user()->id,
+                ]
+            );
+        });
+
+        return back()->with('success', __('Salaire de :amount enregistré pour :full_name.', [
+            'amount' => format_price($paid, $salary->currency),
+            'full_name' => $teacher->full_name,
+        ]));
     }
 
     /**

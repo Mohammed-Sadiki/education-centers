@@ -7,6 +7,9 @@
     expenseModalOpen: false,
     detailModalOpen: false,
     activeExpense: null,
+    salaryCategoryId: {{ $salaryCategoryId }},
+    categoryId: {{ $categoryId ?: ($categories->first()->id ?? 'null') }},
+    get isSalary() { return parseInt(this.categoryId) === this.salaryCategoryId; },
     items: [
         { name: '', quantity: 1, unit_price: '' }
     ],
@@ -91,14 +94,16 @@
             </div>
         </div>
 
-        {{-- Dépenses engagées --}}
+        {{-- Dépenses & charges engagées (dépenses + salaires) --}}
         <div class="finance-card p-4.5">
-            <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ __('Dépenses engagées') }}</span>
+            <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ __('Charges engagées') }}</span>
             <div class="mt-2 text-2xl font-extrabold text-rose-600 dark:text-rose-400 whitespace-nowrap">
                 {{ format_price($totalExpenses, 'MAD') }}
             </div>
             <div class="mt-3 text-[11px] text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-2">
-                {{ $expenses->where('status', '!=', 'cancelled')->count() }} {{ __('achat(s) validé(s)') }}
+                {{ $chargeRows->count() }} {{ __('charge(s) (achats + salaires)') }} ·
+                <span class="text-emerald-600 dark:text-emerald-400">{{ __('versé :') }} {{ format_price($realizedTotal, 'MAD') }}</span> ·
+                <span class="text-amber-600 dark:text-amber-400">{{ __('reste :') }} {{ format_price($dueTotal, 'MAD') }}</span>
             </div>
         </div>
 
@@ -166,7 +171,7 @@
         </div>
     </form>
 
-    {{-- Accordéons Mensuels Cad Syndic --}}
+    {{-- Accordéons Mensuels Cad Syndic (dépenses + salaires unifiés) --}}
     <div class="space-y-3.5">
         @forelse($groupedExpenses as $gKey => $group)
             <div x-data="{ open: true }" class="finance-card overflow-hidden transition-all">
@@ -182,7 +187,7 @@
                                 {{ $group->period_label }}
                             </h3>
                             <p class="text-[11px] text-slate-400">
-                                {{ $group->expenses_count }} {{ __('dépense(s) et achat(s) enregistrés') }}
+                                {{ $group->expenses_count }} {{ __('charge(s) enregistrée(s)') }}
                             </p>
                         </div>
                     </div>
@@ -206,96 +211,115 @@
                         <thead class="bg-slate-50/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-100 dark:bg-slate-800/50 dark:border-slate-800">
                             <tr>
                                 <th class="py-2.5 px-4">{{ __('Date') }}</th>
-                                <th class="py-2.5 px-4">{{ __('Titre & Fournisseur') }}</th>
-                                <th class="py-2.5 px-4">{{ __('Articles achetés') }}</th>
+                                <th class="py-2.5 px-4">{{ __('Nature') }}</th>
                                 <th class="py-2.5 px-4">{{ __('Catégorie') }}</th>
                                 <th class="py-2.5 px-4">{{ __('Mode') }}</th>
+                                <th class="py-2.5 px-4 text-center">{{ __('Statut') }}</th>
                                 <th class="py-2.5 px-4 text-end">{{ __('Montant') }}</th>
                                 <th class="py-2.5 px-4 text-center">{{ __('Justificatif') }}</th>
                                 <th class="py-2.5 px-4 text-end">{{ __('Actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                            @foreach($group->items as $exp)
-                                @php
-                                    $isCancelled = $exp->status === 'cancelled';
-                                @endphp
+                            @foreach($group->items as $row)
+                                @php $isCancelled = $row->status === 'cancelled'; @endphp
                                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 {{ $isCancelled ? 'opacity-50 line-through' : '' }}">
                                     <td class="py-3 px-4 text-slate-600 whitespace-nowrap">
-                                        {{ $exp->expense_date ? format_date($exp->expense_date, 'd/m/Y') : '—' }}
+                                        {{ $row->date ? format_date($row->date, 'd/m/Y') : '—' }}
+                                        @if($row->is_salary && ! empty($row->period_label))
+                                            <span class="block text-[10px] text-slate-400">{{ $row->period_label }}</span>
+                                        @endif
                                     </td>
                                     <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white whitespace-nowrap">
-                                        {{ $exp->translated('title') }}
-                                        @if($exp->supplier)
-                                            <span class="text-[#0DAD98] text-[10px] font-medium block">🏢 {{ $exp->supplier }}</span>
+                                        <span class="inline-flex items-center gap-1.5">
+                                            @if($row->is_salary)
+                                                <span class="text-[#8B5CF6]">👤</span>
+                                            @endif
+                                            {{ $row->nature }}
+                                        </span>
+                                        @if($row->party && ! $row->is_salary)
+                                            <span class="text-[#0DAD98] text-[10px] font-medium block">🏢 {{ $row->party }}</span>
                                         @endif
-                                        @if($exp->reference)
-                                            <span class="text-slate-400 text-[10px] font-normal block font-mono">{{ __('Réf:') }} {{ $exp->reference }}</span>
-                                        @endif
-                                    </td>
-                                    <td class="py-3 px-4 text-slate-700 dark:text-slate-300">
-                                        @if($exp->items->isNotEmpty())
-                                            <div class="flex flex-wrap gap-1">
-                                                @foreach($exp->items as $item)
-                                                    <span class="inline-flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] text-slate-700 dark:text-slate-300">
-                                                        <strong>{{ $item->quantity }}x</strong> {{ $item->translated('name') }} ({{ format_price($item->unit_price, 'MAD') }})
-                                                    </span>
-                                                @endforeach
-                                            </div>
-                                        @else
-                                            <span class="text-slate-400 text-[11px]">{{ __('Charge globale') }}</span>
+                                        @if($row->reference)
+                                            <span class="text-slate-400 text-[10px] font-normal block font-mono">{{ __('Réf:') }} {{ $row->reference }}</span>
                                         @endif
                                     </td>
                                     <td class="py-3 px-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:text-slate-300">
-                                            {{ $exp->category?->translated('name') ?? __('Générale') }}
+                                        <span class="inline-flex items-center rounded-full {{ $row->is_salary ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300' }} px-2 py-0.5 text-[10px] font-semibold">
+                                            {{ $row->category_label }}
                                         </span>
                                     </td>
                                     <td class="py-3 px-4 whitespace-nowrap text-slate-600">
-                                        @if($exp->payment_method === 'cash') {{ __('💵 Espèces') }}
-                                        @elseif($exp->payment_method === 'check') {{ __('📝 Chèque') }}
-                                        @elseif($exp->payment_method === 'bank_transfer') {{ __('🏦 Virement') }}
-                                        @elseif($exp->payment_method === 'credit_card') {{ __('💳 Carte bancaire') }}
-                                        @else {{ $exp->payment_method }}
+                                        @if($row->method === 'cash') {{ __('💵 Espèces') }}
+                                        @elseif($row->method === 'check') {{ __('📝 Chèque') }}
+                                        @elseif($row->method === 'bank_transfer') {{ __('🏦 Virement') }}
+                                        @elseif($row->method === 'credit_card') {{ __('💳 Carte bancaire') }}
+                                        @elseif($row->method) {{ $row->method }}
+                                        @else —
+                                        @endif
+                                    </td>
+                                    <td class="py-3 px-4 text-center whitespace-nowrap">
+                                        @php
+                                            $badge = match ($row->status) {
+                                                'paid' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300',
+                                                'partial' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
+                                                'unpaid', 'pending' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300',
+                                                'cancelled' => 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
+                                                default => 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+                                            };
+                                        @endphp
+                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold {{ $badge }}">
+                                            {{ $row->status_label }}
+                                        </span>
+                                        @if($row->is_salary && $row->due_amount > 0)
+                                            <span class="block text-[9px] text-slate-400 no-underline">{{ __('reste :') }} {{ format_price($row->due_amount, 'MAD') }}</span>
                                         @endif
                                     </td>
                                     <td class="py-3 px-4 text-end font-bold {{ $isCancelled ? 'text-slate-400' : 'text-rose-600' }} whitespace-nowrap">
-                                        {{ format_price($exp->amount, 'MAD') }}
+                                        {{ format_price($row->amount, 'MAD') }}
                                         @if($isCancelled)
                                             <span class="block text-[9px] text-rose-500 font-bold uppercase no-underline">{{ __('Annulé') }}</span>
                                         @endif
                                     </td>
                                     <td class="py-3 px-4 text-center whitespace-nowrap">
-                                        @if($exp->receipt_path)
-                                            <a href="{{ route('super-admin.finance.expenses.receipt', $exp->id) }}" target="_blank"
-                                               class="inline-flex items-center gap-1 text-[11px] font-bold text-[#0DAD98] hover:underline">
-                                                <span>{{ __('📎 Reçu') }}</span>
+                                        @if($row->type === 'expense')
+                                            @if($row->has_receipt)
+                                                <a href="{{ route('super-admin.finance.expenses.receipt', $row->id) }}" target="_blank"
+                                                   class="inline-flex items-center gap-1 text-[11px] font-bold text-[#0DAD98] hover:underline">
+                                                    <span>{{ __('📎 Reçu') }}</span>
+                                                </a>
+                                            @endif
+                                            <a href="{{ route('super-admin.finance.expenses.receipt-pdf', $row->id) }}"
+                                               class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:underline">
+                                                <span>{{ __('🧾 Reçu PDF') }}</span>
                                             </a>
+                                            <a href="{{ route('super-admin.finance.expenses.receipt-pdf', ['expense' => $row->id, 'mode' => 'inline']) }}"
+                                               target="_blank" rel="noopener"
+                                               class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:underline">
+                                                <span>{{ __('🖨️ Imprimer') }}</span>
+                                            </a>
+                                        @else
+                                            <span class="text-slate-300 text-[11px]">—</span>
                                         @endif
-                                        <a href="{{ route('super-admin.finance.expenses.receipt-pdf', $exp->id) }}"
-                                           class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:underline">
-                                            <span>{{ __('🧾 Reçu PDF') }}</span>
-                                        </a>
-                                        <a href="{{ route('super-admin.finance.expenses.receipt-pdf', ['expense' => $exp->id, 'mode' => 'inline']) }}"
-                                           target="_blank" rel="noopener"
-                                           class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:underline">
-                                            <span>{{ __('🖨️ Imprimer') }}</span>
-                                        </a>
                                     </td>
                                     <td class="py-3 px-4 text-end whitespace-nowrap">
                                         <div class="flex items-center justify-end gap-1.5">
-                                            <button type="button" x-on:click="openDetail({{ Js::from($exp) }})"
-                                                    class="rounded-md bg-slate-100 hover:bg-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                                {{ __('Détails') }}
-                                            </button>
-                                            @if(! $isCancelled)
-                                                <form method="POST" action="{{ route('super-admin.finance.expenses.cancel', $exp->id) }}" onsubmit="return confirm('{{ __('Confirmer l\'annulation de cette dépense ? Son montant sera réintégré au budget.') }}');">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <button type="submit" class="rounded-md bg-amber-50 hover:bg-amber-100 px-2 py-1 text-[10px] font-semibold text-amber-700">
-                                                        {{ __('Annuler') }}
-                                                    </button>
-                                                </form>
+                                            @if($row->type === 'expense')
+                                                <button type="button" x-on:click="openDetail({{ Js::from($row->model) }})"
+                                                        class="rounded-md bg-slate-100 hover:bg-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                                    {{ __('Détails') }}
+                                                </button>
+                                                @if($row->can_cancel)
+                                                    <form method="POST" action="{{ route('super-admin.finance.expenses.cancel', $row->id) }}" onsubmit="return confirm('{{ __('Confirmer l\'annulation de cette dépense ? Son montant sera réintégré au budget.') }}');">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit" class="rounded-md bg-amber-50 hover:bg-amber-100 px-2 py-1 text-[10px] font-semibold text-amber-700">
+                                                            {{ __('Annuler') }}
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @else
+                                                <span class="text-[10px] text-slate-400">{{ __('Géré via Dépenses') }}</span>
                                             @endif
                                         </div>
                                     </td>
@@ -348,13 +372,16 @@
                 <input type="hidden" name="school_year" value="{{ $schoolYear }}">
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {{-- Titre de la dépense --}}
+                    {{-- Catégorie (détermine le mode dépense / salaire) --}}
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            {{ __('Titre de la dépense') }} <span class="text-rose-500">*</span>
+                            {{ __('Catégorie') }} <span class="text-rose-500">*</span>
                         </label>
-                        <input type="text" name="title" required placeholder="{{ __('Ex: Achat de fournitures scolaires') }}"
-                               class="w-full rounded-lg border-slate-200 text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                        <select name="category_id" x-model="categoryId" required class="w-full rounded-lg border-slate-200 text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat->id }}">{{ $cat->translated('name') }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     {{-- Centre concerné --}}
@@ -370,136 +397,229 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {{-- Catégorie --}}
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            {{ __('Catégorie') }} <span class="text-rose-500">*</span>
-                        </label>
-                        <select name="category_id" required class="w-full rounded-lg border-slate-200 text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->translated('name') }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                {{-- ─────────── MODE DÉPENSE CLASSIQUE ─────────── --}}
+                <template x-if="!isSalary">
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('Titre de la dépense') }} <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="text" name="title" required placeholder="{{ __('Ex: Achat de fournitures scolaires') }}"
+                                       class="w-full rounded-lg border-slate-200 text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('Fournisseur (facultatif)') }}
+                                </label>
+                                <input type="text" name="supplier" placeholder="{{ __('Ex: Librairie Al Maaref, HP Maroc...') }}"
+                                       class="w-full rounded-lg border-slate-200 text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                            </div>
+                        </div>
 
-                    {{-- Fournisseur --}}
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            {{ __('Fournisseur (facultatif)') }}
-                        </label>
-                        <input type="text" name="supplier" placeholder="{{ __('Ex: Librairie Al Maaref, HP Maroc...') }}"
-                               class="w-full rounded-lg border-slate-200 text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
-                    </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('Date d\'achat') }} <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="date" name="expense_date" value="{{ date('Y-m-d') }}" required
+                                       class="w-full rounded-lg border-slate-200 text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('Mode de paiement') }} <span class="text-rose-500">*</span>
+                                </label>
+                                <select name="payment_method" required class="w-full rounded-lg border-slate-200 text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                                    <option value="bank_transfer">{{ __('Virement bancaire') }}</option>
+                                    <option value="check">{{ __('Chèque') }}</option>
+                                    <option value="cash">{{ __('Espèces') }}</option>
+                                    <option value="credit_card">{{ __('Carte bancaire') }}</option>
+                                </select>
+                            </div>
+                        </div>
 
-                    {{-- Date d'achat --}}
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            {{ __('Date d\'achat') }} <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="date" name="expense_date" value="{{ date('Y-m-d') }}" required
-                               class="w-full rounded-lg border-slate-200 text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
-                    </div>
-                </div>
-
-                {{-- SECTION ARTICLES ACHETÉS (MULTI-LIGNES AVEC CALCUL AUTO) --}}
-                <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/40">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
-                            {{ __('Articles / Produits achetés') }}
-                        </span>
-                        <button type="button" x-on:click="addItem()" class="inline-flex items-center gap-1 rounded-md bg-[#ECFDF5] px-2.5 py-1 text-[11px] font-bold text-[#0DAD98] hover:bg-[#0DAD98]/20 transition-colors">
-                            <span>{{ __('+ Ajouter un article') }}</span>
-                        </button>
-                    </div>
-
-                    <div class="space-y-2">
-                        <template x-for="(item, index) in items" :key="index">
-                            <div class="flex items-center gap-2">
-                                <div class="flex-1">
-                                    <input type="text" :name="'items['+index+'][name]'" x-model="item.name" required
-                                           placeholder="{{ __('Ex: Feutres, Papier A4...') }}"
-                                           class="w-full rounded-lg border-slate-200 bg-white py-1.5 px-2.5 text-xs text-slate-800">
-                                </div>
-                                <div class="w-24">
-                                    <input type="number" min="1" step="1" :name="'items['+index+'][quantity]'" x-model.number="item.quantity" required
-                                           placeholder="{{ __('Qté') }}"
-                                           class="w-full rounded-lg border-slate-200 bg-white py-1.5 px-2.5 text-xs text-slate-800 text-center">
-                                </div>
-                                <div class="w-32">
-                                    <div class="relative">
-                                        <input type="number" min="0" step="0.01" :name="'items['+index+'][unit_price]'" x-model.number="item.unit_price" required
-                                               placeholder="{{ __('Prix unit.') }}"
-                                               class="w-full rounded-lg border-slate-200 bg-white py-1.5 ps-2.5 pe-8 text-xs font-semibold text-slate-900">
-                                        <span class="absolute inset-y-0 end-2 flex items-center text-[10px] text-slate-400 font-bold">DH</span>
-                                    </div>
-                                </div>
-                                <div class="w-28 text-end font-extrabold text-xs text-slate-900 dark:text-white">
-                                    <span x-text="((item.quantity || 0) * (item.unit_price || 0)).toFixed(2)"></span> {{ currency_symbol('MAD') }}
-                                </div>
-                                <button type="button" x-on:click="removeItem(index)" class="text-slate-400 hover:text-rose-500 px-1 text-sm font-bold">
-                                    ✕
+                        {{-- SECTION ARTICLES ACHETÉS (MULTI-LIGNES AVEC CALCUL AUTO) --}}
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/40">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                                    {{ __('Articles / Produits achetés') }}
+                                </span>
+                                <button type="button" x-on:click="addItem()" class="inline-flex items-center gap-1 rounded-md bg-[#ECFDF5] px-2.5 py-1 text-[11px] font-bold text-[#0DAD98] hover:bg-[#0DAD98]/20 transition-colors">
+                                    <span>{{ __('+ Ajouter un article') }}</span>
                                 </button>
                             </div>
-                        </template>
-                    </div>
 
-                    {{-- Résumé du calcul automatique --}}
-                    <div class="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-xs font-bold text-slate-800 dark:text-white">
-                        <span>{{ __('Montant total calculé :') }}</span>
-                        <div class="text-base text-rose-600 font-black">
-                            <span x-text="getTotal().toFixed(2)"></span> MAD
+                            <div class="space-y-2">
+                                <template x-for="(item, index) in items" :key="index">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex-1">
+                                            <input type="text" :name="'items['+index+'][name]'" x-model="item.name" required
+                                                   placeholder="{{ __('Ex: Feutres, Papier A4...') }}"
+                                                   class="w-full rounded-lg border-slate-200 bg-white py-1.5 px-2.5 text-xs text-slate-800">
+                                        </div>
+                                        <div class="w-24">
+                                            <input type="number" min="1" step="1" :name="'items['+index+'][quantity]'" x-model.number="item.quantity" required
+                                                   placeholder="{{ __('Qté') }}"
+                                                   class="w-full rounded-lg border-slate-200 bg-white py-1.5 px-2.5 text-xs text-slate-800 text-center">
+                                        </div>
+                                        <div class="w-32">
+                                            <div class="relative">
+                                                <input type="number" min="0" step="0.01" :name="'items['+index+'][unit_price]'" x-model.number="item.unit_price" required
+                                                       placeholder="{{ __('Prix unit.') }}"
+                                                       class="w-full rounded-lg border-slate-200 bg-white py-1.5 ps-2.5 pe-8 text-xs font-semibold text-slate-900">
+                                                <span class="absolute inset-y-0 end-2 flex items-center text-[10px] text-slate-400 font-bold">DH</span>
+                                            </div>
+                                        </div>
+                                        <div class="w-28 text-end font-extrabold text-xs text-slate-900 dark:text-white">
+                                            <span x-text="((item.quantity || 0) * (item.unit_price || 0)).toFixed(2)"></span> {{ currency_symbol('MAD') }}
+                                        </div>
+                                        <button type="button" x-on:click="removeItem(index)" class="text-slate-400 hover:text-rose-500 px-1 text-sm font-bold">
+                                            ✕
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+
+                            {{-- Montant libre si pas d'articles + résumé calculé --}}
+                            <div class="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-xs font-bold text-slate-800 dark:text-white">
+                                <span>{{ __('Montant total calculé :') }}</span>
+                                <div class="text-base text-rose-600 font-black">
+                                    <span x-text="getTotal().toFixed(2)"></span> MAD
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">{{ __('Ou montant global (sans articles)') }}</label>
+                                <input type="number" min="0" step="0.01" name="amount" placeholder="{{ __('Ex: 1200') }}"
+                                       class="w-full rounded-lg border-slate-200 bg-white py-1.5 px-2.5 text-xs text-slate-800">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('Justificatif (PDF, Image)') }}
+                                </label>
+                                <input type="file" name="receipt" accept=".pdf,.png,.jpg,.jpeg"
+                                       class="w-full text-xs text-slate-500 file:me-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#ECFDF5] file:text-[#0DAD98] hover:file:bg-[#0DAD98]/20">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('N° Référence / Facture') }}
+                                </label>
+                                <input type="text" name="reference" placeholder="{{ __('Ex: FACT-2026-902') }}"
+                                       class="w-full rounded-lg border-slate-200 text-xs text-slate-800">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                {{ __('Description complémentaire') }}
+                            </label>
+                            <input type="text" name="description" placeholder="{{ __('Ex: Remplacement du stock épuisé') }}"
+                                   class="w-full rounded-lg border-slate-200 text-xs text-slate-800">
                         </div>
                     </div>
-                </div>
+                </template>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {{-- Mode de règlement --}}
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            {{ __('Mode de paiement') }} <span class="text-rose-500">*</span>
-                        </label>
-                        <select name="payment_method" required class="w-full rounded-lg border-slate-200 text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
-                            <option value="bank_transfer">{{ __('Virement bancaire') }}</option>
-                            <option value="check">{{ __('Chèque') }}</option>
-                            <option value="cash">{{ __('Espèces') }}</option>
-                            <option value="credit_card">{{ __('Carte bancaire') }}</option>
-                        </select>
-                    </div>
+                {{-- ─────────── MODE SALAIRE PROFESSEUR (catégorie « Salaires des professeurs ») ─────────── --}}
+                <template x-if="isSalary">
+                    <div class="space-y-4 rounded-xl border border-violet-200 bg-violet-50/40 p-4 dark:border-violet-900/50 dark:bg-violet-950/20">
+                        <p class="text-[11px] font-semibold text-violet-700 dark:text-violet-300">
+                            {{ __('Vous enregistrez un salaire. Il sera géré dans la table de paie existante (aucune dépense dupliquée) et rattaché au centre du professeur.') }}
+                        </p>
 
-                    {{-- Justificatif (facture/reçu) --}}
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            {{ __('Justificatif (PDF, Image)') }}
-                        </label>
-                        <input type="file" name="receipt" accept=".pdf,.png,.jpg,.jpeg"
-                               class="w-full text-xs text-slate-500 file:me-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#ECFDF5] file:text-[#0DAD98] hover:file:bg-[#0DAD98]/20">
-                    </div>
-                </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('Professeur concerné') }} <span class="text-rose-500">*</span>
+                                </label>
+                                <select name="teacher_id" required class="w-full rounded-lg border-slate-200 bg-white text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                                    <option value="">{{ __('-- Sélectionner un enseignant --') }}</option>
+                                    @foreach($teachersList as $tch)
+                                        <option value="{{ $tch->id }}">{{ $tch->full_name }} ({{ $tch->center?->name ?? '' }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('Période de rémunération') }} <span class="text-rose-500">*</span>
+                                </label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <select name="month" required class="w-full rounded-lg border-slate-200 bg-white text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                                        @foreach($monthsNames as $m => $label)
+                                            <option value="{{ $m }}" {{ (int) date('n') === $m ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    <input type="number" name="year" min="2020" max="2050" value="{{ date('Y') }}" required
+                                           class="w-full rounded-lg border-slate-200 bg-white text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            {{ __('N° Référence / Facture') }}
-                        </label>
-                        <input type="text" name="reference" placeholder="{{ __('Ex: FACT-2026-902') }}"
-                               class="w-full rounded-lg border-slate-200 text-xs text-slate-800">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('Salaire prévu (DH)') }}
+                                </label>
+                                <input type="number" step="0.01" min="0" name="expected_amount" placeholder="{{ __('Ex: 6000') }}"
+                                       class="w-full rounded-lg border-slate-200 bg-white text-xs font-medium text-slate-900 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('Montant versé (DH)') }} <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="number" step="0.01" min="0" name="paid_amount" required placeholder="{{ __('Ex: 6000') }}"
+                                       class="w-full rounded-lg border-slate-200 bg-white text-xs font-semibold text-slate-900 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('Date de paiement') }}
+                                </label>
+                                <input type="date" name="payment_date" value="{{ date('Y-m-d') }}"
+                                       class="w-full rounded-lg border-slate-200 bg-white text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('Mode de paiement') }}
+                                </label>
+                                <select name="payment_method" class="w-full rounded-lg border-slate-200 bg-white text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                                    <option value="bank_transfer">{{ __('Virement bancaire') }}</option>
+                                    <option value="check">{{ __('Chèque') }}</option>
+                                    <option value="cash">{{ __('Espèces') }}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('Référence / Justificatif') }}
+                                </label>
+                                <input type="text" name="reference" placeholder="{{ __('Ex: VIR-2026-001') }}"
+                                       class="w-full rounded-lg border-slate-200 bg-white text-xs text-slate-800">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ __('Note') }}
+                                </label>
+                                <input type="text" name="notes" placeholder="{{ __('Ex: Salaire octobre - virement émis') }}"
+                                       class="w-full rounded-lg border-slate-200 bg-white text-xs text-slate-800">
+                            </div>
+                        </div>
+                        <input type="hidden" name="currency" value="MAD">
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            {{ __('Description complémentaire') }}
-                        </label>
-                        <input type="text" name="description" placeholder="{{ __('Ex: Remplacement du stock épuisé') }}"
-                               class="w-full rounded-lg border-slate-200 text-xs text-slate-800">
-                    </div>
-                </div>
+                </template>
 
                 <div class="flex justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
                     <button type="button" x-on:click="expenseModalOpen = false" class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">
                         {{ __('Annuler') }}
                     </button>
                     <button type="submit" class="finance-btn-primary">
-                        {{ __('Enregistrer la dépense') }}
+                        <span x-show="!isSalary">{{ __('Enregistrer la dépense') }}</span>
+                        <span x-show="isSalary" x-cloak>{{ __('Enregistrer le salaire') }}</span>
                     </button>
                 </div>
             </form>

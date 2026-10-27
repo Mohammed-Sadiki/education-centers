@@ -721,16 +721,14 @@ class FinanceManagementTest extends TestCase
     }
 
     /**
-     * 27. Super Admin peut afficher la page des salaires professeurs avec filtres de date.
+     * 27. L'ancienne page des salaires redirige désormais vers Dépenses
+     *     (la gestion des salaires est intégrée aux Dépenses, plus de page autonome).
      */
     public function test_super_admin_can_view_teachers_page_with_filters(): void
     {
         $this->actingAs($this->superAdmin)
             ->get('/super-admin/finance/professeurs?domain=all&month=10&year=2026')
-            ->assertOk()
-            ->assertSee('Salaires professeurs')
-            ->assertSee('Salaires attendus')
-            ->assertSee('Octobre 2026');
+            ->assertRedirectContains('/super-admin/finance/depenses');
     }
 
     /**
@@ -794,7 +792,7 @@ class FinanceManagementTest extends TestCase
             ->assertOk()
             ->assertSee('Dépenses')
             ->assertSee('Budget alloué')
-            ->assertSee('Dépenses engagées');
+            ->assertSee('Charges engagées');
 
         // Test de l'enregistrement avec articles multiples et calcul automatique
         $postResponse = $this->actingAs($this->superAdmin)

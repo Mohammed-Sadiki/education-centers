@@ -104,8 +104,12 @@
         // ────────────────────────────────────────────────────────────
         // CONTEXTE DÉDIÉ : GESTION FINANCIÈRE GLOBALE (CAD SYNDIC)
         // ────────────────────────────────────────────────────────────
+        // Navigation simplifiée : Trésorerie & Comptabilité (Compte bancaire,
+        // Comptabilité), Rapports financiers et la rubrique autonome « Salaires
+        // des professeurs » ont été retirés. Les salaires sont désormais gérés
+        // comme une catégorie de charge directement depuis « Dépenses ».
         $groups[] = [
-            'title' => null,
+            'title' => __('Navigation'),
             'items' => array_filter([
                 $link(__('Tableau de bord'), 'super-admin.finance.dashboard', 'chart', 'super-admin.finance.dashboard'),
                 $link(__('Statistiques'), 'super-admin.finance.statistics', 'arrow-trending-up', 'super-admin.finance.statistics'),
@@ -116,25 +120,15 @@
             'title' => __('Gestion financière'),
             'items' => array_filter([
                 $link(__('Paiements'), 'super-admin.finance.students', 'academic', 'super-admin.finance.students'),
-                $link(__('Dépenses'), 'super-admin.finance.expenses', 'banknotes', 'super-admin.finance.expenses'),
+                $link(__('Dépenses'), 'super-admin.finance.expenses', 'banknotes', ['super-admin.finance.expenses', 'super-admin.finance.teachers']),
                 $link(__('Recouvrement'), 'super-admin.finance.recovery', 'clock', 'super-admin.finance.recovery'),
             ])
         ];
 
         $groups[] = [
-            'title' => __('Trésorerie & Comptabilité'),
-            'items' => array_filter([
-                $link(__('Compte bancaire'), 'super-admin.finance.bank', 'building', 'super-admin.finance.bank'),
-                $link(__('Comptabilité'), 'super-admin.finance.accounting', 'document-text', 'super-admin.finance.accounting'),
-                $link(__('Salaires des professeurs'), 'super-admin.finance.teachers', 'user', 'super-admin.finance.teachers'),
-            ])
-        ];
-
-        $groups[] = [
-            'title' => __('Configuration & Rapports'),
+            'title' => __('Configuration'),
             'items' => array_filter([
                 $link(__('Configuration des prix'), 'super-admin.finance.configuration', 'wrench', 'super-admin.finance.configuration'),
-                $link(__('Rapports financiers'), 'super-admin.finance.reports', 'document', 'super-admin.finance.reports'),
             ])
         ];
 

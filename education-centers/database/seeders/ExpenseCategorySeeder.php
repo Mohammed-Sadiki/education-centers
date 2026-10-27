@@ -17,6 +17,7 @@ class ExpenseCategorySeeder extends Seeder
             ['name' => 'Eau', 'code' => 'eau', 'color' => '#06B6D4', 'description' => 'Consommation d\'eau des centres de formation'],
             ['name' => 'Internet & Télécom', 'code' => 'internet', 'color' => '#8B5CF6', 'description' => 'Fibre optique, abonnements téléphoniques'],
             ['name' => 'Loyer & Charges locatives', 'code' => 'loyer', 'color' => '#EC4899', 'description' => 'Baux commerciaux et charges immobilières'],
+            ['name' => 'Salaires des professeurs', 'code' => 'salaires', 'color' => '#8B5CF6', 'description' => 'Rémunérations versées aux professeurs'],
             ['name' => 'Autres charges d\'exploitation', 'code' => 'autres', 'color' => '#64748B', 'description' => 'Frais divers d\'exploitation et imprévus'],
         ];
 
