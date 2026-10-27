@@ -106,6 +106,7 @@ class FormationManagementTest extends TestCase
     {
         $response = $this->actingAs($this->superAdmin)->post(route('formations.store'), [
             'center_id'      => $this->centerMunich->id,
+            'domain'         => 'informatique',
             'name'           => 'Python Basics',
             'code'           => 'PY-101',
             'description'    => 'Introduction to Python',
@@ -119,6 +120,7 @@ class FormationManagementTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('formations', [
             'center_id' => $this->centerMunich->id,
+            'domain'    => 'informatique',
             'code'      => 'PY-101',
             'name'      => 'Python Basics',
         ]);
@@ -192,6 +194,7 @@ class FormationManagementTest extends TestCase
     public function test_center_admin_can_create_formation_in_own_center(): void
     {
         $response = $this->actingAs($this->adminBerlin)->post(route('formations.store'), [
+            'domain'         => 'informatique',
             'name'           => 'Deutsch B2 Berlin',
             'code'           => 'DE-B2',
             'duration_hours' => 150,
@@ -204,6 +207,7 @@ class FormationManagementTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('formations', [
             'center_id' => $this->centerBerlin->id,
+            'domain'    => 'informatique',
             'code'      => 'DE-B2',
             'name'      => 'Deutsch B2 Berlin',
         ]);
@@ -214,6 +218,7 @@ class FormationManagementTest extends TestCase
         // Admin Berlin tente de spécifier center_id de Munich
         $response = $this->actingAs($this->adminBerlin)->post(route('formations.store'), [
             'center_id' => $this->centerMunich->id,
+            'domain'    => 'informatique',
             'name'      => 'Fraude Munich',
             'code'      => 'FRAUD-1',
             'status'    => 'active',
@@ -252,6 +257,7 @@ class FormationManagementTest extends TestCase
     {
         // 'DE-A1' existe déjà à Berlin
         $response = $this->actingAs($this->adminBerlin)->post(route('formations.store'), [
+            'domain' => 'informatique',
             'name'   => 'Autre cours A1',
             'code'   => 'DE-A1',
             'status' => 'active',
@@ -264,6 +270,7 @@ class FormationManagementTest extends TestCase
     {
         // 'DE-A1' existe déjà à Berlin. Munich veut aussi créer 'DE-A1'
         $response = $this->actingAs($this->adminMunich)->post(route('formations.store'), [
+            'domain' => 'informatique',
             'name'   => 'Deutsch A1 Munich',
             'code'   => 'DE-A1',
             'status' => 'active',
@@ -317,7 +324,7 @@ class FormationManagementTest extends TestCase
             'status'         => 'invalid_status',
         ]);
 
-        $response->assertSessionHasErrors(['name', 'code', 'price', 'duration_hours', 'duration_weeks', 'status']);
+        $response->assertSessionHasErrors(['domain', 'name', 'code', 'price', 'duration_hours', 'duration_weeks', 'status']);
     }
 
     public function test_admin_can_toggle_formation_status(): void

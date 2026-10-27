@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Formation;
+use App\Support\DomainRegistry;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -34,6 +35,10 @@ class StoreFormationRequest extends FormRequest
                 $authUser->isSuperAdmin() ? 'required' : 'nullable',
                 'exists:centers,id',
             ],
+            // Domaine de rattachement : column métier réelle `domain` (slug),
+            // obligatoire pour que la formation apparaisse dans le dashboard du
+            // domaine concerné. Validé contre le catalogue (base ou repli canonique).
+            'domain' => ['required', 'string', Rule::in(DomainRegistry::slugs())],
             'name' => ['required', 'string', 'max:255'],
             'code' => [
                 'required',
@@ -59,6 +64,7 @@ class StoreFormationRequest extends FormRequest
     {
         return [
             'center_id' => __('centre éducatif'),
+            'domain' => __('domaine de formation'),
             'name' => __('intitulé de la formation'),
             'code' => __('code de la formation'),
             'description' => __('description du programme'),

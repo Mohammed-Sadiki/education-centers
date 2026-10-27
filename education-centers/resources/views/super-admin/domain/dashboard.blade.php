@@ -77,15 +77,8 @@
                 {{ __('Aucune formation dans ce domaine pour le moment') }}
             </h2>
             <p class="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                {{ __('Le domaine :domain est disponible pour votre centre. Créez votre première formation pour commencer à gérer étudiants, classes et séances.', ['domain' => $domainLabel]) }}
+                {{ __('Le domaine :domain est disponible pour votre centre. Ajoutez votre première formation depuis la page « Domaines de formation » pour commencer à gérer étudiants, classes et séances.', ['domain' => $domainLabel]) }}
             </p>
-            @can('create', \App\Models\Formation::class)
-                <a href="{{ route('formations.create') }}"
-                   class="mt-5 inline-flex items-center gap-2 rounded-xl {{ $cfg['dot'] }} px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90">
-                    <x-icon name="plus" class="h-4 w-4" />
-                    {{ __('Créer une formation') }}
-                </a>
-            @endcan
         </div>
     @endif
 

@@ -190,7 +190,6 @@
 
         $adminItems = array_filter([
             $link(__('Centres'), 'centers.index', 'building', 'centers.*'),
-            $link(__('Utilisateurs'), 'users.index', 'users', 'users.*'),
             $link(__('Étudiants'), 'students.index', 'academic', 'students.*'),
             $link(__('Professeurs'), 'teachers.index', 'user', 'teachers.*'),
             $link(__('Formations'), 'formations.index', 'book', 'formations.*'),
@@ -204,8 +203,6 @@
         $ops = array_filter([
             $link(__('Présences'), 'attendances.index', 'clock', 'attendances.*'),
             $link(__('Évaluations'), 'evaluations.index', 'chart', 'evaluations.*'),
-            $link(__('Paiements'), 'payments.index', 'banknotes', 'payments.*'),
-            $link(__('Factures'), 'invoices.index', 'document', 'invoices.*'),
             $link(__('Documents'), 'documents.index', 'document', 'documents.*'),
             $link(__('Certificats'), 'certificates.index', 'certificate', 'certificates.*'),
         ]);
@@ -214,9 +211,6 @@
         $com = array_filter([
             $link(__('Notifications'), 'notifications.index', 'bell', 'notifications.*'),
             $link(__('Annonces'), 'announcements.index', 'megaphone', 'announcements.*'),
-            $link(__('Audit Logs'), 'audit.index', 'shield', 'audit.*'),
-            $link(__('Messagerie'), 'messages.index', 'message', 'messages.*'),
-            $link(__('Traductions'), 'super-admin.translations.index', 'book', 'super-admin.translations.*'),
         ]);
         $groups[] = ['title' => __('Communication'), 'items' => $com];
 
@@ -227,7 +221,6 @@
         ])];
 
         $adminItems = array_filter([
-            $link(__('Utilisateurs'), 'users.index', 'users', 'users.*'),
             $link(__('Étudiants'), 'students.index', 'academic', 'students.*'),
             $link(__('Professeurs'), 'teachers.index', 'user', 'teachers.*'),
             $link(__('Formations'), 'formations.index', 'book', 'formations.*'),
@@ -241,8 +234,6 @@
         $ops = array_filter([
             $link(__('Présences'), 'attendances.index', 'clock', 'attendances.*'),
             $link(__('Évaluations'), 'evaluations.index', 'chart', 'evaluations.*'),
-            $link(__('Paiements'), 'payments.index', 'banknotes', 'payments.*'),
-            $link(__('Factures'), 'invoices.index', 'document', 'invoices.*'),
             $link(__('Documents'), 'documents.index', 'document', 'documents.*'),
             $link(__('Certificats'), 'certificates.index', 'certificate', 'certificates.*'),
         ]);
@@ -251,8 +242,6 @@
         $com = array_filter([
             $link(__('Notifications'), 'notifications.index', 'bell', 'notifications.*'),
             $link(__('Annonces'), 'announcements.index', 'megaphone', 'announcements.*'),
-            $link(__('Audit Logs'), 'audit.index', 'shield', 'audit.*'),
-            $link(__('Messagerie'), 'messages.index', 'message', 'messages.*'),
         ]);
         $groups[] = ['title' => __('Communication'), 'items' => $com];
 

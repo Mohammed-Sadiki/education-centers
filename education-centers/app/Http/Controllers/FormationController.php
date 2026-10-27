@@ -6,6 +6,7 @@ use App\Http\Requests\StoreFormationRequest;
 use App\Http\Requests\UpdateFormationRequest;
 use App\Models\Center;
 use App\Models\Formation;
+use App\Support\DomainRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -59,16 +60,25 @@ class FormationController extends Controller
     }
 
     /**
-     * Formulaire de création d'une formation.
+     * Formulaire indépendant de création d'une formation, centralisé depuis la
+     * page « Domaines de formation ». Cascade : centre (Super Admin) → domaine.
      */
     public function create(Request $request): View
     {
         Gate::authorize('create', Formation::class);
 
         $authUser = $request->user();
+
+        // Liste des centres : sélectionnable uniquement par le Super Admin.
         $centers = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
 
-        return view('formations.create', compact('centers'));
+        // Catalogue des domaines (commun aux centres, source de vérité `domains`,
+        // repli canonique si la table est vide — ex. suite de tests).
+        $domains = $authUser->isCenterAdmin()
+            ? DomainRegistry::visibleForCenter((int) $authUser->center_id)
+            : DomainRegistry::visible();
+
+        return view('formations.create', compact('centers', 'domains'));
     }
 
     /**

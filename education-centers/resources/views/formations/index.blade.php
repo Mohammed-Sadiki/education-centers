@@ -24,11 +24,6 @@
                 @endif
             </p>
         </div>
-        @can('create', \App\Models\Formation::class)
-            <a href="{{ route('formations.create') }}" class="btn btn-primary shadow-sm" id="btn-create-formation">
-                <i class="bi bi-plus-circle-fill me-1"></i>{{ __('Nouvelle formation') }}
-            </a>
-        @endcan
     </div>
 
     {{-- Filtres --}}
@@ -217,13 +212,6 @@
                             <td colspan="{{ auth()->user()->isSuperAdmin() ? '7' : '6' }}" class="text-center py-5 text-muted">
                                 <i class="bi bi-journal-x fs-1 d-block mb-2 text-secondary"></i>
                                 {{ __('Aucune formation trouvée.') }}
-                                @can('create', \App\Models\Formation::class)
-                                    <div class="mt-2">
-                                        <a href="{{ route('formations.create') }}" class="btn btn-sm btn-primary">
-                                            {{ __('Créer une formation') }}
-                                        </a>
-                                    </div>
-                                @endcan
                             </td>
                         </tr>
                     @endforelse
