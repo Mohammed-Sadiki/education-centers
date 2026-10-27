@@ -92,7 +92,7 @@ class Conversation extends Model
             return $conversation;
         }
 
-        $centerId = $userA->isCenterAdmin() ? $userA->center_id : ($userB->isCenterAdmin() ? $userB->center_id : null);
+        $centerId = $userA->center_id ?: $userB->center_id;
 
         $conversation = static::create([
             'type' => 'direct',

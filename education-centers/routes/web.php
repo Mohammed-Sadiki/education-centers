@@ -290,22 +290,28 @@ Route::middleware('auth')->group(function () {
     });
 
     // ──────────────────────────────────────────────────────────────────────────
-    //  MESSAGERIE INTERNE (Super Admin + Center Admin)
+    //  MESSAGERIE INTERNE (Super Admin + Center Admin + Teacher en lecture seule)
     // ──────────────────────────────────────────────────────────────────────────
     Route::middleware('role:super_admin,center_admin')->group(function () {
         Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
-        Route::get('/messages/conversations', [MessageController::class, 'getConversations'])->name('messages.conversations');
         Route::post('/messages/start-direct/{target}', [MessageController::class, 'startDirect'])->name('messages.start-direct');
-        Route::get('/messages/conversations/{conversation}', [MessageController::class, 'getMessages'])->name('messages.show');
         Route::post('/messages/conversations/{conversation}', [MessageController::class, 'sendMessage'])->name('messages.send');
+    });
+
+    // Routes de consultation des messages (Super Admin, Center Admin, Teacher)
+    Route::middleware('role:super_admin,center_admin,teacher')->group(function () {
+        Route::get('/messages/conversations', [MessageController::class, 'getConversations'])->name('messages.conversations');
+        Route::get('/messages/conversations/{conversation}', [MessageController::class, 'getMessages'])->name('messages.show');
         Route::get('/messages/unread-count', [MessageController::class, 'getUnreadCount'])->name('messages.unread-count');
         Route::get('/messages/attachments/{attachment}', [MessageController::class, 'downloadAttachment'])->name('messages.attachment');
     });
 
     // ──────────────────────────────────────────────────────────────────────────
-    //  ESPACE PROFESSEUR — Classes, étudiants et emploi du temps personnels
+    //  ESPACE PROFESSEUR — Classes, étudiants, emploi du temps et messages reçus
     // ──────────────────────────────────────────────────────────────────────────
     Route::middleware('role:teacher')->group(function () {
+        Route::get('/professeur/mes-messages', [MessageController::class, 'teacherIndex'])
+            ->name('teacher.messages');
         Route::get('/professeur/mes-classes', [TeacherPortalController::class, 'classes'])
             ->name('teacher.classes');
         Route::get('/professeur/mes-classes/{class}', [TeacherPortalController::class, 'showClass'])

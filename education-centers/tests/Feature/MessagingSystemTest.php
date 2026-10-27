@@ -226,7 +226,7 @@ class MessagingSystemTest extends TestCase
         // Berlin Admin should not be able to start conversation with Munich Admin
         $this->actingAs($this->adminBerlin)
             ->postJson(route('messages.start-direct', $this->adminMunich))
-            ->assertUnprocessable();
+            ->assertForbidden();
     }
 
     // ───────────────────────────────────────────────────────────────────────────
@@ -317,5 +317,56 @@ class MessagingSystemTest extends TestCase
     {
         $this->get(route('messages.index'))
             ->assertRedirect(route('login'));
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────
+    //  11. Layout Communication indépendant (aucune sidebar pédagogique)
+    // ───────────────────────────────────────────────────────────────────────────
+
+    public function test_messages_page_uses_independent_layout_without_pedagogical_sidebar(): void
+    {
+        // Reproduit le contexte du bug d'origine : domaine Santé actif en session
+        session(['active_domain' => 'sante']);
+
+        $response = $this->actingAs($this->superAdmin)
+            ->get(route('messages.index'))
+            ->assertOk()
+            ->assertSee('messaging-app', false)
+            ->assertSee('comm-back-home', false);
+
+        // Aucun lien ni libellé de la sidebar pédagogique ne doit apparaître
+        foreach (['students.index', 'teachers.index', 'classes.index', 'payments.index', 'attendances.index', 'schedules.index'] as $name) {
+            $response->assertDontSee(route($name), false);
+        }
+        $response->assertDontSee('Pédagogie');
+    }
+
+    public function test_center_admin_messages_page_has_no_domain_sidebar(): void
+    {
+        $this->actingAs($this->adminBerlin)
+            ->get(route('messages.index'))
+            ->assertOk()
+            ->assertSee('comm-back-home', false)
+            ->assertDontSee(route('students.index'), false)
+            ->assertDontSee(route('invoices.index'), false);
+    }
+
+    public function test_teacher_messages_page_is_independent_and_read_only(): void
+    {
+        $teacher = User::factory()->create([
+            'role' => User::ROLE_TEACHER,
+            'center_id' => $this->berlin->id,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($teacher)
+            ->get(route('teacher.messages'))
+            ->assertOk()
+            ->assertSee('teacher-messages-app', false)
+            ->assertSee('comm-back-home', false)
+            // Lecture seule : aucun bouton d'envoi ni champ de rédaction
+            ->assertDontSee('btn-send-message', false)
+            // Aucune sidebar pédagogique (ni celle du domaine ni celle du professeur)
+            ->assertDontSee(route('teacher.classes'), false);
     }
 }

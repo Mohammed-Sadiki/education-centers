@@ -87,9 +87,13 @@ class LocalizationTest extends TestCase
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'password',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect(route('admin.home'));
 
+        // /dashboard redirige désormais vers l'accueil commun (4 cartes)
         $this->get(route('dashboard'))
+            ->assertRedirect(route('admin.home'));
+
+        $this->get(route('admin.home'))
             ->assertOk()
             ->assertSee('dir="rtl"', false);
     }
@@ -110,11 +114,11 @@ class LocalizationTest extends TestCase
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'password',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect(route('admin.home'));
 
         $this->assertSame('ar', $user->fresh()->locale);
 
-        $this->get(route('dashboard'))
+        $this->get(route('admin.home'))
             ->assertOk()
             ->assertSee('dir="rtl"', false);
     }
@@ -157,6 +161,10 @@ class LocalizationTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('dashboard'))
+            ->assertRedirect(route('admin.home'));
+
+        $this->actingAs($admin)
+            ->get(route('admin.home'))
             ->assertOk()
             ->assertSee('dir="rtl"', false);
     }

@@ -207,6 +207,32 @@ class User extends Authenticatable
     }
 
     /**
+     * Retourne tous les IDs de centre auxquels l'utilisateur est rattaché.
+     * Pour un professeur, inclut son center_id principal ET les centres de ses classes (via class_teacher).
+     *
+     * @return array<int>
+     */
+    public function centerIds(): array
+    {
+        $ids = [];
+        if ($this->center_id) {
+            $ids[] = (int) $this->center_id;
+        }
+
+        if ($this->isTeacher() && $this->relationLoaded('teacher') ? $this->teacher : $this->teacher()->first()) {
+            $teacher = $this->teacher;
+            if ($teacher) {
+                $classCenterIds = $teacher->classes()->pluck('center_id')->filter()->all();
+                foreach ($classCenterIds as $cid) {
+                    $ids[] = (int) $cid;
+                }
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
      * Détermine si le compte utilisateur est actif.
      */
     public function isActive(): bool

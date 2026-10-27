@@ -651,8 +651,9 @@ class TeacherPortalTest extends TestCase
     {
         $superAdmin = User::factory()->superAdmin()->create();
 
+        // L'accueil commun (4 cartes) est la destination depuis la refonte du dashboard
         $this->actingAs($superAdmin)->get(route('dashboard'))
-            ->assertRedirect(route('super-admin.domaines'));
+            ->assertRedirect(route('admin.home'));
     }
 
     public function test_student_portal_data_still_scoped_to_student(): void
