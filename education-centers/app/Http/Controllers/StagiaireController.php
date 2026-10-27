@@ -11,6 +11,7 @@ use App\Models\StagiaireDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -19,49 +20,15 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class StagiaireController extends Controller
 {
     /**
-     * Mini-dashboard spécifique aux Stagiaires.
+     * Ancienne entrée du module : le tableau de bord statistique a été supprimé.
+     * La page principale est désormais la liste « Tous les stagiaires ».
+     * La route est conservée pour ne pas casser les anciens liens.
      */
-    public function dashboard(Request $request): View
+    public function dashboard(): RedirectResponse
     {
         Gate::authorize('viewAny', Stagiaire::class);
 
-        $authUser = $request->user();
-        $query = Stagiaire::query();
-
-        if ($authUser->isCenterAdmin()) {
-            $query->where('center_id', $authUser->center_id);
-        }
-
-        $total = (clone $query)->count();
-        $nouveaux = (clone $query)->where('status', 'nouveau')->count();
-        $enCours = (clone $query)->where('status', 'en_cours')->count();
-        $termines = (clone $query)->where('status', 'termine')->count();
-
-        // Critère d'un dossier complet : CIN renseigné, CIN recto téléversé, dates de stage définies et prix renseigné
-        $dossiersComplets = (clone $query)
-            ->whereNotNull('cin_number')
-            ->whereNotNull('cin_recto_path')
-            ->whereNotNull('stage_start_date')
-            ->whereNotNull('stage_end_date')
-            ->count();
-
-        $dossiersIncomplets = max(0, $total - $dossiersComplets);
-
-        $recentStagiaires = (clone $query)
-            ->with(['center', 'diplomas', 'documents'])
-            ->latest()
-            ->take(6)
-            ->get();
-
-        return view('super-admin.stagiaires.dashboard', compact(
-            'total',
-            'nouveaux',
-            'enCours',
-            'termines',
-            'dossiersComplets',
-            'dossiersIncomplets',
-            'recentStagiaires'
-        ));
+        return redirect()->route('stagiaires.index');
     }
 
     /**
@@ -72,22 +39,20 @@ class StagiaireController extends Controller
         Gate::authorize('viewAny', Stagiaire::class);
 
         $authUser = $request->user();
-        $baseQuery = Stagiaire::query();
 
+        // Périmètre : Admin Centre → son centre uniquement ; Super Admin → tous les centres.
+        $scopeQuery = Stagiaire::query();
         if ($authUser->isCenterAdmin()) {
-            $baseQuery->where('center_id', $authUser->center_id);
+            $scopeQuery->where('center_id', $authUser->center_id);
         }
 
-        $totalCount = (clone $baseQuery)->count();
-        $completsCount = (clone $baseQuery)
-            ->whereNotNull('cin_number')
-            ->whereNotNull('cin_recto_path')
-            ->whereNotNull('stage_start_date')
-            ->whereNotNull('stage_end_date')
-            ->count();
-        $incompletsCount = max(0, $totalCount - $completsCount);
+        // Carte « Total stagiaires » : effectif réel du périmètre, calculé sur la base.
+        // Volontairement indépendant des filtres (recherche, statut, centre) pour que
+        // le compteur reste cohérent quelle que soit la liste affichée.
+        $totalStagiaires = $scopeQuery->count();
 
-        $query = Stagiaire::with(['center', 'diplomas', 'documents']);
+        // `center` est la seule relation affichée par le tableau : pas de chargement inutile.
+        $query = Stagiaire::with('center');
 
         if ($authUser->isCenterAdmin()) {
             $query->where('center_id', $authUser->center_id);
@@ -107,22 +72,6 @@ class StagiaireController extends Controller
             $query->where('status', $status);
         }
 
-        if ($filter = $request->input('filter')) {
-            if ($filter === 'complets') {
-                $query->whereNotNull('cin_number')
-                    ->whereNotNull('cin_recto_path')
-                    ->whereNotNull('stage_start_date')
-                    ->whereNotNull('stage_end_date');
-            } elseif ($filter === 'incomplets') {
-                $query->where(function ($q) {
-                    $q->whereNull('cin_number')
-                        ->orWhereNull('cin_recto_path')
-                        ->orWhereNull('stage_start_date')
-                        ->orWhereNull('stage_end_date');
-                });
-            }
-        }
-
         if ($authUser->isSuperAdmin() && ($centerId = $request->input('center_id'))) {
             $query->where('center_id', $centerId);
         }
@@ -133,10 +82,7 @@ class StagiaireController extends Controller
         return view('super-admin.stagiaires.index', compact(
             'stagiaires',
             'centers',
-            'totalCount',
-            'completsCount',
-            'incompletsCount',
-            'filter'
+            'totalStagiaires'
         ));
     }
 
@@ -234,10 +180,19 @@ class StagiaireController extends Controller
 
     /**
      * Enregistrer un nouveau stagiaire.
+     *
+     * La validation (Formulaire de requête) est passée avant toute écriture :
+     * aucune donnée obligatoire manquante n'atteint la base, et le stagiaire,
+     * ses diplômes et ses documents sont créés dans une seule transaction.
      */
     public function store(StoreStagiaireRequest $request): RedirectResponse
     {
         $data = $request->safe()->except(['cin_recto', 'cin_verso', 'diplomas', 'other_documents']);
+
+        // Le centre d'un Admin Centre est imposé par le serveur, jamais par la requête.
+        if ($request->user()->isCenterAdmin()) {
+            $data['center_id'] = $request->user()->center_id;
+        }
 
         // Upload CIN recto et verso dans l'espace privé
         if ($request->hasFile('cin_recto')) {
@@ -248,68 +203,14 @@ class StagiaireController extends Controller
             $data['cin_verso_path'] = $request->file('cin_verso')->store('stagiaires/cin', 'local');
         }
 
-        $stagiaire = Stagiaire::create($data);
+        $stagiaire = DB::transaction(function () use ($data, $request) {
+            $stagiaire = Stagiaire::create($data);
 
-        // Enregistrement des diplômes multiples
-        if ($request->has('diplomas') && is_array($request->diplomas)) {
-            foreach ($request->diplomas as $index => $dip) {
-                if (empty($dip['title'])) {
-                    continue;
-                }
+            $this->attachDiplomas($stagiaire, $request);
+            $this->attachDocuments($stagiaire, $request);
 
-                $filePath = null;
-                $fileName = null;
-
-                $file = $request->file("diplomas.{$index}.file")
-                    ?? ($request->file('diplomas')[$index]['file'] ?? null)
-                    ?? data_get($request->allFiles(), "diplomas.{$index}.file")
-                    ?? (isset($dip['file']) && $dip['file'] instanceof UploadedFile ? $dip['file'] : null);
-
-                if ($file instanceof UploadedFile) {
-                    $fileName = $file->getClientOriginalName();
-                    $filePath = $file->store("stagiaires/{$stagiaire->id}/diplomas", 'local');
-                }
-
-                $stagiaire->diplomas()->create([
-                    'title' => $dip['title'],
-                    'institution' => $dip['institution'] ?? null,
-                    'year' => $dip['year'] ?? null,
-                    'file_path' => $filePath,
-                    'file_name' => $fileName,
-                ]);
-            }
-        }
-
-        // Enregistrement des autres documents
-        if ($request->has('other_documents') && is_array($request->other_documents)) {
-            foreach ($request->other_documents as $index => $doc) {
-                if (empty($doc['title'])) {
-                    continue;
-                }
-
-                $filePath = null;
-                $fileName = null;
-
-                $file = $request->file("other_documents.{$index}.file")
-                    ?? ($request->file('other_documents')[$index]['file'] ?? null)
-                    ?? data_get($request->allFiles(), "other_documents.{$index}.file")
-                    ?? (isset($doc['file']) && $doc['file'] instanceof UploadedFile ? $doc['file'] : null);
-
-                if ($file instanceof UploadedFile) {
-                    $fileName = $file->getClientOriginalName();
-                    $filePath = $file->store("stagiaires/{$stagiaire->id}/documents", 'local');
-                }
-
-                if ($filePath) {
-                    $stagiaire->documents()->create([
-                        'title' => $doc['title'],
-                        'type' => $doc['type'] ?? 'autre',
-                        'file_path' => $filePath,
-                        'file_name' => $fileName,
-                    ]);
-                }
-            }
-        }
+            return $stagiaire;
+        });
 
         return redirect()
             ->route('stagiaires.show', $stagiaire)
@@ -343,10 +244,19 @@ class StagiaireController extends Controller
 
     /**
      * Mettre à jour le dossier du stagiaire.
+     *
+     * Les diplômes et documents déjà enregistrés sont conservés tels quels :
+     * aucun fichier existant n'est supprimé lorsqu'aucun nouveau fichier n'est
+     * envoyé. Les écrits sont regroupés dans une seule transaction.
      */
     public function update(UpdateStagiaireRequest $request, Stagiaire $stagiaire): RedirectResponse
     {
         $data = $request->safe()->except(['cin_recto', 'cin_verso', 'diplomas', 'other_documents']);
+
+        // Le centre d'un Admin Centre est imposé par le serveur.
+        if ($request->user()->isCenterAdmin()) {
+            $data['center_id'] = $request->user()->center_id;
+        }
 
         if ($request->hasFile('cin_recto')) {
             if ($stagiaire->cin_recto_path && Storage::disk('local')->exists($stagiaire->cin_recto_path)) {
@@ -362,72 +272,78 @@ class StagiaireController extends Controller
             $data['cin_verso_path'] = $request->file('cin_verso')->store('stagiaires/cin', 'local');
         }
 
-        $stagiaire->update($data);
+        DB::transaction(function () use ($stagiaire, $data, $request) {
+            $stagiaire->update($data);
 
-        // Ajout de nouveaux diplômes si envoyés
-        if ($request->has('diplomas') && is_array($request->diplomas)) {
-            foreach ($request->diplomas as $index => $dip) {
-                if (empty($dip['title'])) {
-                    continue;
-                }
+            // Ajout des seules lignes réellement renseignées.
+            $this->attachDiplomas($stagiaire, $request);
+            $this->attachDocuments($stagiaire, $request);
+        });
 
-                $filePath = null;
-                $fileName = null;
+        return redirect()
+            ->route('stagiaires.show', $stagiaire)
+            ->with('success', __('Le dossier de :full_name a été mis à jour avec succès.', ['full_name' => $stagiaire->full_name]));
+    }
 
-                $file = $request->file("diplomas.{$index}.file")
-                    ?? ($request->file('diplomas')[$index]['file'] ?? null)
-                    ?? data_get($request->allFiles(), "diplomas.{$index}.file")
-                    ?? (isset($dip['file']) && $dip['file'] instanceof UploadedFile ? $dip['file'] : null);
+    /**
+     * Enregistre les lignes de la section facultative « Diplômes obtenus ».
+     * Une ligne laissée vide par défaut est ignorée : aucun faux diplôme n'est créé.
+     */
+    private function attachDiplomas(Stagiaire $stagiaire, Request $request): void
+    {
+        foreach ((array) $request->input('diplomas', []) as $index => $dip) {
+            if (! is_array($dip) || trim((string) ($dip['title'] ?? '')) === '') {
+                continue;
+            }
 
-                if ($file instanceof UploadedFile) {
-                    $fileName = $file->getClientOriginalName();
-                    $filePath = $file->store("stagiaires/{$stagiaire->id}/diplomas", 'local');
-                }
+            $filePath = null;
+            $fileName = null;
+            $file = $request->file("diplomas.{$index}.file");
 
-                $stagiaire->diplomas()->create([
-                    'title' => $dip['title'],
-                    'institution' => $dip['institution'] ?? null,
-                    'year' => $dip['year'] ?? null,
+            if ($file instanceof UploadedFile && $file->isValid()) {
+                $fileName = $file->getClientOriginalName();
+                $filePath = $file->store("stagiaires/{$stagiaire->id}/diplomas", 'local');
+            }
+
+            $stagiaire->diplomas()->create([
+                'title' => $dip['title'],
+                'institution' => $dip['institution'] ?? null,
+                'year' => $dip['year'] ?? null,
+                'file_path' => $filePath,
+                'file_name' => $fileName,
+            ]);
+        }
+    }
+
+    /**
+     * Enregistre les lignes de la section facultative « Autres documents ».
+     * Une ligne sans titre (ligne vide par défaut, type présélectionné) est ignorée.
+     */
+    private function attachDocuments(Stagiaire $stagiaire, Request $request): void
+    {
+        foreach ((array) $request->input('other_documents', []) as $index => $doc) {
+            if (! is_array($doc) || trim((string) ($doc['title'] ?? '')) === '') {
+                continue;
+            }
+
+            $filePath = null;
+            $fileName = null;
+            $file = $request->file("other_documents.{$index}.file");
+
+            if ($file instanceof UploadedFile && $file->isValid()) {
+                $fileName = $file->getClientOriginalName();
+                $filePath = $file->store("stagiaires/{$stagiaire->id}/documents", 'local');
+            }
+
+            if ($filePath) {
+                $stagiaire->documents()->create([
+                    'title' => $doc['title'],
+                    'type' => $doc['type'] ?? 'autre',
                     'file_path' => $filePath,
                     'file_name' => $fileName,
                 ]);
             }
         }
-
-        // Ajout de nouveaux documents si envoyés
-        if ($request->has('other_documents') && is_array($request->other_documents)) {
-            foreach ($request->other_documents as $index => $doc) {
-                if (empty($doc['title'])) {
-                    continue;
-                }
-
-                $filePath = null;
-                $fileName = null;
-
-                $file = $request->file("other_documents.{$index}.file")
-                    ?? ($request->file('other_documents')[$index]['file'] ?? null)
-                    ?? data_get($request->allFiles(), "other_documents.{$index}.file")
-                    ?? (isset($doc['file']) && $doc['file'] instanceof UploadedFile ? $doc['file'] : null);
-
-                if ($file instanceof UploadedFile) {
-                    $fileName = $file->getClientOriginalName();
-                    $filePath = $file->store("stagiaires/{$stagiaire->id}/documents", 'local');
-                }
-
-                if ($filePath) {
-                    $stagiaire->documents()->create([
-                        'title' => $doc['title'],
-                        'type' => $doc['type'] ?? 'autre',
-                        'file_path' => $filePath,
-                        'file_name' => $fileName,
-                    ]);
-                }
-            }
-        }
-
-        return redirect()
-            ->route('stagiaires.show', $stagiaire)
-            ->with('success', __('Le dossier de :full_name a été mis à jour avec succès.', ['full_name' => $stagiaire->full_name]));
     }
 
     /**

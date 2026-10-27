@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('Liste des Stagiaires') . ' — ' . config('app.name'))
+@section('title', __('Tous les stagiaires') . ' — ' . config('app.name'))
 @section('description', __('Gestion administrative des stagiaires et suivi des dossiers de stage.'))
 
 @section('breadcrumb')
@@ -10,7 +10,7 @@
     </li>
     <li class="flex items-center gap-2">
         <x-icon name="chevron-left" class="h-3 w-3 text-slate-400 rotate-180" />
-        <a href="{{ route('stagiaires.dashboard') }}" class="hover:text-brand-700 dark:hover:text-brand-400 transition-colors">{{ __('Stagiaires') }}</a>
+        <a href="{{ route('stagiaires.index') }}" class="hover:text-brand-700 dark:hover:text-brand-400 transition-colors">{{ __('Stagiaires') }}</a>
     </li>
     <li class="flex items-center gap-2">
         <x-icon name="chevron-left" class="h-3 w-3 text-slate-400 rotate-180" />
@@ -20,74 +20,38 @@
 
 @section('content')
 <div class="space-y-6">
-    {{-- En-tête de la page --}}
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                <span>{{ __('🧑‍💼 Dossiers Stagiaires') }}</span>
-            </h1>
-            <p class="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                {{ __('Gestion des stagiaires, pièces d\'identité, conventions, diplômes et prix convenu du stage.') }}
-            </p>
-        </div>
-        <div class="flex items-center gap-2.5">
-            <a href="{{ route('stagiaires.dashboard') }}"
-               class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition">
-                <x-icon name="chart" class="h-4 w-4" />
-                <span>{{ __('Tableau de bord') }}</span>
-            </a>
-            <a href="{{ route('stagiaires.documents') }}"
-               class="inline-flex items-center gap-1.5 rounded-xl border border-teal-300 bg-teal-50 px-3.5 py-2 text-xs font-semibold text-teal-800 shadow-2xs hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/40 dark:text-teal-300 transition">
-                <x-icon name="document" class="h-4 w-4" />
-                <span>{{ __('Documents') }}</span>
-            </a>
-            <a href="{{ route('stagiaires.create') }}"
-               id="btn-nouveau-stagiaire"
-               class="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-purple-700 transition">
-                <x-icon name="plus" class="h-4 w-4" />
-                <span>{{ __('Nouveau stagiaire') }}</span>
-            </a>
-        </div>
+    {{-- En-tête de la page : titre + description (aucun bouton, la création est dans la sidebar) --}}
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            {{ __('Tous les stagiaires') }}
+        </h1>
+        <p class="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            @if(auth()->user()->isSuperAdmin())
+                {{ __('Consultez et gérez tous les stagiaires enregistrés dans les centres de formation.') }}
+            @else
+                {{ __('Consultez et gérez les stagiaires enregistrés dans votre centre de formation.') }}
+            @endif
+        </p>
     </div>
 
     {{-- ────────────────────────────────────────────────────────────
-         ONGLETS DOSSIERS : TOUS / COMPLETS / INCOMPLETS
+         CARTE STATISTIQUE UNIQUE : TOTAL STAGIAIRES (périmètre autorisé)
     ──────────────────────────────────────────────────────────── --}}
-    <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
-        <a href="{{ route('stagiaires.index', request()->except(['filter', 'page'])) }}"
-           class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all {{ !request()->filled('filter') ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800' }}">
-            <span>{{ __('Tous les dossiers') }}</span>
-            <span class="rounded-full px-1.5 py-0.5 text-[10px] {{ !request()->filled('filter') ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200' }}">
-                {{ $totalCount ?? $stagiaires->total() }}
-            </span>
-        </a>
-
-        <a href="{{ route('stagiaires.index', array_merge(request()->except('page'), ['filter' => 'complets'])) }}"
-           class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all {{ request('filter') === 'complets' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800' }}">
-            <x-icon name="check" class="h-3.5 w-3.5" />
-            <span>{{ __('Dossiers complets') }}</span>
-            <span class="rounded-full px-1.5 py-0.5 text-[10px] {{ request('filter') === 'complets' ? 'bg-white/25 text-white' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' }}">
-                {{ $completsCount ?? 0 }}
-            </span>
-        </a>
-
-        <a href="{{ route('stagiaires.index', array_merge(request()->except('page'), ['filter' => 'incomplets'])) }}"
-           class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all {{ request('filter') === 'incomplets' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800' }}">
-            <x-icon name="warning" class="h-3.5 w-3.5" />
-            <span>{{ __('Dossiers incomplets') }}</span>
-            <span class="rounded-full px-1.5 py-0.5 text-[10px] {{ request('filter') === 'incomplets' ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' }}">
-                {{ $incompletsCount ?? 0 }}
-            </span>
-        </a>
+    <div id="card-total-stagiaires"
+         class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 sm:max-w-xs">
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white shadow-2xs">
+            <x-icon name="users" class="h-6 w-6" />
+        </span>
+        <div class="min-w-0">
+            <span class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ __('Total stagiaires') }}</span>
+            <p class="mt-1 text-3xl font-black leading-none text-purple-700 dark:text-purple-300">{{ $totalStagiaires }}</p>
+            <span class="mt-1 block text-[11px] text-slate-400 dark:text-slate-500">{{ __('Stagiaires enregistrés') }}</span>
+        </div>
     </div>
 
     {{-- Filtres et recherche --}}
     <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <form method="GET" action="{{ route('stagiaires.index') }}" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            @if(request()->filled('filter'))
-                <input type="hidden" name="filter" value="{{ request('filter') }}">
-            @endif
-
             <div>
                 <label for="search" class="sr-only">{{ __('Recherche') }}</label>
                 <div class="relative">
@@ -133,7 +97,7 @@
                     <x-icon name="filter" class="h-3.5 w-3.5" />
                     <span>{{ __('Filtrer') }}</span>
                 </button>
-                @if(request()->hasAny(['search', 'status', 'center_id', 'filter']))
+                @if(request()->hasAny(['search', 'status', 'center_id']))
                     <a href="{{ route('stagiaires.index') }}"
                        class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 transition"
                        title="{{ __('Réinitialiser tous les filtres') }}">
@@ -215,7 +179,7 @@
                                 <div class="flex items-center justify-end gap-1.5">
                                     <a href="{{ route('stagiaires.show', $stagiaire) }}"
                                        class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-purple-600 dark:hover:bg-slate-800 dark:hover:text-purple-400 transition"
-                                       title="{{ __('Consulter le dossier') }}">
+                                       title="{{ __('Consulter le stagiaire') }}">
                                         <x-icon name="eye" class="h-4 w-4" />
                                     </a>
                                     <a href="{{ route('stagiaires.edit', $stagiaire) }}"

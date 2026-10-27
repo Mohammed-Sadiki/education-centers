@@ -10,7 +10,7 @@
             <nav class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
                 <a href="{{ route('super-admin.domaines') }}" class="hover:text-slate-800 dark:hover:text-slate-200">{{ __('Portail') }}</a>
                 <span>/</span>
-                <a href="{{ route('stagiaires.dashboard') }}" class="hover:text-slate-800 dark:hover:text-slate-200">{{ __('Stagiaires') }}</a>
+                <a href="{{ route('stagiaires.index') }}" class="hover:text-slate-800 dark:hover:text-slate-200">{{ __('Stagiaires') }}</a>
                 <span>/</span>
                 <a href="{{ route('stagiaires.index') }}" class="hover:text-slate-800 dark:hover:text-slate-200">{{ __('Liste') }}</a>
                 <span>/</span>

@@ -95,11 +95,6 @@
         $url = \Illuminate\Support\Facades\Route::has($routeName) ? route($routeName, $params) : $fallbackUrl;
         if (!$url) return null;
         $active = request()->routeIs($pattern);
-        if ($active && !empty($params['filter'])) {
-            $active = request()->query('filter') === $params['filter'];
-        } elseif ($active && empty($params['filter']) && is_string($pattern) && $pattern === 'stagiaires.index' && request()->filled('filter')) {
-            $active = false;
-        }
         return compact('label', 'url', 'icon', 'active');
     };
 
@@ -147,27 +142,13 @@
         // ────────────────────────────────────────────────────────────
         // CONTEXTE DÉDIÉ : GESTION ADMINISTRATIVE DES STAGIAIRES
         // ────────────────────────────────────────────────────────────
-        $groups[] = [
-            'title' => __('Dashboard'),
-            'items' => array_filter([
-                $link(__('Tableau de bord'), 'stagiaires.dashboard', 'chart', 'stagiaires.dashboard'),
-            ])
-        ];
-
+        // Espace simplifié : la liste « Tous les stagiaires » est la page principale
+        // du module ; le tableau de bord statistique et le groupe Dossiers ont été retirés.
         $groups[] = [
             'title' => __('Gestion des stagiaires'),
             'items' => array_filter([
                 $link(__('Tous les stagiaires'), 'stagiaires.index', 'users', 'stagiaires.index'),
                 $link(__('Ajouter un stagiaire'), 'stagiaires.create', 'plus', 'stagiaires.create'),
-            ])
-        ];
-
-        $groups[] = [
-            'title' => __('Dossiers'),
-            'items' => array_filter([
-                $link(__('Dossiers complets'), 'stagiaires.index', 'check', 'stagiaires.index', null, ['filter' => 'complets']),
-                $link(__('Dossiers incomplets'), 'stagiaires.index', 'warning', 'stagiaires.index', null, ['filter' => 'incomplets']),
-                $link(__('Documents'), 'stagiaires.documents', 'document', 'stagiaires.documents*'),
             ])
         ];
 

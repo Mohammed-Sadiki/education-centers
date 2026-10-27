@@ -11,10 +11,12 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\HasStagiaireFormData;
 use Tests\TestCase;
 
 class StagiaireManagementTest extends TestCase
 {
+    use HasStagiaireFormData;
     use RefreshDatabase;
 
     protected Center $centerParis;
@@ -55,19 +57,19 @@ class StagiaireManagementTest extends TestCase
     }
 
     /**
-     * 1. Super Admin peut accéder au module Stagiaires (dashboard, index, create).
+     * 1. Super Admin peut accéder au module Stagiaires (dashboard redirigé, index, create).
      */
     public function test_super_admin_can_access_stagiaires_module(): void
     {
+        // L'ancienne route du tableau de bord redirige proprement vers la liste.
         $this->actingAs($this->superAdmin)
             ->get(route('stagiaires.dashboard'))
-            ->assertOk()
-            ->assertSee('Tableau de bord — Stagiaires');
+            ->assertRedirect(route('stagiaires.index'));
 
         $this->actingAs($this->superAdmin)
             ->get(route('stagiaires.index'))
             ->assertOk()
-            ->assertSee('Dossiers Stagiaires');
+            ->assertSee('Tous les stagiaires');
 
         $this->actingAs($this->superAdmin)
             ->get(route('stagiaires.create'))
@@ -103,6 +105,8 @@ class StagiaireManagementTest extends TestCase
 
     /**
      * 3 & 6. Création d'un stagiaire avec stage_price positif et devise EUR.
+     * Le jeu de données utilise les alias du formulaire (birth_date, cin_delivered_at…)
+     * et reste volontairement proche de ce que poste le navigateur.
      */
     public function test_super_admin_can_create_stagiaire_with_stage_price(): void
     {
@@ -127,7 +131,7 @@ class StagiaireManagementTest extends TestCase
             'status' => 'nouveau',
             'center_id' => $this->centerParis->id,
             'notes' => 'Candidature spontanée acceptée.',
-        ];
+        ] + $this->cinFiles();
 
         $response = $this->actingAs($this->superAdmin)
             ->post(route('stagiaires.store'), $payload);
@@ -184,14 +188,15 @@ class StagiaireManagementTest extends TestCase
             'center_id' => $this->centerParis->id,
         ]);
 
-        $updatePayload = [
+        $updatePayload = $this->stagiairePayloadWithCin([
             'first_name' => 'Sara',
             'last_name' => 'Idrissi-Nouvelle',
+            'email' => 'sara.idrissi@example.com',
             'stage_price' => 1200.00,
             'currency' => 'EUR',
             'status' => 'en_cours',
             'center_id' => $this->centerLyon->id,
-        ];
+        ]);
 
         $response = $this->actingAs($this->superAdmin)
             ->put(route('stagiaires.update', $stagiaire), $updatePayload);
@@ -244,12 +249,15 @@ class StagiaireManagementTest extends TestCase
         $diploma2File = UploadedFile::fake()->create('master.pdf', 600, 'application/pdf');
         $otherDocFile = UploadedFile::fake()->create('attestation.pdf', 200, 'application/pdf');
 
-        $payload = [
+        $payload = $this->stagiairePayload([
             'first_name' => 'Mehdi',
             'last_name' => 'El Fassi',
+            'email' => 'mehdi.elfassi@example.com',
             'cin_number' => 'EF998877',
             'stage_price' => 1800.00,
             'currency' => 'EUR',
+            'center_id' => $this->centerParis->id,
+        ]) + [
             'cin_recto' => $cinRecto,
             'cin_verso' => $cinVerso,
             'diplomas' => [
@@ -382,24 +390,41 @@ class StagiaireManagementTest extends TestCase
     }
 
     /**
-     * 13. Contexte Stagiaires : vérification de la sidebar dédiée et absence des liens Santé.
+     * 13. Contexte Stagiaires : sidebar simplifiée (2 liens uniquement), absence des
+     * anciens groupes Dashboard/Dossiers et des liens Santé/Pédagogie.
+     *
+     * Les assertions portent sur la sidebar (<aside>) afin de rester indépendantes
+     * du contenu principal de la page.
      */
     public function test_stagiaires_context_displays_dedicated_sidebar_and_navigation(): void
     {
         $response = $this->actingAs($this->superAdmin)
-            ->get(route('stagiaires.dashboard'));
+            ->get(route('stagiaires.index'));
 
         $response->assertOk()
-            ->assertSee('Espace administratif')
-            ->assertSee('Tableau de bord')
-            ->assertSee('Tous les stagiaires')
-            ->assertSee('Ajouter un stagiaire')
-            ->assertSee('Dossiers complets')
-            ->assertSee('Dossiers incomplets')
-            ->assertSee('Documents')
-            ->assertSee(route('super-admin.domaines'))
-            ->assertDontSee('Dashboard Santé')
-            ->assertDontSee('Pédagogie');
+            ->assertSee('Total stagiaires');
+
+        $html = $response->getContent();
+        $sidebar = substr($html, strpos($html, '<aside'), strpos($html, '</aside>') - strpos($html, '<aside'));
+
+        // Éléments structurels conservés.
+        $this->assertStringContainsString('Espace administratif', $sidebar);
+        $this->assertStringContainsString(route('admin.home'), $sidebar);
+
+        // Les deux seules entrées fonctionnelles.
+        $this->assertStringContainsString('Tous les stagiaires', $sidebar);
+        $this->assertStringContainsString('Ajouter un stagiaire', $sidebar);
+
+        // Groupe Dashboard et groupe Dossiers retirés de la sidebar.
+        $this->assertStringNotContainsString('Tableau de bord', $sidebar);
+        $this->assertStringNotContainsString(route('stagiaires.dashboard'), $sidebar);
+        $this->assertStringNotContainsString('Dossiers complets', $sidebar);
+        $this->assertStringNotContainsString('Dossiers incomplets', $sidebar);
+        $this->assertStringNotContainsString(route('stagiaires.documents'), $sidebar);
+
+        // Hors périmètre : liens du contexte domaine.
+        $this->assertStringNotContainsString('Dashboard Santé', $sidebar);
+        $this->assertStringNotContainsString('Pédagogie', $sidebar);
     }
 
     /**
@@ -419,12 +444,14 @@ class StagiaireManagementTest extends TestCase
     }
 
     /**
-     * 15. Filtrage des dossiers complets et incomplets.
+     * 15. Les filtres « dossier complet / incomplet » ont été retirés de l'interface :
+     * la liste affiche tous les stagiaires autorisés, quel que soit l'état du dossier,
+     * et l'ancien paramètre ?filter ne restreint plus rien.
      */
-    public function test_stagiaires_filtering_complets_and_incomplets(): void
+    public function test_dossier_completeness_filters_are_removed_and_all_stagiaires_are_listed(): void
     {
-        // Dossier complet
-        $complet = Stagiaire::create([
+        // Dossier « complet » (CIN + dates renseignés)
+        Stagiaire::create([
             'first_name' => 'Jean-Luc',
             'last_name' => 'Complet',
             'cin_number' => 'CIN112233',
@@ -435,26 +462,35 @@ class StagiaireManagementTest extends TestCase
             'center_id' => $this->centerParis->id,
         ]);
 
-        // Dossier incomplet (manque dates et cin)
-        $incomplet = Stagiaire::create([
+        // Dossier « incomplet » (CIN et dates manquants)
+        Stagiaire::create([
             'first_name' => 'Paul',
             'last_name' => 'Incomplet',
             'center_id' => $this->centerParis->id,
         ]);
 
-        // Filtre complets
+        // Aucun onglet ni compteur de dossiers dans la page.
+        $page = $this->actingAs($this->superAdmin)
+            ->get(route('stagiaires.index'))
+            ->assertOk()
+            ->assertSee('Complet')
+            ->assertSee('Incomplet')
+            ->getContent();
+
+        $this->assertStringNotContainsString('Tous les dossiers', $page);
+        $this->assertStringNotContainsString('Dossiers complets', $page);
+        $this->assertStringNotContainsString('Dossiers incomplets', $page);
+
+        // L'ancien paramètre ne filtre plus la liste : les deux stagiaires restent visibles.
         $this->actingAs($this->superAdmin)
             ->get(route('stagiaires.index', ['filter' => 'complets']))
             ->assertOk()
             ->assertSee('Complet')
-            ->assertDontSee('Incomplet');
+            ->assertSee('Incomplet');
 
-        // Filtre incomplets
-        $this->actingAs($this->superAdmin)
-            ->get(route('stagiaires.index', ['filter' => 'incomplets']))
-            ->assertOk()
-            ->assertSee('Incomplet')
-            ->assertDontSee('Complet');
+        // Les données ne sont évidemment pas modifiées par ces changements d'affichage.
+        $this->assertDatabaseHas('stagiaires', ['last_name' => 'Complet', 'cin_number' => 'CIN112233']);
+        $this->assertDatabaseHas('stagiaires', ['last_name' => 'Incomplet', 'cin_number' => null]);
     }
 
     /**

@@ -575,14 +575,19 @@ class FinanceManagementTest extends TestCase
     }
 
     /**
-     * 21. Stagiaires reste fonctionnel.
+     * 21. Stagiaires reste fonctionnel (dashboard redirigé vers la liste simplifiée).
      */
     public function test_stagiaires_module_remains_functional(): void
     {
         $this->actingAs($this->superAdmin)
             ->get(route('stagiaires.dashboard'))
+            ->assertRedirect(route('stagiaires.index'));
+
+        $this->actingAs($this->superAdmin)
+            ->followingRedirects()
+            ->get(route('stagiaires.dashboard'))
             ->assertOk()
-            ->assertSee('Tableau de bord — Stagiaires');
+            ->assertSee('Tous les stagiaires');
     }
 
     /**

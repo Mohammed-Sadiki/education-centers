@@ -16,7 +16,7 @@
     $communicationRoute = route('messages.index');
 
     $stagiairesRoute = $isSuperAdmin
-        ? route('stagiaires.dashboard')
+        ? route('stagiaires.index')
         : route('dashboard');
 
     $financeRoute = $isSuperAdmin

@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Concerns\HasStagiaireValidation;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateStagiaireRequest extends FormRequest
 {
+    use HasStagiaireValidation;
+
     public function authorize(): bool
     {
         $stagiaire = $this->route('stagiaire');
@@ -38,92 +41,41 @@ class UpdateStagiaireRequest extends FormRequest
         } elseif ($this->input('gender') === 'autre') {
             $this->merge(['gender' => 'other']);
         }
+
+        // Centre résolu côté serveur pour un Admin Centre : impossible de déplacer
+        // un stagiaire vers un centre qui n'est pas le sien.
+        if ($this->user()?->isCenterAdmin()) {
+            $this->merge(['center_id' => $this->user()->center_id]);
+        }
     }
 
+    /**
+     * Mêmes règles que la création. Les scans CIN déjà enregistrés peuvent être
+     * conservés : un nouveau fichier n'est exigé que si aucun n'est présent.
+     */
     public function rules(): array
     {
-        return [
-            // Informations personnelles
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'center_id' => ['nullable', 'exists:centers,id'],
-            'date_of_birth' => ['nullable', 'date', 'before:today'],
-            'birth_date' => ['nullable', 'date', 'before:today'],
-            'place_of_birth' => ['nullable', 'string', 'max:255'],
-            'birth_place' => ['nullable', 'string', 'max:255'],
-            'gender' => ['nullable', 'string', Rule::in(['male', 'female', 'other', 'homme', 'femme', 'autre'])],
-            'nationality' => ['nullable', 'string', 'max:100'],
-            'address' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'email' => ['nullable', 'email', 'max:255'],
+        $stagiaire = $this->route('stagiaire');
 
-            // Identité (CIN)
-            'cin_number' => ['nullable', 'string', 'max:50'],
-            'cin_issued_date' => ['nullable', 'date'],
-            'cin_delivered_at' => ['nullable', 'date'],
-            'cin_issued_place' => ['nullable', 'string', 'max:255'],
-            'cin_delivered_place' => ['nullable', 'string', 'max:255'],
-            'cin_recto' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
-            'cin_verso' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
-
-            // Stage
-            'stage_start_date' => ['nullable', 'date'],
-            'stage_end_date' => ['nullable', 'date', 'after_or_equal:stage_start_date'],
-            'stage_type' => ['nullable', 'string', 'max:255'],
-            'stage_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
-            'currency' => ['nullable', 'string', 'max:10'],
-            'status' => ['nullable', 'string', Rule::in(['nouveau', 'en_cours', 'termine', 'suspendu', 'annule'])],
-            'notes' => ['nullable', 'string', 'max:2000'],
-
-            // Diplômes nouveaux
-            'diplomas' => ['nullable', 'array'],
-            'diplomas.*.title' => ['nullable', 'string', 'max:255'],
-            'diplomas.*.institution' => ['nullable', 'string', 'max:255'],
-            'diplomas.*.year' => ['nullable', 'max:10'],
-            'diplomas.*.file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
-
-            // Autres documents nouveaux
-            'other_documents' => ['nullable', 'array'],
-            'other_documents.*.title' => ['nullable', 'string', 'max:255'],
-            'other_documents.*.type' => ['nullable', 'string', 'max:50'],
-            'other_documents.*.file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
-        ];
+        return $this->stagiaireFieldRules() + [
+            'cin_recto' => [
+                Rule::requiredIf(fn () => ! $stagiaire || ! $stagiaire->cin_recto_path),
+                'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120',
+            ],
+            'cin_verso' => [
+                Rule::requiredIf(fn () => ! $stagiaire || ! $stagiaire->cin_verso_path),
+                'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120',
+            ],
+        ] + $this->attachmentRowRules();
     }
 
     public function attributes(): array
     {
-        return [
-            'first_name' => __('prénom'),
-            'last_name' => __('nom'),
-            'center_id' => __('centre'),
-            'date_of_birth' => __('date de naissance'),
-            'place_of_birth' => __('lieu de naissance'),
-            'gender' => __('sexe'),
-            'nationality' => __('nationalité'),
-            'address' => __('adresse'),
-            'phone' => __('téléphone'),
-            'email' => __('adresse e-mail'),
-            'cin_number' => __('numéro CIN'),
-            'cin_issued_date' => __('date de délivrance CIN'),
-            'cin_issued_place' => __('lieu de délivrance CIN'),
-            'cin_recto' => __('CIN recto'),
-            'cin_verso' => __('CIN verso'),
-            'stage_start_date' => __('date de début du stage'),
-            'stage_end_date' => __('date de fin du stage'),
-            'stage_type' => __('type de stage'),
-            'stage_price' => __('prix du stage'),
-            'currency' => __('devise'),
-            'status' => __('statut'),
-            'notes' => __('notes'),
-        ];
+        return $this->stagiaireAttributes();
     }
 
     public function messages(): array
     {
-        return [
-            'stage_price.numeric' => __('Le prix du stage doit être un montant numérique valide.'),
-            'stage_price.min' => __('Le prix du stage doit être supérieur ou égal à 0.'),
-            'stage_end_date.after_or_equal' => __('La date de fin du stage doit être postérieure ou égale à la date de début.'),
-        ];
+        return $this->stagiaireMessages();
     }
 }

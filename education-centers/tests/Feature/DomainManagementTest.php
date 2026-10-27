@@ -441,8 +441,14 @@ class DomainManagementTest extends TestCase
 
     public function test_stagiaires_dashboard_is_still_accessible(): void
     {
+        // L'ancienne entrée redirige proprement vers la liste « Tous les stagiaires ».
         $response = $this->actingAs($this->superAdmin)->get(route('stagiaires.dashboard'));
-        $response->assertStatus(200);
+        $response->assertRedirect(route('stagiaires.index'));
+
+        $this->actingAs($this->superAdmin)
+            ->followingRedirects()
+            ->get(route('stagiaires.dashboard'))
+            ->assertOk();
     }
 
     public function test_stagiaires_route_is_independent_of_domain_routes(): void
@@ -451,8 +457,8 @@ class DomainManagementTest extends TestCase
         $this->actingAs($this->superAdmin)
             ->get(route('super-admin.domain.dashboard', 'informatique'));
 
-        // La route Stagiaires reste indépendante
-        $response = $this->actingAs($this->superAdmin)->get(route('stagiaires.dashboard'));
+        // La route Stagiaires reste indépendante (liste accessible, statut 200)
+        $response = $this->actingAs($this->superAdmin)->get(route('stagiaires.index'));
         $response->assertStatus(200);
     }
 
@@ -467,7 +473,8 @@ class DomainManagementTest extends TestCase
         // Stagiaires est désormais accessible depuis la page d'accueil principale /admin/accueil
         $homeResponse = $this->actingAs($this->superAdmin)->get(route('admin.home'));
         $homeResponse->assertSee('Gestion des stagiaires');
-        $homeResponse->assertSee(route('stagiaires.dashboard'));
+        // L'entrée du module pointe directement sur la liste « Tous les stagiaires ».
+        $homeResponse->assertSee(route('stagiaires.index'), false);
     }
 
     public function test_stagiaires_is_not_listed_as_a_formation_domain(): void
