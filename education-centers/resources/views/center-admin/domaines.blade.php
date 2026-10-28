@@ -44,10 +44,7 @@
                 </a>
             @endcan
             @can('create', \App\Models\Formation::class)
-                {{-- Le bouton « Ajouter une formation » ouvre désormais le formulaire
-                     refondu d'inscription (élève + centre/domaine + formation + paiement).
-                     La création du catalogue reste accessible via la route formations.create. --}}
-                <a href="{{ route('students.create') }}"
+                <a href="{{ route('formations.create') }}"
                    id="btn-add-formation-ca-domaines"
                    class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600"
                    title="{{ __('Ajouter une formation') }}"

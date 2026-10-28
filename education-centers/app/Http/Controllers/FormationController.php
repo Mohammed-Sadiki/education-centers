@@ -98,7 +98,7 @@ class FormationController extends Controller
 
         return redirect()
             ->route('formations.show', $formation)
-            ->with('success', __('La formation \\":name\\" (:code) a été créée avec succès.', ['name' => $formation->name, 'code' => $formation->code]));
+            ->with('success', __('La formation « :name » (:code) a été créée avec succès.', ['name' => $formation->name, 'code' => $formation->code]));
     }
 
     /**
@@ -134,7 +134,7 @@ class FormationController extends Controller
 
         return redirect()
             ->route('formations.show', $formation)
-            ->with('success', __('La formation \\":name\\" a été mise à jour avec succès.', ['name' => $formation->name]));
+            ->with('success', __('La formation « :name » a été mise à jour avec succès.', ['name' => $formation->name]));
     }
 
     /**
@@ -148,8 +148,8 @@ class FormationController extends Controller
         $formation->update(['status' => $newStatus]);
 
         $message = $newStatus === 'active'
-            ? __('La formation \\":name\\" a été activée.', ['name' => $formation->name])
-            : __('La formation \\":name\\" a été désactivée.', ['name' => $formation->name]);
+            ? __('La formation « :name » a été activée.', ['name' => $formation->name])
+            : __('La formation « :name » a été désactivée.', ['name' => $formation->name]);
 
         return back()->with('success', $message);
     }
@@ -172,6 +172,6 @@ class FormationController extends Controller
 
         return redirect()
             ->route('formations.index')
-            ->with('success', __('La formation \\":name\\" a été supprimée avec succès.', ['name' => $name]));
+            ->with('success', __('La formation « :name » a été supprimée avec succès.', ['name' => $name]));
     }
 }

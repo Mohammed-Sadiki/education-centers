@@ -59,11 +59,10 @@ class FormationCreationCentralizationTest extends TestCase
             ->assertOk()
             ->assertSee('btn-add-student-domaines', false)
             ->assertSee('btn-add-formation-domaines', false)
+            ->assertSee('Ajouter un élève')
             ->assertSee('Ajouter une formation')
-            // Le bouton « Ajouter une formation » ouvre le formulaire refondu
-            // d'inscription (students.create) ; la route catalogue formations.create
-            // reste en place mais n'est plus liée sur cette page.
-            ->assertSee(route('students.create'), false);
+            ->assertSee(route('students.create'), false)
+            ->assertSee(route('formations.create'), false);
 
         $html = $response->getContent();
         // Le bouton formation suit immédiatement le bouton élève (ordre visuel « côte à côte »).
@@ -82,9 +81,10 @@ class FormationCreationCentralizationTest extends TestCase
                 ->assertOk()
                 ->assertSee('btn-add-student-ca-domaines', false)
                 ->assertSee('btn-add-formation-ca-domaines', false)
+                ->assertSee('Ajouter un élève')
                 ->assertSee('Ajouter une formation')
-                // Bouton refondu → formulaire d'inscription students.create.
-                ->assertSee(route('students.create'), false);
+                ->assertSee(route('students.create'), false)
+                ->assertSee(route('formations.create'), false);
 
             $html = $response->getContent();
             $this->assertLessThan(

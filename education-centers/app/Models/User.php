@@ -49,6 +49,8 @@ class User extends Authenticatable
         'password',
         'role',
         'center_id',
+        'domain',
+        'formation_id',
         'phone',
         'status',
         'locale',
@@ -127,6 +129,80 @@ class User extends Authenticatable
     public function teacher(): HasOne
     {
         return $this->hasOne(Teacher::class);
+    }
+
+    /**
+     * Formation principale enseignée par le professeur.
+     */
+    public function formation(): BelongsTo
+    {
+        return $this->belongsTo(Formation::class);
+    }
+
+    /**
+     * Domaines d'enseignement associés à l'utilisateur (professeur).
+     */
+    public function teachingDomains(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Domain::class, 'user_domains', 'user_id', 'domain_slug', 'id', 'slug')
+            ->withTimestamps();
+    }
+
+    /**
+     * Synchronise les domaines d'enseignement d'un utilisateur / professeur.
+     * Met également à jour le dossier Teacher associé s'il existe.
+     *
+     * @param array<int, string> $slugs
+     */
+    public function syncTeachingDomains(array $slugs): void
+    {
+        $validSlugs = Domain::whereIn('slug', $slugs)->pluck('slug')->toArray();
+        $this->teachingDomains()->sync($validSlugs);
+
+        $primary = $validSlugs[0] ?? null;
+        if ($this->domain !== $primary) {
+            $this->domain = $primary;
+            $this->save();
+        }
+
+        // Si l'utilisateur possède déjà un dossier Teacher, on synchronise aussi Teacher
+        if ($this->teacher) {
+            $this->teacher->syncTeachingDomains($validSlugs);
+        }
+    }
+
+    /**
+     * Récupère la liste des slugs de domaines d'enseignement de cet utilisateur.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function domainSlugs(): \Illuminate\Support\Collection
+    {
+        $userSlugs = \Illuminate\Support\Facades\DB::table('user_domains')
+            ->where('user_id', $this->id)
+            ->pluck('domain_slug');
+
+        if ($this->domain) {
+            $userSlugs = $userSlugs->push($this->domain);
+        }
+
+        if ($this->formation && $this->formation->domain) {
+            $userSlugs = $userSlugs->push($this->formation->domain);
+        }
+
+        if ($this->teacher) {
+            $userSlugs = $userSlugs->concat($this->teacher->domainSlugs());
+        }
+
+        return $userSlugs->filter()->unique()->values();
+    }
+
+    /**
+     * Modèles de domaines d'enseignement.
+     */
+    public function domains(): \Illuminate\Support\Collection
+    {
+        return Domain::whereIn('slug', $this->domainSlugs())->ordered()->get();
     }
 
     public function conversationParticipants(): HasMany

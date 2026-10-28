@@ -1,156 +1,282 @@
-@extends('layouts.app')
+@extends('layouts.standalone')
 
-@section('title', __('Nouvel utilisateur') . ' — ' . config('app.name'))
+@section('title', __('Ajouter un utilisateur') . ' — ' . config('app.name'))
+@section('description', __('Création d\'un compte utilisateur professeur pour le système.'))
+@section('standalone_title', __('Ajouter un utilisateur'))
 
-@section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('users.index') }}" class="text-decoration-none">{{ __('Utilisateurs') }}</a></li>
-    <li class="breadcrumb-item active" aria-current="page">{{ __('Nouveau') }}</li>
-@endsection
+@php
+    $authUser = auth()->user();
+    $isCenterAdmin = $authUser->isCenterAdmin();
+    $forcedCenter = $isCenterAdmin ? $authUser->center : null;
+    $backUrl = route('users.index');
+@endphp
+
+@section('standalone_back_url', $backUrl)
+@section('standalone_back_label', __('Retour aux utilisateurs'))
 
 @section('content')
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
+<div class="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6"
+     x-data="userTeacherFormApp({
+         formations: @js($formationsData),
+         isCenterAdmin: @js($isCenterAdmin),
+         forcedCenterId: @js($isCenterAdmin ? (int) $authUser->center_id : null),
+         initialCenterId: @js(old('center_id', $isCenterAdmin ? $authUser->center_id : '')),
+         initialDomain: @js(old('domain', '')),
+         initialFormationId: @js(old('formation_id', '')),
+     })">
 
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white border-bottom py-3">
-                    <h4 class="fw-bold mb-0">
-                        <i class="bi bi-person-plus-fill text-primary me-2"></i>{{ __('Créer un utilisateur') }}
-                    </h4>
-                    @if(auth()->user()->isCenterAdmin())
-                        <p class="text-muted small mb-0 mt-1">
-                            {{ __('Centre :') }} <strong>{{ auth()->user()->center?->name }}</strong> {{ __('— le compte sera rattaché à votre centre.') }}
-                        </p>
-                    @endif
+    {{-- Titre de page --}}
+    <x-ui.page-header
+        :title="__('Ajouter un utilisateur')"
+        :description="__('Création d\'un compte professeur permettant l\'accès à l\'application. Les élèves sont gérés en dossiers administratifs.')" />
+
+    {{-- Bandeau centre automatique (Admin Centre) --}}
+    @if($isCenterAdmin)
+        <div class="mb-6 flex items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50 px-5 py-4 text-base text-brand-800 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-200">
+            <x-icon name="building" class="h-6 w-6 shrink-0" />
+            <div>
+                {{ __('Centre') }} : <strong>{{ $forcedCenter?->translated('name') ?? $forcedCenter?->name }}</strong>
+                — {{ __('Le compte professeur sera automatiquement rattaché à votre centre.') }}
+            </div>
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('users.store') }}" id="form-create-user" class="space-y-6">
+        @csrf
+
+        {{-- Rôle imposé automatiquement : Professeur (vérifié et sécurisé serveur) --}}
+        <input type="hidden" name="role" value="{{ \App\Models\User::ROLE_TEACHER }}">
+
+        {{-- ══════════════════════════════════════════════════════════════
+             SECTION 1 — IDENTITÉ & INFORMATIONS DU COMPTE
+        ══════════════════════════════════════════════════════════════ --}}
+        <section class="ec-card overflow-hidden">
+            <header class="border-b border-slate-100 bg-slate-50/60 px-6 py-5 dark:border-slate-800 dark:bg-slate-800/40">
+                <h2 class="flex items-center gap-3 text-2xl font-extrabold tracking-tight text-brand-700 dark:text-brand-300">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-base font-extrabold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">1</span>
+                    <x-icon name="user" class="h-6 w-6" />
+                    {{ __('Identité & coordonnées') }}
+                </h2>
+            </header>
+            <div class="grid gap-5 p-6 sm:grid-cols-2">
+                {{-- Nom complet --}}
+                <div class="sm:col-span-1">
+                    <label for="name" class="ec-label text-[1.0625rem] font-semibold">{{ __('Nom complet') }} <span class="text-red-500">*</span></label>
+                    <input type="text" id="name" name="name" class="ec-input text-[1.0625rem] @error('name') is-invalid @enderror"
+                           value="{{ old('name') }}" placeholder="{{ __('Ex : Jean Dupont') }}" required autocomplete="name" autofocus>
+                    @error('name') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="card-body p-4">
-                    <form method="POST" action="{{ route('users.store') }}" id="form-create-user" novalidate>
-                        @csrf
+                {{-- Adresse e-mail --}}
+                <div class="sm:col-span-1">
+                    <label for="email" class="ec-label text-[1.0625rem] font-semibold">{{ __('Adresse e-mail') }} <span class="text-red-500">*</span></label>
+                    <input type="email" id="email" name="email" class="ec-input text-[1.0625rem] @error('email') is-invalid @enderror"
+                           value="{{ old('email') }}" placeholder="{{ __('professeur@education-centers.de') }}" required autocomplete="email">
+                    @error('email') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                </div>
 
-                        <div class="row g-3">
+                {{-- Téléphone --}}
+                <div class="sm:col-span-1">
+                    <label for="phone" class="ec-label text-[1.0625rem] font-semibold">{{ __('Numéro de téléphone') }}</label>
+                    <input type="tel" id="phone" name="phone" class="ec-input text-[1.0625rem] @error('phone') is-invalid @enderror"
+                           value="{{ old('phone') }}" placeholder="+49 30 1234567" autocomplete="tel">
+                    @error('phone') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                </div>
 
-                            {{-- Nom --}}
-                            <div class="col-md-6">
-                                <label for="name" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-person me-1"></i>{{ __('Nom complet') }} <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" id="name" name="name"
-                                       class="form-control @error('name') is-invalid @enderror"
-                                       value="{{ old('name') }}" placeholder="{{ __('Jean Dupont') }}" required autofocus>
-                                @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-
-                            {{-- Email --}}
-                            <div class="col-md-6">
-                                <label for="email" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-envelope me-1"></i>{{ __('Adresse e-mail') }} <span class="text-danger">*</span>
-                                </label>
-                                <input type="email" id="email" name="email"
-                                       class="form-control @error('email') is-invalid @enderror"
-                                       value="{{ old('email') }}" placeholder="jean@education-centers.de" required>
-                                @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-
-                            {{-- Téléphone --}}
-                            <div class="col-md-6">
-                                <label for="phone" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-telephone me-1"></i>{{ __('Téléphone') }}
-                                </label>
-                                <input type="text" id="phone" name="phone"
-                                       class="form-control @error('phone') is-invalid @enderror"
-                                       value="{{ old('phone') }}" placeholder="+49 30 1234567">
-                                @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-
-                            {{-- Rôle --}}
-                            <div class="col-md-6">
-                                <label for="role" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-shield me-1"></i>{{ __('Rôle') }} <span class="text-danger">*</span>
-                                </label>
-                                <select id="role" name="role"
-                                        class="form-select @error('role') is-invalid @enderror" required>
-                                    <option value="">{{ __('— Sélectionner —') }}</option>
-                                    @foreach($allowedRoles as $value => $label)
-                                        <option value="{{ $value }}" {{ old('role') === $value ? 'selected' : '' }}>
-                                            {{ $label }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('role') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-
-                            {{-- Centre (Super Admin uniquement) --}}
-                            @if(auth()->user()->isSuperAdmin())
-                                <div class="col-md-6" id="center-field">
-                                    <label for="center_id" class="form-label fw-semibold small text-secondary">
-                                        <i class="bi bi-building me-1"></i>{{ __('Centre') }}
-                                        <span class="text-muted">{{ __('(non requis pour Super Admin)') }}</span>
-                                    </label>
-                                    <select id="center_id" name="center_id"
-                                            class="form-select @error('center_id') is-invalid @enderror">
-                                        <option value="">{{ __('— Sans centre (Super Admin) —') }}</option>
-                                        @foreach($centers as $center)
-                                            <option value="{{ $center->id }}" {{ old('center_id') == $center->id ? 'selected' : '' }}>
-                                                {{ $center->translated('name') }} ({{ $center->city }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('center_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                            @endif
-
-                            {{-- Statut --}}
-                            <div class="col-md-6">
-                                <label for="status" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-toggle-on me-1"></i>{{ __('Statut') }} <span class="text-danger">*</span>
-                                </label>
-                                <select id="status" name="status"
-                                        class="form-select @error('status') is-invalid @enderror" required>
-                                    <option value="active"   {{ old('status', 'active') === 'active'   ? 'selected' : '' }}>{{ __('Actif') }}</option>
-                                    <option value="inactive" {{ old('status') === 'inactive' ? 'selected' : '' }}>{{ __('Inactif') }}</option>
-                                </select>
-                                @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-
-                            <div class="col-12"><hr class="my-1"></div>
-
-                            {{-- Mot de passe --}}
-                            <div class="col-md-6">
-                                <label for="password" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-lock me-1"></i>{{ __('Mot de passe') }} <span class="text-danger">*</span>
-                                </label>
-                                <input type="password" id="password" name="password"
-                                       class="form-control @error('password') is-invalid @enderror"
-                                       placeholder="{{ __('Min. 8 caractères') }}" required autocomplete="new-password">
-                                @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-
-                            {{-- Confirmation --}}
-                            <div class="col-md-6">
-                                <label for="password_confirmation" class="form-label fw-semibold small text-secondary">
-                                    <i class="bi bi-lock-fill me-1"></i>{{ __('Confirmer le mot de passe') }} <span class="text-danger">*</span>
-                                </label>
-                                <input type="password" id="password_confirmation" name="password_confirmation"
-                                       class="form-control" placeholder="{{ __('Répéter le mot de passe') }}" required>
-                            </div>
-
-                        </div>
-
-                        <div class="d-flex gap-2 mt-4 pt-2 border-top">
-                            <button type="submit" class="btn btn-primary shadow-sm">
-                                <i class="bi bi-person-check me-1"></i>{{ __('Créer l\'utilisateur') }}
-                            </button>
-                            <a href="{{ route('users.index') }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-1"></i>{{ __('Annuler') }}
-                            </a>
-                        </div>
-
-                    </form>
+                {{-- Type de compte (Fixé à Professeur) --}}
+                <div class="sm:col-span-1">
+                    <label class="ec-label text-[1.0625rem] font-semibold">{{ __('Type de compte') }}</label>
+                    <div class="ec-input flex items-center justify-between bg-slate-50 text-[1.0625rem] text-slate-700 dark:bg-slate-800/60 dark:text-slate-200 font-bold">
+                        <span class="inline-flex items-center gap-2">
+                            <span class="h-2.5 w-2.5 rounded-full bg-blue-500"></span>
+                            {{ __('Professeur') }}
+                        </span>
+                        <span class="ec-badge bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">{{ __('Automatique') }}</span>
+                    </div>
+                    <p class="ec-help text-[0.95rem]">{{ __('Ce formulaire permet de créer uniquement des comptes professeurs.') }}</p>
                 </div>
             </div>
+        </section>
 
+        {{-- ══════════════════════════════════════════════════════════════
+             SECTION 2 — RATTACHEMENT AU CENTRE & STATUT
+        ══════════════════════════════════════════════════════════════ --}}
+        <section class="ec-card overflow-hidden">
+            <header class="border-b border-slate-100 bg-slate-50/60 px-6 py-5 dark:border-slate-800 dark:bg-slate-800/40">
+                <h2 class="flex items-center gap-3 text-2xl font-extrabold tracking-tight text-brand-700 dark:text-brand-300">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-base font-extrabold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">2</span>
+                    <x-icon name="building" class="h-6 w-6" />
+                    {{ __('Centre & statut') }}
+                </h2>
+            </header>
+            <div class="grid gap-5 p-6 sm:grid-cols-2">
+                {{-- LIGNE 1 : Centre de rattachement & Statut du compte --}}
+                @if($isCenterAdmin)
+                    <div class="sm:col-span-1">
+                        <label class="ec-label text-[1.0625rem] font-semibold">{{ __('Centre de rattachement') }}</label>
+                        <div class="ec-input flex items-center justify-between bg-slate-50 text-[1.0625rem] text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+                            <span>{{ $forcedCenter?->translated('name') ?? $forcedCenter?->name }}</span>
+                            <span class="ec-badge bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">{{ __('Automatique') }}</span>
+                        </div>
+                    </div>
+                @else
+                    <div class="sm:col-span-1">
+                        <label for="center_id" class="ec-label text-[1.0625rem] font-semibold">{{ __('Centre de rattachement') }} <span class="text-red-500">*</span></label>
+                        <select id="center_id" name="center_id" class="ec-select text-[1.0625rem] @error('center_id') is-invalid @enderror"
+                                x-model="centerId" x-on:change="applyCascade()" required>
+                            <option value="">{{ __('— Sélectionner le centre —') }}</option>
+                            @foreach($centers as $center)
+                                <option value="{{ $center->id }}" @selected(old('center_id') == $center->id)>
+                                    {{ method_exists($center, 'translated') ? ($center->translated('name') ?? $center->name) : $center->name }} ({{ $center->city }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('center_id') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                    </div>
+                @endif
+
+                {{-- Statut du compte --}}
+                <div class="sm:col-span-1">
+                    <label for="status" class="ec-label text-[1.0625rem] font-semibold">{{ __('Statut du compte') }} <span class="text-red-500">*</span></label>
+                    <select id="status" name="status" class="ec-select text-[1.0625rem] @error('status') is-invalid @enderror" required>
+                        <option value="active" @selected(old('status', 'active') === 'active')>{{ __('Actif') }}</option>
+                        <option value="inactive" @selected(old('status') === 'inactive')>{{ __('Inactif') }}</option>
+                    </select>
+                    @error('status') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- LIGNE 2 : Domaine d'enseignement & Formation enseignée --}}
+                <div class="sm:col-span-1">
+                    <label for="domain" class="ec-label text-[1.0625rem] font-semibold">{{ __('Domaine d\'enseignement') }} <span class="text-red-500">*</span></label>
+                    <select id="domain" name="domain" class="ec-select text-[1.0625rem] @error('domain') is-invalid @enderror"
+                            x-model="domain" x-on:change="applyCascade()" required>
+                        <option value="">{{ __('— Sélectionner le domaine —') }}</option>
+                        @foreach($domains as $dom)
+                            <option value="{{ $dom->slug }}" @selected(old('domain') === $dom->slug)>
+                                {{ method_exists($dom, 'translated') ? ($dom->translated('name') ?? $dom->name) : $dom->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('domain') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="sm:col-span-1">
+                    <label for="formation_id" class="ec-label text-[1.0625rem] font-semibold">{{ __('Formation enseignée') }} <span class="text-red-500">*</span></label>
+                    <select id="formation_id" name="formation_id" class="ec-select text-[1.0625rem] @error('formation_id') is-invalid @enderror"
+                            x-model="formationId" required>
+                        <option value="">{{ __('— Sélectionner la formation —') }}</option>
+                        @foreach($formationsData as $formation)
+                            <option value="{{ $formation['id'] }}"
+                                    data-center-id="{{ $formation['center_id'] }}"
+                                    data-domain="{{ $formation['domain'] }}"
+                                    @selected(old('formation_id') == $formation['id'])>
+                                {{ $formation['name'] }} ({{ $formation['code'] }})
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('formation_id') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+
+                    <p x-show="!domain" class="ec-help mt-1 text-[0.95rem]">
+                        {{ __('Sélectionnez d\'abord le centre et le domaine d\'enseignement.') }}
+                    </p>
+                    <p x-show="domain && visibleCount === 0" x-cloak class="ec-error mt-1 text-[0.95rem]">
+                        {{ __('Aucune formation disponible pour ce domaine.') }}
+                    </p>
+                    <p x-show="domain && visibleCount > 0" x-cloak class="ec-help mt-1 text-[0.95rem]">
+                        <span x-text="visibleCount"></span> {{ __('formation(s) disponible(s) dans ce catalogue.') }}
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        {{-- ══════════════════════════════════════════════════════════════
+             SECTION 3 — SÉCURITÉ DU MOT DE PASSE
+        ══════════════════════════════════════════════════════════════ --}}
+        <section class="ec-card overflow-hidden">
+            <header class="border-b border-slate-100 bg-slate-50/60 px-6 py-5 dark:border-slate-800 dark:bg-slate-800/40">
+                <h2 class="flex items-center gap-3 text-2xl font-extrabold tracking-tight text-brand-700 dark:text-brand-300">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-base font-extrabold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">3</span>
+                    <x-icon name="lock" class="h-6 w-6" />
+                    {{ __('Sécurité du mot de passe') }}
+                </h2>
+            </header>
+            <div class="grid gap-5 p-6 sm:grid-cols-2">
+                <div>
+                    <label for="password" class="ec-label text-[1.0625rem] font-semibold">{{ __('Mot de passe') }} <span class="text-red-500">*</span></label>
+                    <input type="password" id="password" name="password" class="ec-input text-[1.0625rem] @error('password') is-invalid @enderror"
+                           placeholder="{{ __('Min. 8 caractères') }}" required autocomplete="new-password">
+                    @error('password') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="password_confirmation" class="ec-label text-[1.0625rem] font-semibold">{{ __('Confirmer le mot de passe') }} <span class="text-red-500">*</span></label>
+                    <input type="password" id="password_confirmation" name="password_confirmation" class="ec-input text-[1.0625rem]"
+                           placeholder="{{ __('Répéter le mot de passe') }}" required autocomplete="new-password">
+                </div>
+            </div>
+        </section>
+
+        {{-- Actions --}}
+        <div class="flex flex-wrap items-center justify-end gap-3 pb-6">
+            <a href="{{ route('users.index') }}" class="ec-btn-secondary text-[1.0625rem]">{{ __('Annuler') }}</a>
+            <button type="submit" class="ec-btn-primary px-7 text-[1.0625rem]" id="btn-submit-user">
+                <x-icon name="check" class="h-5 w-5" />
+                {{ __('Créer le compte professeur') }}
+            </button>
         </div>
-    </div>
+    </form>
 </div>
+
+<script>
+function userTeacherFormApp(config) {
+    return {
+        formations: config.formations,
+        isCenterAdmin: config.isCenterAdmin,
+        forcedCenterId: config.forcedCenterId,
+        centerId: config.initialCenterId ? String(config.initialCenterId) : '',
+        domain: config.initialDomain ? String(config.initialDomain) : '',
+        formationId: config.initialFormationId ? String(config.initialFormationId) : '',
+        visibleCount: 0,
+
+        get effectiveCenterId() {
+            return this.isCenterAdmin ? String(this.forcedCenterId) : String(this.centerId || '');
+        },
+
+        init() {
+            this.applyCascade(true);
+        },
+
+        applyCascade(isInitial = false) {
+            const center = this.effectiveCenterId;
+            const currentDomain = this.domain;
+            const formationSelect = document.getElementById('formation_id');
+            if (!formationSelect) return;
+
+            let count = 0;
+            let currentStillValid = false;
+
+            formationSelect.querySelectorAll('option[data-center-id]').forEach((option) => {
+                const match = (center !== '' ? option.dataset.centerId === center : true)
+                    && (currentDomain !== '' ? option.dataset.domain === currentDomain : false);
+
+                option.hidden = !match;
+                option.disabled = !match;
+
+                if (match) {
+                    count++;
+                    if (String(option.value) === String(this.formationId)) {
+                        currentStillValid = true;
+                    }
+                }
+            });
+
+            this.visibleCount = count;
+
+            if (!isInitial && !currentStillValid) {
+                this.formationId = '';
+                formationSelect.value = '';
+            }
+        }
+    };
+}
+</script>
 @endsection

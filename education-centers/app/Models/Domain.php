@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,6 +15,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Domain extends Model
 {
+    use HasTranslations;
+
+    /**
+     * Fields whose displayed value can be localized.
+     *
+     * @var list<string>
+     */
+    protected array $translatable = ['name', 'description'];
+
     protected $fillable = [
         'slug',
         'name',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Center;
 use App\Models\Formation;
 use App\Models\Student;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,13 +52,27 @@ class AuthController extends Controller
         $remember = $request->boolean('remember');
 
         if (Auth::attempt($credentials, $remember)) {
+            $user = Auth::user();
+
+            // Règle stricte : seuls les Super Admin, Admins Centre et Professeurs
+            // peuvent se connecter à l'application. Les élèves n'ont pas d'accès utilisateur.
+            if ($user->role === User::ROLE_STUDENT) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => __('L\'accès à l\'application est réservé à l\'administration et au corps enseignant.'),
+                ])->onlyInput('email');
+            }
+
             $request->session()->regenerate();
 
             if ($request->session()->pull('locale_explicit', false)) {
                 $locale = $request->session()->get('locale');
 
                 if (is_string($locale) && in_array($locale, LocaleController::SUPPORTED_LOCALES, true)) {
-                    Auth::user()->forceFill(['locale' => $locale])->saveQuietly();
+                    $user->forceFill(['locale' => $locale])->saveQuietly();
                 }
             }
 
@@ -65,7 +80,7 @@ class AuthController extends Controller
             // interdite au rôle) comme destination post-connexion.
             $request->session()->forget('url.intended');
 
-            if (Auth::user()->isSuperAdmin() || Auth::user()->isCenterAdmin()) {
+            if ($user->isSuperAdmin() || $user->isCenterAdmin()) {
                 return redirect()->route('admin.home')
                     ->with('success', __('Connexion réussie. Bienvenue !'));
             }

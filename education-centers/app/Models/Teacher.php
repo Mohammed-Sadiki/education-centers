@@ -21,6 +21,7 @@ class Teacher extends Model
         'user_id',
         'center_id',
         'domain',
+        'formation_id',
         'teacher_number',
         'first_name',
         'last_name',
@@ -72,6 +73,14 @@ class Teacher extends Model
     }
 
     /**
+     * Formation principale enseignée par ce professeur.
+     */
+    public function formation(): BelongsTo
+    {
+        return $this->belongsTo(Formation::class);
+    }
+
+    /**
      * Classes auxquelles ce professeur est affecté.
      */
     public function classes(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -97,9 +106,36 @@ class Teacher extends Model
     }
 
     /**
+     * Relation vers les modèles Domain via le pivot teacher_domains.
+     */
+    public function teachingDomains(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Domain::class, 'teacher_domains', 'teacher_id', 'domain_slug', 'id', 'slug')
+            ->withTimestamps();
+    }
+
+    /**
+     * Synchronise les domaines d'enseignement d'un professeur.
+     * Met également à jour la colonne `domain` (premier domaine ou null) pour rétro-compatibilité.
+     *
+     * @param array<int, string> $slugs
+     */
+    public function syncTeachingDomains(array $slugs): void
+    {
+        $validSlugs = Domain::whereIn('slug', $slugs)->pluck('slug')->toArray();
+        $this->teachingDomains()->sync($validSlugs);
+
+        $primary = $validSlugs[0] ?? null;
+        if ($this->domain !== $primary) {
+            $this->domain = $primary;
+            $this->save();
+        }
+    }
+
+    /**
      * Un professeur peut enseigner dans plusieurs domaines :
-     * son domaine principal (colonne `domain`) OU tout domaine de classe
-     * auquel il est affecté via le pivot `class_teacher`.
+     * son domaine principal (colonne `domain`), les domaines déclarés via `teacher_domains`
+     * OU tout domaine de classe auquel il est affecté via le pivot `class_teacher`.
      */
     public function scopeForDomain(\Illuminate\Database\Eloquent\Builder $query, ?string $slug): \Illuminate\Database\Eloquent\Builder
     {
@@ -109,23 +145,29 @@ class Teacher extends Model
 
         return $query->where(function (\Illuminate\Database\Eloquent\Builder $q) use ($slug) {
             $q->where('domain', $slug)
+                ->orWhereHas('teachingDomains', fn (\Illuminate\Database\Eloquent\Builder $d) => $d->where('domains.slug', $slug))
                 ->orWhereHas('classes.formation', fn (\Illuminate\Database\Eloquent\Builder $f) => $f->where('domain', $slug));
         });
     }
 
     /**
-     * Slugs des domaines d'un professeur (domaine principal + classes affectées).
+     * Slugs des domaines d'un professeur (pivot teacher_domains + domaine principal + classes affectées).
      *
      * @return \Illuminate\Support\Collection<int, string>
      */
     public function domainSlugs(): \Illuminate\Support\Collection
     {
+        $fromPivot = \Illuminate\Support\Facades\DB::table('teacher_domains')
+            ->where('teacher_id', $this->id)
+            ->pluck('domain_slug');
+
         $fromClasses = $this->classes()
             ->with('formation:id,domain')
             ->get()
             ->pluck('formation.domain');
 
-        return $fromClasses
+        return $fromPivot
+            ->concat($fromClasses)
             ->push($this->domain)
             ->filter()
             ->unique()

@@ -19,10 +19,10 @@ class UpdateUserRequest extends FormRequest
         $targetUser = $this->route('user');
         $isSuperAdmin = $authUser->isSuperAdmin();
 
-        // Rôles autorisés selon le rôle de l'éditeur
+        // Rôles autorisés selon le rôle de l'éditeur (aucun rôle élève)
         $allowedRoles = $isSuperAdmin
-            ? [User::ROLE_SUPER_ADMIN, User::ROLE_CENTER_ADMIN, User::ROLE_TEACHER, User::ROLE_STUDENT]
-            : [User::ROLE_TEACHER, User::ROLE_STUDENT];
+            ? [User::ROLE_SUPER_ADMIN, User::ROLE_CENTER_ADMIN, User::ROLE_TEACHER]
+            : [User::ROLE_TEACHER];
 
         $rules = [
             'name' => ['required', 'string', 'max:150'],
@@ -37,6 +37,23 @@ class UpdateUserRequest extends FormRequest
             'role' => ['required', 'string', Rule::in($allowedRoles)],
             'phone' => ['nullable', 'string', 'max:30'],
             'status' => ['required', 'in:active,inactive'],
+            'domain' => ['nullable', 'string', Rule::exists('domains', 'slug')],
+            'formation_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('formations', 'id')->where(function ($query) use ($isSuperAdmin, $authUser, $targetUser) {
+                    $centerId = $isSuperAdmin ? ($this->input('center_id') ?: $targetUser?->center_id) : $authUser->center_id;
+                    $domain = $this->input('domain') ?: $targetUser?->domain;
+                    if ($centerId) {
+                        $query->where('center_id', $centerId);
+                    }
+                    if ($domain) {
+                        $query->where('domain', $domain);
+                    }
+                }),
+            ],
+            'domains' => ['nullable', 'array'],
+            'domains.*' => ['string', Rule::exists('domains', 'slug')],
         ];
 
         // Center_id : seul le Super Admin peut le modifier

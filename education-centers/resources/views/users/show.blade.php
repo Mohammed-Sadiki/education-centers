@@ -108,6 +108,29 @@
                                         @endif
                                     </span>
                                 </li>
+                                @if($user->isTeacher() && $user->domains()->isNotEmpty())
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3">
+                                        <span class="text-muted fw-semibold">{{ __('Domaines d\'enseignement') }}</span>
+                                        <div class="d-flex flex-wrap gap-1 justify-content-end">
+                                            @foreach($user->domains() as $dom)
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
+                                                    {{ method_exists($dom, 'translated') ? ($dom->translated('name') ?? $dom->name) : $dom->name }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    </li>
+                                @endif
+                                @if($user->isTeacher() && ($user->formation || $user->teacher?->formation))
+                                    @php
+                                        $taughtFormation = $user->formation ?? $user->teacher?->formation;
+                                    @endphp
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3">
+                                        <span class="text-muted fw-semibold">{{ __('Formation enseignée') }}</span>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2 fw-semibold">
+                                            <i class="bi bi-journal-bookmark me-1"></i>{{ method_exists($taughtFormation, 'translated') ? ($taughtFormation->translated('name') ?? $taughtFormation->name) : $taughtFormation->name }}
+                                        </span>
+                                    </li>
+                                @endif
                                 <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3">
                                     <span class="text-muted fw-semibold">{{ __('Statut') }}</span>
                                     @if($user->isActive())

@@ -75,13 +75,14 @@ class UserManagementTest extends TestCase
         $response->assertSee('Prof Munich');
     }
 
-    public function test_center_admin_only_sees_users_from_their_center(): void
+    public function test_center_admin_only_sees_users_from_their_center_excluding_students(): void
     {
         $response = $this->actingAs($this->centerAdminA)->get(route('users.index'));
 
         $response->assertStatus(200);
         $response->assertSee('Prof Berlin');
-        $response->assertSee('Eleve Berlin');
+        // Les élèves ne doivent JAMAIS apparaître dans la liste des utilisateurs
+        $response->assertDontSee('Eleve Berlin');
         $response->assertDontSee('Prof Munich');
         $response->assertDontSee('Admin Munich');
     }
@@ -95,8 +96,19 @@ class UserManagementTest extends TestCase
         $responseStudent->assertStatus(403);
     }
 
-    public function test_super_admin_can_create_user_with_any_role_and_center(): void
+    public function test_super_admin_can_create_teacher_user_with_center(): void
     {
+        \App\Models\Domain::firstOrCreate(['slug' => 'informatique'], ['name' => 'Informatique', 'icon' => 'monitor', 'color' => 'blue', 'sort_order' => 1, 'is_active' => true]);
+        $formation = \App\Models\Formation::create([
+            'center_id' => $this->centerB->id,
+            'domain' => 'informatique',
+            'name' => 'Web Munich',
+            'code' => 'WEB-MUC',
+            'duration_hours' => 120,
+            'price' => 500,
+            'status' => 'active',
+        ]);
+
         $userData = [
             'name' => 'Nouveau Prof',
             'email' => 'new.teacher@test.de',
@@ -105,6 +117,8 @@ class UserManagementTest extends TestCase
             'role' => User::ROLE_TEACHER,
             'center_id' => $this->centerB->id,
             'status' => 'active',
+            'domain' => 'informatique',
+            'formation_id' => $formation->id,
         ];
 
         $response = $this->actingAs($this->superAdmin)->post(route('users.store'), $userData);
@@ -114,29 +128,45 @@ class UserManagementTest extends TestCase
             'email' => 'new.teacher@test.de',
             'role' => User::ROLE_TEACHER,
             'center_id' => $this->centerB->id,
+            'domain' => 'informatique',
+            'formation_id' => $formation->id,
         ]);
     }
 
-    public function test_center_admin_creates_user_scoped_strictly_to_their_center(): void
+    public function test_center_admin_creates_teacher_scoped_strictly_to_their_center(): void
     {
-        // Even if centerAdmin tries to pass centerB's id or role center_admin/super_admin
+        \App\Models\Domain::firstOrCreate(['slug' => 'sante'], ['name' => 'Santé', 'icon' => 'heart', 'color' => 'emerald', 'sort_order' => 2, 'is_active' => true]);
+        $formation = \App\Models\Formation::create([
+            'center_id' => $this->centerA->id,
+            'domain' => 'sante',
+            'name' => 'Soins Berlin',
+            'code' => 'SOIN-BER',
+            'duration_hours' => 80,
+            'price' => 400,
+            'status' => 'active',
+        ]);
+
         $userData = [
-            'name' => 'Eleve Cree par Admin Berlin',
-            'email' => 'eleve.scoped@test.de',
+            'name' => 'Prof Cree par Admin Berlin',
+            'email' => 'prof.scoped@test.de',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
-            'role' => User::ROLE_STUDENT,
+            'role' => User::ROLE_TEACHER,
             'center_id' => $this->centerB->id, // attempt spoofing
             'status' => 'active',
+            'domain' => 'sante',
+            'formation_id' => $formation->id,
         ];
 
         $response = $this->actingAs($this->centerAdminA)->post(route('users.store'), $userData);
 
         $response->assertRedirect();
         $this->assertDatabaseHas('users', [
-            'email' => 'eleve.scoped@test.de',
-            'role' => User::ROLE_STUDENT,
+            'email' => 'prof.scoped@test.de',
+            'role' => User::ROLE_TEACHER,
             'center_id' => $this->centerA->id, // MUST be centerA, not centerB!
+            'domain' => 'sante',
+            'formation_id' => $formation->id,
         ]);
     }
 
@@ -222,11 +252,67 @@ class UserManagementTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => $this->teacherA->id]);
     }
 
-    public function test_super_admin_can_delete_user(): void
+    public function test_super_admin_can_create_teacher_user_with_domains(): void
     {
-        $response = $this->actingAs($this->superAdmin)->delete(route('users.destroy', $this->teacherA));
-        $response->assertRedirect(route('users.index'));
+        \App\Models\Domain::firstOrCreate(['slug' => 'informatique'], ['name' => 'Informatique', 'icon' => 'monitor', 'color' => 'blue', 'sort_order' => 1, 'is_active' => true]);
+        \App\Models\Domain::firstOrCreate(['slug' => 'sante'], ['name' => 'Santé', 'icon' => 'heart', 'color' => 'emerald', 'sort_order' => 2, 'is_active' => true]);
 
-        $this->assertDatabaseMissing('users', ['id' => $this->teacherA->id]);
+        $formation = \App\Models\Formation::create([
+            'center_id' => $this->centerB->id,
+            'domain' => 'informatique',
+            'name' => 'Dev Web Munich',
+            'code' => 'DEV-MUC',
+            'duration_hours' => 120,
+            'price' => 500,
+            'status' => 'active',
+        ]);
+
+        $userData = [
+            'name' => 'Prof Multi Domaines',
+            'email' => 'multi.dom@test.de',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'role' => User::ROLE_TEACHER,
+            'center_id' => $this->centerB->id,
+            'status' => 'active',
+            'domain' => 'informatique',
+            'formation_id' => $formation->id,
+            'domains' => ['informatique', 'sante'],
+        ];
+
+        $response = $this->actingAs($this->superAdmin)->post(route('users.store'), $userData);
+
+        $response->assertRedirect();
+        $user = User::where('email', 'multi.dom@test.de')->first();
+        $this->assertNotNull($user);
+        $this->assertEqualsCanonicalizing(['informatique', 'sante'], $user->domainSlugs()->toArray());
+        $this->assertDatabaseHas('user_domains', [
+            'user_id' => $user->id,
+            'domain_slug' => 'informatique',
+        ]);
+        $this->assertDatabaseHas('user_domains', [
+            'user_id' => $user->id,
+            'domain_slug' => 'sante',
+        ]);
+    }
+
+    public function test_update_teacher_updates_teaching_domains(): void
+    {
+        \App\Models\Domain::firstOrCreate(['slug' => 'informatique'], ['name' => 'Informatique', 'icon' => 'monitor', 'color' => 'blue', 'sort_order' => 1, 'is_active' => true]);
+        \App\Models\Domain::firstOrCreate(['slug' => 'sante'], ['name' => 'Santé', 'icon' => 'heart', 'color' => 'emerald', 'sort_order' => 2, 'is_active' => true]);
+
+        $updateData = [
+            'name' => $this->teacherA->name,
+            'email' => $this->teacherA->email,
+            'role' => User::ROLE_TEACHER,
+            'status' => 'active',
+            'domains' => ['sante'],
+        ];
+
+        $response = $this->actingAs($this->centerAdminA)->put(route('users.update', $this->teacherA), $updateData);
+        $response->assertRedirect();
+
+        $this->teacherA->refresh();
+        $this->assertEqualsCanonicalizing(['sante'], $this->teacherA->domainSlugs()->toArray());
     }
 }

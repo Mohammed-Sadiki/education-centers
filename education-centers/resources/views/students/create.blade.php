@@ -1,8 +1,8 @@
 @extends('layouts.standalone')
 
-@section('title', __('Ajouter une formation') . ' — ' . config('app.name'))
+@section('title', __('Ajouter un élève') . ' — ' . config('app.name'))
 @section('description', __('Inscription d\'un élève à une formation avec paiement intégré.'))
-@section('standalone_title', __('Ajouter une formation'))
+@section('standalone_title', __('Ajouter un élève'))
 
 @php
     $authUser = auth()->user();
@@ -26,7 +26,7 @@
 
     {{-- Titre de page --}}
     <x-ui.page-header
-        :title="__('Ajouter une formation')"
+        :title="__('Ajouter un élève')"
         :description="__('Renseignez l\'élève, choisissez le centre, le domaine et la formation, puis enregistrez le paiement — tout sera transmis à Gestion financière.')" />
 
     {{-- Bandeau centre automatique (Admin Centre) : le centre n'est pas modifiable --}}

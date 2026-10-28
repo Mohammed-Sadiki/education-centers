@@ -381,20 +381,21 @@ class StudentPortalTest extends TestCase
         ]);
     }
 
-    public function test_student_can_log_in_and_reaches_a_personal_dashboard(): void
+    /**
+     * MISSION — Gestion des utilisateurs :
+     * Les élèves ne peuvent plus se connecter à l'application.
+     * Ils restent des dossiers administratifs sans compte d'accès.
+     */
+    public function test_student_cannot_log_in_and_is_blocked_at_login(): void
     {
-        $this->post('/login', [
+        $response = $this->post('/login', [
             'email' => $this->studentUser->email,
             'password' => 'password',
-        ])->assertRedirect(route('dashboard'));
+        ]);
 
-        $this->get(route('dashboard'))
-            ->assertOk()
-            ->assertSee('Élève Berlin')
-            ->assertSee('Centre Berlin')
-            ->assertSee('Espace élève')
-            ->assertSee('Tableau de bord')
-            ->assertDontSee('Gestion des centres');
+        // La connexion doit être refusée : redirection vers la page d'accueil avec erreur
+        $this->assertGuest();
+        $response->assertSessionHasErrors(['email']);
     }
 
     public function test_dashboard_contains_only_the_authenticated_students_academic_data(): void

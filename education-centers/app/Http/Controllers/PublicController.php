@@ -131,21 +131,9 @@ class PublicController extends Controller
         if ($formation->center_id !== (int) $data['center_id']) {
             return back()->withErrors(['formation_id' => __('Cette formation n\'appartient pas à ce centre.')])->withInput();
         }
-        // Create user account (student role)
-        $existingUser = User::where('email', $data['email'])->first();
-        if ($existingUser) {
-            return back()->withErrors(['email' => __('Un compte existe déjà avec cet email.')])->withInput();
-        }
-        $user = User::create([
-            'name' => $data['first_name'].' '.$data['last_name'],
-            'email' => $data['email'],
-            'password' => bcrypt(str()->random(12)),
-            'role' => User::ROLE_STUDENT,
-            'center_id' => $center->id,
-            'status' => 'active',
-        ]);
+        // Création directe du dossier étudiant sans compte utilisateur
         $student = Student::create([
-            'user_id' => $user->id,
+            'user_id' => null,
             'center_id' => $center->id,
             'student_number' => Student::generateStudentNumber($center),
             'first_name' => $data['first_name'],

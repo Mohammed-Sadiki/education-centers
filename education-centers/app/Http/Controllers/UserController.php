@@ -17,18 +17,25 @@ class UserController extends Controller
     /**
      * Liste des utilisateurs avec recherche, filtres et pagination.
      * Super Admin → tous | Admin Centre → uniquement son centre.
+     * Seuls les rôles autorisés (super_admin, center_admin, teacher) sont affichés.
+     * Les élèves ne doivent JAMAIS apparaître.
      */
     public function index(Request $request): View
     {
         Gate::authorize('viewAny', User::class);
 
         $authUser = $request->user();
-        $query = User::with('center');
+        $allowedRoles = [User::ROLE_SUPER_ADMIN, User::ROLE_CENTER_ADMIN, User::ROLE_TEACHER];
+
+        $query = User::with('center')->whereIn('role', $allowedRoles);
 
         // Isolation multi-centres
         if ($authUser->isCenterAdmin()) {
             $query->where('center_id', $authUser->center_id);
         }
+
+        // Calcul du total des utilisateurs du périmètre (avant les filtres de recherche)
+        $totalUsers = (clone $query)->count();
 
         // Filtre : recherche par nom ou email
         if ($search = $request->input('search')) {
@@ -38,9 +45,11 @@ class UserController extends Controller
             });
         }
 
-        // Filtre : rôle
+        // Filtre : rôle (restreint aux rôles d'utilisateurs autorisés)
         if ($role = $request->input('role')) {
-            $query->where('role', $role);
+            if (in_array($role, $allowedRoles, true)) {
+                $query->where('role', $role);
+            }
         }
 
         // Filtre : statut
@@ -56,11 +65,12 @@ class UserController extends Controller
         $users = $query->orderBy('name')->paginate(15)->withQueryString();
         $centers = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
 
-        return view('users.index', compact('users', 'centers'));
+        return view('users.index', compact('users', 'centers', 'totalUsers'));
     }
 
     /**
      * Formulaire de création d'un utilisateur.
+     * Important : depuis ce formulaire, il doit être possible de créer UNIQUEMENT des comptes Professeurs.
      */
     public function create(Request $request): View
     {
@@ -68,21 +78,47 @@ class UserController extends Controller
 
         $authUser = $request->user();
         $centers = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
+        $domains = \App\Models\Domain::ordered()->get();
 
-        // Rôles autorisés selon le créateur
-        $allowedRoles = $this->getAllowedRoles($authUser);
+        // Récupérer les formations actives avec leur centre et domaine
+        $formationsQuery = \App\Models\Formation::query()
+            ->where('status', 'active')
+            ->orderBy('name');
 
-        return view('users.create', compact('centers', 'allowedRoles'));
+        if ($authUser->isCenterAdmin()) {
+            $formationsQuery->where('center_id', $authUser->center_id);
+        }
+
+        $formationsData = $formationsQuery
+            ->get(['id', 'center_id', 'domain', 'name', 'code'])
+            ->map(function ($f) {
+                return [
+                    'id' => $f->id,
+                    'center_id' => $f->center_id,
+                    'domain' => $f->domain,
+                    'name' => method_exists($f, 'translated') ? ($f->translated('name') ?? $f->name) : $f->name,
+                    'code' => $f->code,
+                ];
+            })
+            ->values();
+
+        return view('users.create', compact('centers', 'domains', 'formationsData'));
     }
 
     /**
      * Enregistre un nouvel utilisateur.
-     * Sécurité : le center_id est contrôlé côté serveur pour les Admin Centre.
+     * Sécurité : création uniquement de compte Professeur, vérifié côté serveur.
+     * Le centre est forcé automatiquement pour un Admin Centre.
      */
     public function store(StoreUserRequest $request): RedirectResponse
     {
         $authUser = $request->user();
         $data = $request->validated();
+        $domainSlugs = $data['domains'] ?? [];
+        unset($data['domains']);
+
+        // Règle stricte : seul le rôle Professeur peut être créé via ce formulaire
+        $data['role'] = User::ROLE_TEACHER;
 
         // Hasher le mot de passe
         $data['password'] = Hash::make($data['password']);
@@ -90,23 +126,28 @@ class UserController extends Controller
         // Sécurité multi-centres : forcer le center_id pour Admin Centre
         if ($authUser->isCenterAdmin()) {
             $data['center_id'] = $authUser->center_id;
-
-            // Admin Centre ne peut pas créer un super_admin ou center_admin
-            if (in_array($data['role'], [User::ROLE_SUPER_ADMIN, User::ROLE_CENTER_ADMIN])) {
-                abort(403, __('Vous n\'êtes pas autorisé à créer ce type de compte.'));
-            }
         } else {
-            // Super Admin : center_id = null pour super_admin, sinon validé par le formulaire
-            if ($data['role'] === User::ROLE_SUPER_ADMIN) {
-                $data['center_id'] = null;
+            // Super Admin : pour un professeur, un center_id est requis
+            if (empty($data['center_id'])) {
+                return back()->withErrors(['center_id' => __('Le centre de rattachement du professeur est obligatoire.')])->withInput();
             }
         }
 
         $user = User::create($data);
 
+        // Si domain est spécifié et que domainSlugs est vide, utiliser domain
+        if (! empty($data['domain'])) {
+            $domainSlugs = array_unique(array_merge($domainSlugs, [$data['domain']]));
+        }
+
+        // Enregistrer les domaines d'enseignement sélectionnés
+        if (! empty($domainSlugs)) {
+            $user->syncTeachingDomains($domainSlugs);
+        }
+
         return redirect()
-            ->route('users.show', $user)
-            ->with('success', __('L\'utilisateur « :name » a été créé avec succès.', ['name' => $user->name]));
+            ->route('users.index')
+            ->with('success', __('Le compte professeur « :name » a été créé avec succès.', ['name' => $user->name]));
     }
 
     /**
@@ -129,8 +170,30 @@ class UserController extends Controller
         $authUser = $request->user();
         $centers = $authUser->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
         $allowedRoles = $this->getAllowedRoles($authUser, $user);
+        $domains = \App\Models\Domain::ordered()->get();
 
-        return view('users.edit', compact('user', 'centers', 'allowedRoles'));
+        $formationsQuery = \App\Models\Formation::query()
+            ->where('status', 'active')
+            ->orderBy('name');
+
+        if ($authUser->isCenterAdmin()) {
+            $formationsQuery->where('center_id', $authUser->center_id);
+        }
+
+        $formationsData = $formationsQuery
+            ->get(['id', 'center_id', 'domain', 'name', 'code'])
+            ->map(function ($f) {
+                return [
+                    'id' => $f->id,
+                    'center_id' => $f->center_id,
+                    'domain' => $f->domain,
+                    'name' => method_exists($f, 'translated') ? ($f->translated('name') ?? $f->name) : $f->name,
+                    'code' => $f->code,
+                ];
+            })
+            ->values();
+
+        return view('users.edit', compact('user', 'centers', 'allowedRoles', 'domains', 'formationsData'));
     }
 
     /**
@@ -141,6 +204,8 @@ class UserController extends Controller
     {
         $authUser = $request->user();
         $data = $request->validated();
+        $domainSlugs = $data['domains'] ?? null;
+        unset($data['domains']);
 
         // Gestion du mot de passe (facultatif à la modification)
         if (empty($data['password'])) {
@@ -166,6 +231,29 @@ class UserController extends Controller
         }
 
         $user->update($data);
+
+        // Si dossier Teacher associé, mettre à jour son domain et formation_id
+        if ($user->teacher) {
+            $teacherUpdates = [];
+            if (isset($data['domain'])) {
+                $teacherUpdates['domain'] = $data['domain'];
+            }
+            if (array_key_exists('formation_id', $data)) {
+                $teacherUpdates['formation_id'] = $data['formation_id'];
+            }
+            if (! empty($teacherUpdates)) {
+                $user->teacher->update($teacherUpdates);
+            }
+        }
+
+        // Mise à jour des domaines d'enseignement si fournis ou si rôle professeur
+        if (! empty($data['domain'])) {
+            $domainSlugs = array_unique(array_merge((array) ($domainSlugs ?? []), [$data['domain']]));
+        }
+
+        if ($domainSlugs !== null) {
+            $user->syncTeachingDomains($domainSlugs);
+        }
 
         return redirect()
             ->route('users.show', $user)
@@ -205,7 +293,7 @@ class UserController extends Controller
     }
 
     /**
-     * Retourne les rôles autorisés pour la création/modification selon le rôle du demandeur.
+     * Retourne les rôles autorisés pour la modification selon le rôle du demandeur.
      */
     private function getAllowedRoles(User $authUser, ?User $targetUser = null): array
     {
@@ -213,15 +301,13 @@ class UserController extends Controller
             return [
                 User::ROLE_SUPER_ADMIN => __('Super Admin'),
                 User::ROLE_CENTER_ADMIN => __('Admin Centre'),
-                User::ROLE_TEACHER => 'Professeur',
-                User::ROLE_STUDENT => __('Élève'),
+                User::ROLE_TEACHER => __('Professeur'),
             ];
         }
 
         // Admin Centre
         return [
-            User::ROLE_TEACHER => 'Professeur',
-            User::ROLE_STUDENT => __('Élève'),
+            User::ROLE_TEACHER => __('Professeur'),
         ];
     }
 }

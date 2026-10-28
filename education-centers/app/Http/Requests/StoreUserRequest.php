@@ -18,10 +18,9 @@ class StoreUserRequest extends FormRequest
         $authUser = $this->user();
         $isSuperAdmin = $authUser->isSuperAdmin();
 
-        // Rôles autorisés selon le rôle du créateur
-        $allowedRoles = $isSuperAdmin
-            ? [User::ROLE_SUPER_ADMIN, User::ROLE_CENTER_ADMIN, User::ROLE_TEACHER, User::ROLE_STUDENT]
-            : [User::ROLE_TEACHER, User::ROLE_STUDENT];
+        // Rôles autorisés : création uniquement de compte Professeur via ce formulaire
+        // Seul le rôle Professeur est autorisé (imposé automatiquement ou vérifié serveur)
+        $allowedRoles = [User::ROLE_TEACHER];
 
         $rules = [
             'name' => ['required', 'string', 'max:150'],
@@ -30,12 +29,30 @@ class StoreUserRequest extends FormRequest
             'role' => ['required', 'string', Rule::in($allowedRoles)],
             'phone' => ['nullable', 'string', 'max:30'],
             'status' => ['required', 'in:active,inactive'],
+            'domain' => ['required', 'string', Rule::exists('domains', 'slug')],
+            'formation_id' => [
+                'required',
+                'integer',
+                Rule::exists('formations', 'id')->where(function ($query) use ($isSuperAdmin, $authUser) {
+                    $centerId = $isSuperAdmin ? $this->input('center_id') : $authUser->center_id;
+                    $domain = $this->input('domain');
+                    if ($centerId) {
+                        $query->where('center_id', $centerId);
+                    }
+                    if ($domain) {
+                        $query->where('domain', $domain);
+                    }
+                }),
+            ],
+            // Compatibilité optionnelle si tableau domains fourni
+            'domains' => ['nullable', 'array'],
+            'domains.*' => ['string', Rule::exists('domains', 'slug')],
         ];
 
-        // Center_id : seul le Super Admin peut le choisir librement
+        // Center_id : obligatoire pour Super Admin créant un professeur
         if ($isSuperAdmin) {
             $rules['center_id'] = [
-                'nullable',
+                'required',
                 'integer',
                 Rule::exists('centers', 'id'),
             ];
