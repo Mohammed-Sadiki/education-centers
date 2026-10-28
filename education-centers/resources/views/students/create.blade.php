@@ -117,7 +117,7 @@
                 {{-- Photo de profil + aperçu --}}
                 <div>
                     <label class="ec-label text-[1.0625rem] font-semibold">{{ __('Photo de profil') }}</label>
-                    <p class="ec-help text-[0.95rem]">{{ __('JPG ou PNG, 2 Mo maximum. Un aperçu s\'affiche avant l\'enregistrement.') }}</p>
+                    <p class="ec-help text-[0.95rem]">{{ __('JPG ou PNG, 5 Mo maximum. Un aperçu s\'affiche avant l\'enregistrement.') }}</p>
                     <div class="mt-2 flex items-center gap-4">
                         <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400 dark:border-slate-600 dark:bg-slate-800">
                             <img x-show="profilePreview" x-cloak :src="profilePreview" alt="{{ __('Aperçu de la photo') }}" class="h-full w-full object-cover">

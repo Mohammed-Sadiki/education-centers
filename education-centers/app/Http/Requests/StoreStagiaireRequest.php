@@ -59,7 +59,7 @@ class StoreStagiaireRequest extends FormRequest
             // partie du dossier : obligatoires.
             'cin_recto' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
             'cin_verso' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
-            'profile_photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'profile_photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
         ] + $this->attachmentRowRules();
     }
 

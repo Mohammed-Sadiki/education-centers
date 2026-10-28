@@ -103,7 +103,7 @@ class StoreStudentRequest extends FormRequest
             'status' => ['nullable', Rule::in(['active', 'inactive'])],
 
             // ── Pièces et fichiers (facultatifs à la validation de base) ──────
-            'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
             'cin_files' => ['nullable', 'array', 'max:6'],
             'cin_files.*' => ['image', 'mimes:jpg,jpeg,png', 'max:4096'],
             'other_files' => ['nullable', 'array', 'max:10'],

@@ -70,7 +70,7 @@ class UpdateStagiaireRequest extends FormRequest
             // (préservation des dossiers existants lors de la modification).
             'profile_photo' => [
                 Rule::requiredIf(fn () => ! $stagiaire || ! $stagiaire->profile_photo_path),
-                'image', 'mimes:jpg,jpeg,png', 'max:2048',
+                'image', 'mimes:jpg,jpeg,png', 'max:5120',
             ],
         ] + $this->attachmentRowRules();
     }

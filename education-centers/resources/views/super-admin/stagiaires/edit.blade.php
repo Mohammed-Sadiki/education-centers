@@ -209,14 +209,14 @@
                             <span class="text-rose-500">*</span>
                         @endif
                     </label>
-                    <p class="ec-help text-[0.95rem]">{{ __('JPG ou PNG, 2 Mo maximum. Un aperçu s\'affiche avant l\'enregistrement ; sans nouveau fichier, la photo actuelle est conservée.') }}</p>
+                    <p class="ec-help text-[0.95rem]">{{ __('JPG ou PNG, 5 Mo maximum. Un aperçu s\'affiche avant l\'enregistrement ; sans nouveau fichier, la photo actuelle est conservée.') }}</p>
                     <div class="mt-2 flex items-center gap-4">
                         <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400 dark:border-slate-600 dark:bg-slate-800">
                             <img :src="profilePreview" x-show="profilePreview" alt="{{ __('Photo actuelle') }}" class="h-full w-full object-cover">
                             <x-icon name="user" x-show="!profilePreview" class="h-9 w-9 text-slate-400" />
                         </div>
                         <div class="w-full sm:max-w-md">
-                            <input type="file" id="profile_photo" name="profile_photo" x-ref="profileInput" accept="image/jpeg,image/png" data-max-kb="2048" data-label="{{ __('Photo de profil') }}"
+                            <input type="file" id="profile_photo" name="profile_photo" x-ref="profileInput" accept="image/jpeg,image/png" data-max-kb="5120" data-label="{{ __('Photo de profil') }}"
                                    @if(! $photoUrl) required data-required @endif
                                    x-on:change="onProfileChange($event)"
                                    class="block w-full text-[1rem] @error('profile_photo') is-invalid @enderror file:me-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2 file:text-[1rem] file:font-semibold file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-500/10 dark:file:text-brand-300">

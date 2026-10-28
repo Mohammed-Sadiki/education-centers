@@ -199,7 +199,7 @@ trait HasStagiaireValidation
             'company_name.required' => __('Le nom de l\'entreprise de stage est obligatoire.'),
             'company_location.required' => __('Le lieu de l\'entreprise de stage est obligatoire.'),
             'profile_photo.image' => __('La photo de profil doit être une image (JPG ou PNG).'),
-            'profile_photo.max' => __('La photo de profil ne doit pas dépasser 2 Mo.'),
+            'profile_photo.max' => __('La photo de profil ne doit pas dépasser 5 Mo.'),
             'other_files.*.mimes' => __('Les fichiers joints doivent être au format PDF, JPG, PNG, DOC ou DOCX.'),
             'other_files.*.max' => __('Chaque fichier joint doit peser au maximum 8 Mo.'),
             'diplomas.*.file.required' => __('Ce diplôme nécessite son fichier scanné (PDF ou image).'),
