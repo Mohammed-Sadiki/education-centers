@@ -40,6 +40,8 @@ class Student extends Model
         'city',
         'country',
         'phone',
+        'whatsapp',
+        'profile_photo_path',
         'emergency_contact_name',
         'emergency_contact_phone',
         'emergency_contact_relation',

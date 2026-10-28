@@ -8,14 +8,16 @@ use Illuminate\Http\UploadedFile;
  * Constructeur de données du formulaire stagiaire.
  *
  * Le formulaire « Ajouter un stagiaire » exige désormais toutes ses informations
- * hors sections « Diplômes obtenus » et « Autres documents ». Les tests partagent
- * donc un jeu de données complet, qu'ils dégradent volontairement pour vérifier
- * un refus précis.
+ * personnelles (dont WhatsApp, téléphone d'urgence, photos CIN et photo de profil)
+ * ainsi que les trois champs de l'entreprise de stage. Les champs hérités de
+ * l'ancien formulaire (email, adresse, stage, notes…) restent acceptés mais
+ * facultatifs. Les tests partagent donc un jeu de données complet, qu'ils
+ * dégradent volontairement pour vérifier un refus précis.
  */
 trait HasStagiaireFormData
 {
     /**
-     * Jeu de données valide couvrant les sections obligatoires 1 à 3.
+     * Jeu de données valide couvrant toutes les sections obligatoires.
      *
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
@@ -26,10 +28,16 @@ trait HasStagiaireFormData
             'first_name' => 'Karim',
             'last_name' => 'Benani',
             'date_of_birth' => '1998-05-14',
-            'place_of_birth' => 'Casablanca',
-            'gender' => 'male',
             'nationality' => 'Marocaine',
             'phone' => '+212612345678',
+            'whatsapp' => '+212612345679',
+            'emergency_contact_phone' => '+212522334455',
+            'company_name' => 'Atlas Technologies',
+            'company_phone' => '+212527000000',
+            'company_location' => 'Casablanca, Maroc',
+            // Champs hérités, désormais facultatifs mais toujours acceptés.
+            'place_of_birth' => 'Casablanca',
+            'gender' => 'male',
             'email' => 'karim.benani@example.com',
             'address' => '12 Rue de Rivoli, Paris',
             'cin_number' => 'AB123456',
@@ -59,14 +67,24 @@ trait HasStagiaireFormData
     }
 
     /**
-     * Données du formulaire + scans CIN : dossier complet accepté.
+     * Photo de profil exigée à la création (et tant qu'aucune photo n'existe).
+     */
+    protected function profilePhotoFile(): UploadedFile
+    {
+        return UploadedFile::fake()->image('profil.jpg', 200, 200);
+    }
+
+    /**
+     * Données du formulaire + pièces obligatoires : dossier complet accepté.
      *
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
      */
     protected function stagiairePayloadWithCin(array $overrides = []): array
     {
-        return $this->stagiairePayload($overrides) + $this->cinFiles();
+        return $this->stagiairePayload($overrides)
+            + $this->cinFiles()
+            + ['profile_photo' => $this->profilePhotoFile()];
     }
 
     /**

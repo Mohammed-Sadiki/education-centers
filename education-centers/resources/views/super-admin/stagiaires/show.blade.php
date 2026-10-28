@@ -17,6 +17,11 @@
                 <span class="text-slate-700 font-semibold dark:text-slate-300">{{ __('Dossier') }}</span>
             </nav>
             <div class="flex items-center gap-3">
+                @if($stagiaire->profile_photo_path)
+                    <img src="{{ route('stagiaires.profile-photo', $stagiaire) }}"
+                         alt="{{ __('Photo de profil') }}"
+                         class="h-14 w-14 shrink-0 rounded-full border-2 border-slate-200 object-cover dark:border-slate-700">
+                @endif
                 <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                     {{ $stagiaire->first_name }} {{ $stagiaire->last_name }}
                 </h1>
@@ -152,6 +157,20 @@
                     </div>
 
                     <div>
+                        <dt class="font-medium text-slate-500 dark:text-slate-400">{{ __('Numéro WhatsApp') }}</dt>
+                        <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                            <bdi dir="ltr">{{ $stagiaire->whatsapp ?: '—' }}</bdi>
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt class="font-medium text-slate-500 dark:text-slate-400">{{ __('Numéro de téléphone d\'urgence') }}</dt>
+                        <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                            <bdi dir="ltr">{{ $stagiaire->emergency_contact_phone ?: '—' }}</bdi>
+                        </dd>
+                    </div>
+
+                    <div>
                         <dt class="font-medium text-slate-500 dark:text-slate-400">{{ __('Email') }}</dt>
                         <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
                             @if($stagiaire->email)
@@ -168,6 +187,39 @@
                         <dt class="font-medium text-slate-500 dark:text-slate-400">{{ __('Adresse résidentielle') }}</dt>
                         <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
                             {{ $stagiaire->address ?? '—' }}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+
+            {{-- 1 bis. Entreprise où le stagiaire effectuera son stage --}}
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
+                        <x-icon name="building" class="h-4 w-4" />
+                    </span>
+                    {{ __('Entreprise où le stagiaire effectuera son stage') }}
+                </h3>
+
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div>
+                        <dt class="font-medium text-slate-500 dark:text-slate-400">{{ __('Nom de l\'entreprise') }}</dt>
+                        <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                            {{ $stagiaire->company_name ?: __('Non renseigné') }}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt class="font-medium text-slate-500 dark:text-slate-400">{{ __('Numéro de téléphone de l\'entreprise') }}</dt>
+                        <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                            <bdi dir="ltr">{{ $stagiaire->company_phone ?: '—' }}</bdi>
+                        </dd>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <dt class="font-medium text-slate-500 dark:text-slate-400">{{ __('Lieu de l\'entreprise') }}</dt>
+                        <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
+                            {{ $stagiaire->company_location ?: '—' }}
                         </dd>
                     </div>
                 </dl>

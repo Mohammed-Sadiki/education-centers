@@ -22,39 +22,45 @@ class StagiairePolicy
 
     /**
      * Voir la liste des stagiaires.
-     * Seul Super Admin y a accès pour le moment.
+     *
+     * Super Admin : tous les centres autorisés. Admin Centre : son centre
+     * uniquement — le périmètre est appliqué par le contrôleur.
      */
     public function viewAny(User $authUser): bool
     {
-        return false;
+        return $authUser->isCenterAdmin();
     }
 
     /**
-     * Consulter un dossier stagiaire.
+     * Consulter un dossier stagiaire : uniquement un dossier de son centre.
      */
     public function view(User $authUser, Stagiaire $stagiaire): bool
     {
-        return false;
+        return $authUser->isCenterAdmin()
+            && $authUser->center_id !== null
+            && (int) $authUser->center_id === (int) $stagiaire->center_id;
     }
 
     /**
-     * Créer un dossier stagiaire.
+     * Créer un dossier stagiaire. Le centre d'un Admin Centre est imposé par
+     * le serveur (prepareForValidation + contrôleur) : il ne peut donc inscrire
+     * que des stagiaires de son propre centre.
      */
     public function create(User $authUser): bool
     {
-        return false;
+        return $authUser->isCenterAdmin() && $authUser->center_id !== null;
     }
 
     /**
-     * Modifier un dossier stagiaire.
+     * Modifier un dossier stagiaire de son centre.
      */
     public function update(User $authUser, Stagiaire $stagiaire): bool
     {
-        return false;
+        return $this->view($authUser, $stagiaire);
     }
 
     /**
-     * Supprimer un dossier stagiaire.
+     * Supprimer un dossier stagiaire : opération réservée au Super Admin.
      */
     public function delete(User $authUser, Stagiaire $stagiaire): bool
     {

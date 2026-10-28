@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Formation;
 use App\Models\Student;
 use App\Models\User;
+use App\Services\FinanceService;
 use App\Support\DomainRegistry;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -91,11 +92,26 @@ class StoreStudentRequest extends FormRequest
             'city' => ['nullable', 'string', 'max:100'],
             'country' => ['nullable', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:30'],
+            'whatsapp' => ['nullable', 'string', 'max:30'],
             'emergency_contact_name' => ['nullable', 'string', 'max:255'],
             'emergency_contact_phone' => ['nullable', 'string', 'max:30'],
             'emergency_contact_relation' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:2000'],
-            'status' => ['required', Rule::in(['active', 'inactive'])],
+            // Le statut n'est plus un champ visible du formulaire refondu : il
+            // reste accepté pour les appels existants et default « active » côté
+            // contrôleur lorsqu'il est absent.
+            'status' => ['nullable', Rule::in(['active', 'inactive'])],
+
+            // ── Pièces et fichiers (facultatifs à la validation de base) ──────
+            'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'cin_files' => ['nullable', 'array', 'max:6'],
+            'cin_files.*' => ['image', 'mimes:jpg,jpeg,png', 'max:4096'],
+            'other_files' => ['nullable', 'array', 'max:10'],
+            'other_files.*' => ['file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:8192'],
+
+            // ── Paiement intégré (facultif : absent pour la création « dossier seul ») ──
+            'payment_option' => ['nullable', 'in:avance,paye'],
+            'avance_amount' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 
@@ -109,34 +125,60 @@ class StoreStudentRequest extends FormRequest
         $validator->after(function (Validator $validator) {
             $authUser = $this->user();
 
-            if (! $this->filled('formation_id')) {
-                return;
+            // Récupération de la formation si elle est fournie (la règle « exists »
+            // traite déjà le cas d'un identifiant invalide).
+            $formation = $this->filled('formation_id')
+                ? Formation::find($this->input('formation_id'))
+                : null;
+
+            if ($formation) {
+                // Centre effectif, déterminé côté serveur (jamais le center_id brut
+                // d'un Admin Centre). Le compte utilisateur n'entre plus en ligne de
+                // compte : pour un Super Admin, c'est le center_id choisi qui fait foi.
+                $centerId = $authUser->isCenterAdmin()
+                    ? (int) $authUser->center_id
+                    : (int) $this->input('center_id');
+
+                if (! $formation->isActive()) {
+                    $validator->errors()->add('formation_id', __('La formation sélectionnée est inactive.'));
+                }
+
+                // Isolation multi-centres : la formation doit appartenir au centre retenu.
+                if ((int) $formation->center_id !== $centerId) {
+                    $validator->errors()->add('formation_id', __('La formation sélectionnée n\'appartient pas au centre choisi.'));
+                }
+
+                // Cohérence domaine / formation (le domaine est celui de la formation).
+                if ($this->filled('domain') && $formation->domain !== $this->input('domain')) {
+                    $validator->errors()->add('formation_id', __('La formation sélectionnée n\'appartient pas au domaine choisi.'));
+                }
             }
 
-            $formation = Formation::find($this->input('formation_id'));
-            if (! $formation) {
-                return; // Déjà traité par la règle exists.
-            }
+            // ── Contrôles du paiement intégré (uniquement si une option est transmise) ──
+            if ($this->filled('payment_option')) {
+                if (! $formation) {
+                    $validator->errors()->add('formation_id', __('Une formation est requise pour enregistrer un paiement.'));
 
-            // Centre effectif, déterminé côté serveur (jamais le center_id brut
-            // d'un Admin Centre). Le compte utilisateur n'entre plus en ligne de
-            // compte : pour un Super Admin, c'est le center_id choisi qui fait foi.
-            $centerId = $authUser->isCenterAdmin()
-                ? (int) $authUser->center_id
-                : (int) $this->input('center_id');
+                    return;
+                }
 
-            if (! $formation->isActive()) {
-                $validator->errors()->add('formation_id', __('La formation sélectionnée est inactive.'));
-            }
+                // Tarif de référence : configuration financière existante.
+                $price = FinanceService::getFormationAnnualPrice($formation);
+                $option = $this->input('payment_option');
 
-            // Isolation multi-centres : la formation doit appartenir au centre retenu.
-            if ((int) $formation->center_id !== $centerId) {
-                $validator->errors()->add('formation_id', __('La formation sélectionnée n\'appartient pas au centre choisi.'));
-            }
+                if ($option === 'avance') {
+                    $advance = $this->input('avance_amount');
 
-            // Cohérence domaine / formation (le domaine est celui de la formation).
-            if ($this->filled('domain') && $formation->domain !== $this->input('domain')) {
-                $validator->errors()->add('formation_id', __('La formation sélectionnée n\'appartient pas au domaine choisi.'));
+                    if (! $this->filled('avance_amount')) {
+                        $validator->errors()->add('avance_amount', __('Le montant de l\'avance est requis.'));
+                    } elseif ((float) $advance < 0) {
+                        $validator->errors()->add('avance_amount', __('Le montant de l\'avance ne peut pas être négatif.'));
+                    } elseif ((float) $advance > $price + 0.01) {
+                        $validator->errors()->add('avance_amount', __('Le montant de l\'avance ne peut pas dépasser le prix de la formation (:price).', [
+                            'price' => format_price($price, 'MAD'),
+                        ]));
+                    }
+                }
             }
         });
     }
@@ -162,11 +204,19 @@ class StoreStudentRequest extends FormRequest
             'city' => __('ville'),
             'country' => __('pays'),
             'phone' => __('téléphone'),
+            'whatsapp' => __('numéro WhatsApp'),
             'emergency_contact_name' => __('nom du contact d’urgence'),
             'emergency_contact_phone' => __('téléphone du contact d’urgence'),
             'emergency_contact_relation' => __('lien avec le contact d’urgence'),
             'notes' => __('remarques'),
             'status' => __('statut'),
+            'profile_photo' => __('photo de profil'),
+            'cin_files' => __('photos de la CIN'),
+            'cin_files.*' => __('photo de la CIN'),
+            'other_files' => __('autres fichiers'),
+            'other_files.*' => __('fichier'),
+            'payment_option' => __('type de paiement'),
+            'avance_amount' => __('montant de l\'avance'),
         ];
     }
 }

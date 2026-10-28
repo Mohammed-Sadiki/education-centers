@@ -9,16 +9,26 @@ use Illuminate\Validation\Rule;
  * Règles de validation partagées par les formulaires « Ajouter un stagiaire »
  * et « Modifier un stagiaire ».
  *
- * Principe : toutes les informations du stagiaire sont obligatoires, SAUF les
- * deux sections facultatives « Diplômes obtenus » et « Autres documents ».
- * Une ligne dynamique laissée vide est ignorée (elle n'est pas considérée comme
- * un ajout) ; dès qu'un administrateur renseigne une ligne, tous les champs de
- * cette ligne — texte et fichier scanné — deviennent obligatoires.
+ * Principe de la refonte : le formulaire ne comporte que deux sections —
+ * « Informations personnelles » et « Entreprise où le stagiaire effectuera son
+ * stage » — et tous les champs affichés sont obligatoires, à l'exception des
+ * « Autres fichiers » (section facultative).
+ *
+ * Les informations administratives qui ne figurent plus dans le formulaire
+ * (lieu de naissance, sexe, e-mail, adresse, numéro CIN, période et prix du
+ * stage, statut, notes, diplômes et documents existants) restent acceptées par
+ * le serveur — leurs formats sont toujours contrôlés — mais ne sont plus
+ * exigées : aucun dossier existant n'est mis en défaut et aucune valeur déjà
+ * enregistrée n'est effacée.
+ *
+ * Les lignes facultatives « Diplômes obtenus » et « Autres documents » conservent
+ * leur règle « tout ou rien » : une ligne vide est ignorée, une ligne commencée
+ * doit être entièrement complétée.
  */
 trait HasStagiaireValidation
 {
     /**
-     * Champs des sections 1 à 3 : obligatoires et formatés.
+     * Champs des deux cartes du formulaire : obligatoires et formatés.
      *
      * Les fichiers CIN ne figurent pas ici : leur caractère obligatoire diffère
      * entre la création (toujours exigés) et la modification (un scan déjà
@@ -30,32 +40,48 @@ trait HasStagiaireValidation
             // 1. Informations personnelles
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'center_id' => ['required', 'integer', 'exists:centers,id'],
             'date_of_birth' => ['required', 'date', 'before:today'],
-            'place_of_birth' => ['required', 'string', 'max:255'],
-            'gender' => ['required', 'string', Rule::in(['male', 'female', 'other'])],
             'nationality' => ['required', 'string', 'max:100'],
             'phone' => ['required', 'string', 'max:30', 'regex:/^[0-9+().\s-]+$/'],
-            'email' => ['required', 'email', 'max:255'],
-            'address' => ['required', 'string', 'max:255'],
+            'whatsapp' => ['required', 'string', 'max:30', 'regex:/^[0-9+().\s-]+$/'],
+            'emergency_contact_phone' => ['required', 'string', 'max:30', 'regex:/^[0-9+().\s-]+$/'],
 
-            // 2. Identité (CIN)
-            'cin_number' => ['required', 'string', 'max:50'],
-            'cin_issued_date' => ['required', 'date'],
-            'cin_issued_place' => ['required', 'string', 'max:255'],
+            // 2. Entreprise où le stagiaire effectuera son stage (3 champs, exigés)
+            'company_name' => ['required', 'string', 'max:255'],
+            'company_phone' => ['required', 'string', 'max:30', 'regex:/^[0-9+().\s-]+$/'],
+            'company_location' => ['required', 'string', 'max:255'],
 
-            // 3. Stage, période et prix convenu
-            'stage_start_date' => ['required', 'date'],
-            'stage_end_date' => ['required', 'date', 'after_or_equal:stage_start_date'],
-            'stage_type' => ['required', 'string', 'max:255'],
-            'stage_price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
-            'currency' => ['required', 'string', 'max:10'],
-            'status' => ['required', 'string', Rule::in(['nouveau', 'en_cours', 'termine', 'suspendu', 'annule'])],
-            'notes' => ['required', 'string', 'max:2000'],
+            // Rattachement : jamais choisi par un Admin Centre (résolu côté serveur).
+            'center_id' => ['required', 'integer', 'exists:centers,id'],
 
-            // Alias envoyés par le formulaire d'édition : facultatifs en tant que
-            // tels, leur valeur est reversée dans les champs canoniques ci-dessus
-            // par prepareForValidation().
+            // 3. Téléversements du formulaire. La photo de profil fait partie des
+            // informations personnelles exigées : son caractère obligatoire est
+            // fixé par chaque requête (à la modification, une photo déjà
+            // enregistrée peut être conservée). Les « Autres fichiers » restent
+            // la seule section facultative.
+            'other_files' => ['nullable', 'array', 'max:10'],
+            'other_files.*' => ['file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:8192'],
+
+            // Champs administratifs conservés en base mais absents du formulaire :
+            // facultatifs, leur format reste vérifié dès qu'une valeur est envoyée.
+            'place_of_birth' => ['nullable', 'string', 'max:255'],
+            'gender' => ['nullable', 'string', Rule::in(['male', 'female', 'other'])],
+            'address' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'cin_number' => ['nullable', 'string', 'max:50'],
+            'cin_issued_date' => ['nullable', 'date'],
+            'cin_issued_place' => ['nullable', 'string', 'max:255'],
+            'stage_start_date' => ['nullable', 'date'],
+            'stage_end_date' => ['nullable', 'date', 'after_or_equal:stage_start_date'],
+            'stage_type' => ['nullable', 'string', 'max:255'],
+            'stage_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'currency' => ['nullable', 'string', 'max:10'],
+            'status' => ['nullable', 'string', Rule::in(['nouveau', 'en_cours', 'termine', 'suspendu', 'annule'])],
+            'notes' => ['nullable', 'string', 'max:2000'],
+
+            // Alias envoyés par d'anciens formulaires d'édition (birth_date,
+            // cin_delivered_at…) : leur valeur est reversée dans les champs
+            // canoniques ci-dessus par prepareForValidation().
             'birth_date' => ['nullable', 'date', 'before:today'],
             'birth_place' => ['nullable', 'string', 'max:255'],
             'cin_delivered_at' => ['nullable', 'date'],
@@ -64,7 +90,10 @@ trait HasStagiaireValidation
     }
 
     /**
-     * Règles conditionnelles des lignes dynamiques (sections 4 et 5).
+     * Règles conditionnelles des lignes dynamiques (diplômes et documents
+     * administratifs). Ces sections ne figurent plus dans le formulaire refondu
+     * mais restent acceptées par le serveur : les dossiers et les pièces
+     * existants conservent leur mode d'alimentation.
      *
      * @return array<string, array>
      */
@@ -118,12 +147,20 @@ trait HasStagiaireValidation
             'last_name' => __('nom'),
             'center_id' => __('centre'),
             'date_of_birth' => __('date de naissance'),
-            'place_of_birth' => __('lieu de naissance'),
-            'gender' => __('sexe'),
             'nationality' => __('nationalité'),
             'phone' => __('téléphone'),
-            'email' => __('adresse e-mail'),
+            'whatsapp' => __('numéro WhatsApp'),
+            'emergency_contact_phone' => __('téléphone d\'urgence'),
+            'profile_photo' => __('photo de profil'),
+            'other_files' => __('autres fichiers'),
+            'other_files.*' => __('autre fichier'),
+            'company_name' => __('nom de l\'entreprise'),
+            'company_phone' => __('téléphone de l\'entreprise'),
+            'company_location' => __('lieu de l\'entreprise'),
+            'place_of_birth' => __('lieu de naissance'),
+            'gender' => __('sexe'),
             'address' => __('adresse'),
+            'email' => __('adresse e-mail'),
             'cin_number' => __('numéro CIN'),
             'cin_issued_date' => __('date de délivrance CIN'),
             'cin_issued_place' => __('lieu de délivrance CIN'),
@@ -156,6 +193,15 @@ trait HasStagiaireValidation
             'stage_price.min' => __('Le prix du stage doit être supérieur ou égal à 0.'),
             'stage_end_date.after_or_equal' => __('La date de fin du stage doit être postérieure ou égale à la date de début.'),
             'phone.regex' => __('Le numéro de téléphone est invalide.'),
+            'whatsapp.regex' => __('Le numéro WhatsApp est invalide.'),
+            'emergency_contact_phone.regex' => __('Le numéro de téléphone d\'urgence est invalide.'),
+            'company_phone.regex' => __('Le numéro de téléphone de l\'entreprise est invalide.'),
+            'company_name.required' => __('Le nom de l\'entreprise de stage est obligatoire.'),
+            'company_location.required' => __('Le lieu de l\'entreprise de stage est obligatoire.'),
+            'profile_photo.image' => __('La photo de profil doit être une image (JPG ou PNG).'),
+            'profile_photo.max' => __('La photo de profil ne doit pas dépasser 2 Mo.'),
+            'other_files.*.mimes' => __('Les fichiers joints doivent être au format PDF, JPG, PNG, DOC ou DOCX.'),
+            'other_files.*.max' => __('Chaque fichier joint doit peser au maximum 8 Mo.'),
             'diplomas.*.file.required' => __('Ce diplôme nécessite son fichier scanné (PDF ou image).'),
             'diplomas.*.title.required' => __('Le nom du diplôme est obligatoire lorsque la ligne est utilisée.'),
             'diplomas.*.institution.required' => __('L\'établissement est obligatoire lorsque la ligne est utilisée.'),

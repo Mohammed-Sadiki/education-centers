@@ -18,15 +18,17 @@ use Tests\TestCase;
 /**
  * Validation stricte des formulaires « Ajouter un stagiaire » et « Modifier un stagiaire ».
  *
- * Règle maîtresse : toutes les informations des sections 1 à 3 sont obligatoires,
- * sauf les sections 4 « Diplômes obtenus » et 5 « Autres documents », qui peuvent
- * rester entièrement vides. Dès qu'une ligne facultative est réellement commencée,
- * tous ses champs (texte et fichier scanné) deviennent obligatoires ; une ligne
- * vide par défaut — y compris avec son « type de pièce » présélectionné — n'est
- * ni un ajout, ni un blocage, et ne crée aucun enregistrement orphelin.
+ * Règle maîtresse : toutes les informations personnelles (dont WhatsApp, téléphone
+ * d'urgence, photos CIN et photo de profil) et les trois champs de l'entreprise de
+ * stage sont obligatoires. Seule la section « Autres fichiers » peut rester vide.
+ * Les champs hérités de l'ancien formulaire (email, adresse, stage, notes…) restent
+ * acceptés mais facultatifs ; dès qu'ils sont fournis, leur format est contrôlé.
  *
- * Les écritures (stagiaire + diplômes + documents) sont transactionnelles : aucune
- * erreur de validation ne laisse de dossier partiel en base.
+ * Les sections dynamiques « Diplômes » et « Autres documents » (legacy) suivent
+ * toujours la logique « tout ou rien » : une ligne commencée exige tous ses champs.
+ *
+ * Les écritures (stagiaire + pièces) sont transactionnelles : aucune erreur de
+ * validation ne laisse de dossier partiel en base.
  */
 class StagiaireFormValidationTest extends TestCase
 {
@@ -96,11 +98,10 @@ class StagiaireFormValidationTest extends TestCase
     public function test_each_required_field_is_enforced(): void
     {
         $requiredFields = [
-            'first_name', 'last_name', 'center_id', 'date_of_birth', 'place_of_birth',
-            'gender', 'nationality', 'phone', 'email', 'address',
-            'cin_number', 'cin_issued_date', 'cin_issued_place', 'cin_recto', 'cin_verso',
-            'stage_start_date', 'stage_end_date', 'stage_type', 'stage_price',
-            'status', 'notes',
+            'first_name', 'last_name', 'center_id', 'date_of_birth', 'nationality',
+            'phone', 'whatsapp', 'emergency_contact_phone',
+            'cin_recto', 'cin_verso', 'profile_photo',
+            'company_name', 'company_phone', 'company_location',
         ];
 
         foreach ($requiredFields as $field) {
@@ -539,9 +540,7 @@ class StagiaireFormValidationTest extends TestCase
             ->followingRedirects()
             ->post(route('stagiaires.store'), $this->form([
                 'last_name' => '',
-                'diplomas' => [
-                    ['title' => 'Licence Interrompue', 'institution' => '', 'year' => '', 'file' => ''],
-                ],
+                'company_location' => '',
             ]))
             ->assertOk()
             ->getContent();
@@ -552,9 +551,9 @@ class StagiaireFormValidationTest extends TestCase
         $this->assertStringContainsString('is-invalid', $html);
         $this->assertStringContainsString('ec-error', $html);
 
-        // Valeurs conservées, ligne facultative commencée conservée.
+        // Valeurs conservées, y compris dans la carte Entreprise de stage.
         $this->assertStringContainsString('value="Karim"', $html);
-        $this->assertStringContainsString('Licence Interrompue', $html);
+        $this->assertStringContainsString('value="Atlas Technologies"', $html);
     }
 
     /**
@@ -584,11 +583,14 @@ class StagiaireFormValidationTest extends TestCase
         $this->assertStringContainsString('data-stagiaire-form', $html);
         $this->assertStringContainsString('novalidate', $html);
         $this->assertStringContainsString('Facultatif', $html);
-        $this->assertStringContainsString('data-row-group="diplomas"', $html);
-        $this->assertStringContainsString('data-row-group="other_documents"', $html);
 
-        foreach (['first_name', 'last_name', 'center_id', 'email', 'phone', 'address',
-            'cin_number', 'stage_price', 'stage_type', 'notes'] as $field) {
+        // Les deux cartes demandées sont bien présentes.
+        $this->assertStringContainsString('Informations personnelles', $html);
+        $this->assertStringContainsString('Entreprise où le stagiaire effectuera son stage', $html);
+
+        foreach (['first_name', 'last_name', 'center_id', 'date_of_birth', 'nationality',
+            'phone', 'whatsapp', 'emergency_contact_phone',
+            'company_name', 'company_phone', 'company_location'] as $field) {
             preg_match_all(
                 '/<(?:input|select|textarea)\b[^>]*\bname="'.preg_quote($field, '/').'"[^>]*>/s',
                 $html,
@@ -603,12 +605,21 @@ class StagiaireFormValidationTest extends TestCase
             }
         }
 
-        // Les lignes facultatives ne portent jamais l'attribut HTML `required`.
-        preg_match_all('/<(?:input|select|textarea)[^>]*data-row-field[^>]*>/s', $html, $rowTags);
-        $this->assertNotEmpty($rowTags[0], 'Les lignes dynamiques doivent être instrumentées.');
+        // Les pièces obligatoires sont instrumentées de la même façon.
+        foreach (['cin_recto', 'cin_verso', 'profile_photo'] as $field) {
+            $this->assertMatchesRegularExpression(
+                '/<input\b[^>]*name="'.preg_quote($field, '/').'"[^>]*data-required[^>]*>/s',
+                $html,
+                "La pièce obligatoire « {$field} » doit être contrôlée par le script."
+            );
+        }
 
-        foreach ($rowTags[0] as $tag) {
-            $this->assertStringNotContainsString('required', $tag, 'Une ligne facultative ne doit pas être marquée obligatoire : '.$tag);
+        // Seule section facultative : « Autres fichiers » — jamais marquée obligatoire.
+        preg_match_all('/<input\b[^>]*name="other_files\[\]"[^>]*>/s', $html, $optionalTags);
+        $this->assertNotEmpty($optionalTags[0], 'Le champ « Autres fichiers » doit être présent.');
+        foreach ($optionalTags[0] as $tag) {
+            $this->assertStringNotContainsString('required', $tag, '« Autres fichiers » ne doit pas être obligatoire : '.$tag);
+            $this->assertStringContainsString('data-optional-files', $tag);
         }
     }
 
@@ -617,17 +628,50 @@ class StagiaireFormValidationTest extends TestCase
     // ──────────────────────────────────────────────────────────────────────────
 
     /**
-     * Scénario 17 — le module reste réservé au Super Admin ; les Admin Centres
-     * sont refusés sur toutes les actions (comportement existant conservé).
+     * Scénario 17 — les Admin Centres accèdent au module, limitées à leur centre :
+     * la création leur est ouverte (centre imposé côté serveur), la suppression
+     * reste réservée au Super Admin.
      */
-    public function test_centre_admins_cannot_reach_the_stagiaires_module(): void
+    public function test_centre_admins_reach_their_own_stagiaires_module(): void
     {
-        foreach ([$this->adminBerlin, $this->adminMunich] as $admin) {
-            $this->actingAs($admin)->get(route('stagiaires.index'))->assertForbidden();
-            $this->actingAs($admin)->get(route('stagiaires.create'))->assertForbidden();
-            $this->actingAs($admin)->post(route('stagiaires.store'), $this->form())->assertForbidden();
-            $this->assertDatabaseCount('stagiaires', 0);
+        foreach ([[$this->adminBerlin, $this->berlin], [$this->adminMunich, $this->munich]] as [$admin, $center]) {
+            $this->actingAs($admin)->get(route('stagiaires.index'))->assertOk();
+            $this->actingAs($admin)->get(route('stagiaires.create'))->assertOk();
+
+            // Même en tentant d'imposer un autre centre, le serveur force le leur.
+            $this->actingAs($admin)
+                ->post(route('stagiaires.store'), $this->form(['center_id' => $center === $this->berlin ? $this->munich->id : $this->berlin->id]))
+                ->assertSessionHasNoErrors();
+
+            $this->assertDatabaseHas('stagiaires', [
+                'first_name' => 'Karim',
+                'last_name' => 'Benani',
+                'center_id' => $center->id,
+            ]);
+
+            $stagiaire = Stagiaire::where('center_id', $center->id)->firstOrFail();
+            $this->actingAs($admin)->delete(route('stagiaires.destroy', $stagiaire))->assertForbidden();
         }
+    }
+
+    /**
+     * Un Admin Centre ne peut pas modifier un stagiaire d'un autre centre.
+     */
+    public function test_centre_admin_cannot_touch_another_centre_stagiaire(): void
+    {
+        $stagiaire = Stagiaire::create([
+            'first_name' => 'Stagiaire',
+            'last_name' => 'Munich',
+            'center_id' => $this->munich->id,
+        ]);
+
+        $this->actingAs($this->adminBerlin)
+            ->get(route('stagiaires.show', $stagiaire))
+            ->assertForbidden();
+
+        $this->actingAs($this->adminBerlin)
+            ->put(route('stagiaires.update', $stagiaire), $this->stagiairePayloadWithCin())
+            ->assertForbidden();
     }
 
     /**
@@ -684,7 +728,9 @@ class StagiaireFormValidationTest extends TestCase
                 'center_id' => $this->berlin->id,
             ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['email', 'cin_recto', 'stage_price', 'notes']);
+            ->assertJsonValidationErrors(['date_of_birth', 'nationality', 'phone', 'whatsapp',
+                'emergency_contact_phone', 'cin_recto', 'cin_verso', 'profile_photo',
+                'company_name', 'company_phone', 'company_location']);
 
         $this->assertDatabaseCount('stagiaires', 0);
     }
@@ -753,14 +799,18 @@ class StagiaireFormValidationTest extends TestCase
 
         $this->actingAs($this->superAdmin)
             ->put(route('stagiaires.update', $stagiaire), ['last_name' => 'Noir'])
-            ->assertSessionHasErrors(['first_name', 'email', 'center_id', 'stage_price', 'notes']);
+            ->assertSessionHasErrors([
+                'first_name', 'center_id', 'date_of_birth', 'nationality', 'phone',
+                'whatsapp', 'emergency_contact_phone', 'cin_recto', 'profile_photo',
+                'company_name', 'company_phone', 'company_location',
+            ]);
 
         $this->assertDatabaseHas('stagiaires', ['id' => $stagiaire->id, 'last_name' => 'Weiss']);
     }
 
     /**
-     * Scénario 19 — un dossier dont les scans CIN existent déjà n'exige aucun
-     * nouveau fichier : les pièces enregistrées sont conservées.
+     * Scénario 19 — un dossier dont les pièces existent déjà (CIN, photo de profil)
+     * n'exige aucun nouveau fichier : les éléments enregistrés sont conservés.
      */
     public function test_update_keeps_existing_files_without_new_upload(): void
     {
@@ -768,6 +818,7 @@ class StagiaireFormValidationTest extends TestCase
             'center_id' => $this->berlin->id,
             'cin_recto_path' => 'stagiaires/cin/recto.pdf',
             'cin_verso_path' => 'stagiaires/cin/verso.pdf',
+            'profile_photo_path' => 'stagiaires/1/profile/profil.jpg',
         ]));
 
         $diploma = $stagiaire->diplomas()->create([
@@ -800,6 +851,7 @@ class StagiaireFormValidationTest extends TestCase
         // Aucune pièce existante n'a été supprimée ni remplacée.
         $this->assertSame('stagiaires/cin/recto.pdf', $stagiaire->cin_recto_path);
         $this->assertSame('stagiaires/cin/verso.pdf', $stagiaire->cin_verso_path);
+        $this->assertSame('stagiaires/1/profile/profil.jpg', $stagiaire->profile_photo_path);
         $this->assertDatabaseHas('stagiaire_diplomas', ['id' => $diploma->id, 'title' => 'Diplôme existant']);
         $this->assertDatabaseHas('stagiaire_documents', ['id' => $document->id, 'title' => 'Document existant']);
     }
@@ -814,6 +866,7 @@ class StagiaireFormValidationTest extends TestCase
             'center_id' => $this->berlin->id,
             'cin_recto_path' => 'stagiaires/cin/recto.pdf',
             'cin_verso_path' => 'stagiaires/cin/verso.pdf',
+            'profile_photo_path' => 'stagiaires/profile/legacy.jpg',
         ]));
 
         // Ligne vide : acceptée, aucun diplôme parasite créé.
@@ -943,8 +996,11 @@ class StagiaireFormValidationTest extends TestCase
         $this->assertContains('required', $rules['other_documents.1.type']);
         $this->assertContains('required', $rules['other_documents.1.file']);
 
-        // Les scans CIN sont exigés à la création, dans les deux formulaires.
+        // Les scans CIN et la photo de profil sont exigés à la création.
         $this->assertContains('required', $request->rules()['cin_recto']);
-        $this->assertContains('required', $request->rules()['notes']);
+        $this->assertContains('required', $request->rules()['profile_photo']);
+        $this->assertContains('required', $request->rules()['company_name']);
+        // Les champs hérités de l'ancien formulaire restent facultatifs.
+        $this->assertContains('nullable', $request->rules()['notes']);
     }
 }

@@ -1,14 +1,13 @@
 {{--
     Validation côté client des formulaires stagiaires (création et édition).
 
-    Règle reflétée du serveur : tout est obligatoire sauf les sections
-    « Diplômes obtenus » et « Autres documents ». Une ligne dynamique laissée
-    vide n'est pas un ajout et ne bloque donc jamais la soumission ; dès qu'une
-    ligne est commencée, tous ses champs (texte et fichier) sont exigés.
+    Règle reflétée du serveur : toutes les informations affichées sont
+    obligatoires, à l'exception de la section « Autres fichiers » (fichiers
+    multiples facultatifs, mais format et taille vérifiés s'ils sont fournis).
 
     Le contrôle ne se limite pas aux attributs HTML `required` : formats e-mail,
-    montant, date, extensions et taille de fichier sont vérifiés, et la
-    soumission est bloquée tant qu'une erreur reste affichée.
+    téléphone, montant, date, extensions et taille de fichier sont vérifiés, et
+    la soumission est bloquée tant qu'une erreur reste affichée.
 --}}
 <script>
 (function () {
@@ -16,17 +15,19 @@
 
     const MESSAGES = {
         requiredField: @js(__('Ce champ est obligatoire.')),
-        missingFile: @js(__('Veuillez sélectionner un fichier (PDF, JPG ou PNG).')),
+        missingFile: @js(__('Veuillez sélectionner un fichier.')),
         invalidEmail: @js(__('Cette adresse e-mail est invalide.')),
+        invalidPhone: @js(__('Ce numéro de téléphone est invalide.')),
         invalidNumber: @js(__('Ce montant doit être un nombre valide.')),
         invalidDate: @js(__('Cette date est invalide.')),
-        badFileFormat: @js(__('Format de fichier non autorisé : PDF, JPG ou PNG uniquement.')),
+        badFileFormat: @js(__('Format de fichier non autorisé.')),
         tooLargeFile: @js(__('Fichier trop volumineux : taille maximale dépassée.')),
         incompleteRow: @js(__('Cette ligne facultative est commencée mais incomplète : tous ses champs sont nécessaires.')),
         summary: @js(__('Veuillez corriger les champs en rouge avant d\'enregistrer le stagiaire.')),
     };
 
     const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const PHONE_PATTERN = /^[0-9+().\s-]+$/;
     const NUMBER_PATTERN = /^-?\d{1,9}([.,]\d{1,2})?$/;
     const reduceMotion = window.matchMedia
         && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -35,30 +36,33 @@
 
     /**
      * Contrôle un champ : `required` force la présence, le format est vérifié
-     * dès qu'une valeur est présente.
+     * dès qu'une valeur est présente. Les fichiers multiples (« Autres fichiers »)
+     * sont contrôlés un à un.
      */
     function checkField(field, required) {
         if (field.type === 'file') {
-            const file = field.files && field.files[0];
+            const files = Array.from(field.files || []);
 
-            if (required && !file) {
+            if (required && files.length === 0) {
                 return MESSAGES.missingFile;
             }
-            if (!file) {
+            if (files.length === 0) {
                 return null;
             }
 
             const accepted = (field.getAttribute('accept') || '')
                 .split(',').map((extension) => extension.trim().toLowerCase()).filter(Boolean);
 
-            if (accepted.length && !accepted.some((extension) => file.name.toLowerCase().endsWith(extension))) {
-                return MESSAGES.badFileFormat;
-            }
-
             const maxKb = parseInt(field.getAttribute('data-max-kb') || '0', 10);
 
-            if (maxKb > 0 && file.size > maxKb * 1024) {
-                return MESSAGES.tooLargeFile;
+            for (const file of files) {
+                if (accepted.length && !accepted.some((extension) => file.name.toLowerCase().endsWith(extension))) {
+                    return MESSAGES.badFileFormat;
+                }
+
+                if (maxKb > 0 && file.size > maxKb * 1024) {
+                    return MESSAGES.tooLargeFile;
+                }
             }
 
             return null;
@@ -74,6 +78,9 @@
         }
         if (field.type === 'email' && !EMAIL_PATTERN.test(value)) {
             return MESSAGES.invalidEmail;
+        }
+        if (field.type === 'tel' && !PHONE_PATTERN.test(value)) {
+            return MESSAGES.invalidPhone;
         }
         if (field.type === 'number' && !NUMBER_PATTERN.test(value)) {
             return MESSAGES.invalidNumber;
@@ -110,7 +117,7 @@
         }
 
         const error = document.createElement('p');
-        error.className = 'ec-error text-[11px]';
+        error.className = 'ec-error text-[0.95rem]';
         error.dataset.stagiaireError = '1';
         error.textContent = message;
         holder.appendChild(error);
@@ -222,6 +229,16 @@
             }
         });
 
+        // Fichiers facultatifs (« Autres fichiers ») : format et taille vérifiés
+        // uniquement si des fichiers ont été sélectionnés.
+        form.querySelectorAll('[data-optional-files]').forEach((field) => {
+            const error = checkField(field, false);
+
+            if (error) {
+                report(field, error);
+            }
+        });
+
         validateOptionalRows(form, report);
 
         if (firstInvalid) {
@@ -247,13 +264,13 @@
 
         // L'erreur d'un champ disparaît dès que l'utilisateur le corrige.
         form.addEventListener('input', (event) => {
-            if (event.target.matches('[data-required], [data-row-field]')) {
+            if (event.target.matches('[data-required], [data-row-field], [data-optional-files]')) {
                 clearFieldError(event.target);
             }
         });
 
         form.addEventListener('change', (event) => {
-            if (event.target.matches('[data-required], [data-row-field]')) {
+            if (event.target.matches('[data-required], [data-row-field], [data-optional-files]')) {
                 clearFieldError(event.target);
             }
         });

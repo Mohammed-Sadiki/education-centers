@@ -168,12 +168,15 @@ class StagiaireController extends Controller
 
     /**
      * Formulaire d'ajout d'un nouveau stagiaire.
+     *
+     * Les centres ne sont proposés qu'au Super Admin : un Admin Centre est
+     * rattaché d'office à son propre centre (résolu côté serveur à l'enregistrement).
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         Gate::authorize('create', Stagiaire::class);
 
-        $centers = Center::orderBy('name')->get();
+        $centers = $request->user()->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
 
         return view('super-admin.stagiaires.create', compact('centers'));
     }
@@ -183,16 +186,23 @@ class StagiaireController extends Controller
      *
      * La validation (Formulaire de requête) est passée avant toute écriture :
      * aucune donnée obligatoire manquante n'atteint la base, et le stagiaire,
-     * ses diplômes et ses documents sont créés dans une seule transaction.
+     * sa photo, ses fichiers et ses pièces existantes sont créés dans une seule
+     * transaction.
      */
     public function store(StoreStagiaireRequest $request): RedirectResponse
     {
-        $data = $request->safe()->except(['cin_recto', 'cin_verso', 'diplomas', 'other_documents']);
+        $data = $request->safe()->except([
+            'cin_recto', 'cin_verso', 'profile_photo', 'other_files', 'diplomas', 'other_documents',
+        ]);
 
         // Le centre d'un Admin Centre est imposé par le serveur, jamais par la requête.
         if ($request->user()->isCenterAdmin()) {
             $data['center_id'] = $request->user()->center_id;
         }
+
+        // Les informations absentes du formulaire restent gérées par leurs
+        // valeurs par défaut en base : aucune écriture explicite de NULL.
+        $data = $this->withoutNullValues($data);
 
         // Upload CIN recto et verso dans l'espace privé
         if ($request->hasFile('cin_recto')) {
@@ -206,6 +216,8 @@ class StagiaireController extends Controller
         $stagiaire = DB::transaction(function () use ($data, $request) {
             $stagiaire = Stagiaire::create($data);
 
+            $this->storeProfilePhoto($stagiaire, $request);
+            $this->attachOtherFiles($stagiaire, $request);
             $this->attachDiplomas($stagiaire, $request);
             $this->attachDocuments($stagiaire, $request);
 
@@ -230,14 +242,15 @@ class StagiaireController extends Controller
     }
 
     /**
-     * Formulaire d'édition du stagiaire.
+     * Formulaire d'édition du stagiaire (mêmes champs et même présentation
+     * que le formulaire d'ajout).
      */
-    public function edit(Stagiaire $stagiaire): View
+    public function edit(Request $request, Stagiaire $stagiaire): View
     {
         Gate::authorize('update', $stagiaire);
 
         $stagiaire->load(['diplomas', 'documents']);
-        $centers = Center::orderBy('name')->get();
+        $centers = $request->user()->isSuperAdmin() ? Center::orderBy('name')->get() : collect();
 
         return view('super-admin.stagiaires.edit', compact('stagiaire', 'centers'));
     }
@@ -245,18 +258,25 @@ class StagiaireController extends Controller
     /**
      * Mettre à jour le dossier du stagiaire.
      *
-     * Les diplômes et documents déjà enregistrés sont conservés tels quels :
-     * aucun fichier existant n'est supprimé lorsqu'aucun nouveau fichier n'est
-     * envoyé. Les écrits sont regroupés dans une seule transaction.
+     * Les pièces déjà enregistrées (scans CIN, photo de profil, documents,
+     * diplômes) sont conservées telles quelles lorsqu'aucun nouveau fichier
+     * n'est envoyé. Les champs absents du formulaire ne sont pas réécrits :
+     * les valeurs administratives antérieures restent en base. Les écrits sont
+     * regroupés dans une seule transaction.
      */
     public function update(UpdateStagiaireRequest $request, Stagiaire $stagiaire): RedirectResponse
     {
-        $data = $request->safe()->except(['cin_recto', 'cin_verso', 'diplomas', 'other_documents']);
+        $data = $request->safe()->except([
+            'cin_recto', 'cin_verso', 'profile_photo', 'other_files', 'diplomas', 'other_documents',
+        ]);
 
         // Le centre d'un Admin Centre est imposé par le serveur.
         if ($request->user()->isCenterAdmin()) {
             $data['center_id'] = $request->user()->center_id;
         }
+
+        // Aucune valeur NULL n'écrase une information déjà enregistrée.
+        $data = $this->withoutNullValues($data);
 
         if ($request->hasFile('cin_recto')) {
             if ($stagiaire->cin_recto_path && Storage::disk('local')->exists($stagiaire->cin_recto_path)) {
@@ -275,7 +295,10 @@ class StagiaireController extends Controller
         DB::transaction(function () use ($stagiaire, $data, $request) {
             $stagiaire->update($data);
 
-            // Ajout des seules lignes réellement renseignées.
+            $this->storeProfilePhoto($stagiaire, $request);
+
+            // Ajout des seules pièces réellement fournies ; rien n'est supprimé.
+            $this->attachOtherFiles($stagiaire, $request);
             $this->attachDiplomas($stagiaire, $request);
             $this->attachDocuments($stagiaire, $request);
         });
@@ -283,6 +306,66 @@ class StagiaireController extends Controller
         return redirect()
             ->route('stagiaires.show', $stagiaire)
             ->with('success', __('Le dossier de :full_name a été mis à jour avec succès.', ['full_name' => $stagiaire->full_name]));
+    }
+
+    /**
+     * Conserver uniquement les valeurs réellement envoyées par le formulaire.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function withoutNullValues(array $data): array
+    {
+        return array_filter($data, fn ($value) => $value !== null);
+    }
+
+    /**
+     * Téléverser la photo de profil dans l'espace privé du dossier du stagiaire.
+     *
+     * Aucun fichier existant n'est supprimé lorsqu'aucune nouvelle photo n'est
+     * envoyée (règle de préservation du formulaire de modification).
+     */
+    private function storeProfilePhoto(Stagiaire $stagiaire, Request $request): void
+    {
+        $file = $request->file('profile_photo');
+
+        if (! $file instanceof UploadedFile || ! $file->isValid()) {
+            // Aucune nouvelle photo envoyée : la photo existante est conservée.
+            return;
+        }
+
+        $oldPath = $stagiaire->profile_photo_path;
+        $path = $file->store("stagiaires/{$stagiaire->id}/profile", 'local');
+
+        if ($oldPath && Storage::disk('local')->exists($oldPath)) {
+            Storage::disk('local')->delete($oldPath);
+        }
+
+        $stagiaire->update(['profile_photo_path' => $path]);
+    }
+
+    /**
+     * Enregistrer les fichiers de la section facultative « Autres fichiers ».
+     * Chaque fichier devient une pièce de type « autre » intitulée d'après son
+     * nom d'origine ; les pièces déjà présentes restent intactes.
+     */
+    private function attachOtherFiles(Stagiaire $stagiaire, Request $request): void
+    {
+        foreach ((array) $request->file('other_files', []) as $file) {
+            if (! $file instanceof UploadedFile || ! $file->isValid()) {
+                continue;
+            }
+
+            $name = basename($file->getClientOriginalName());
+            $path = $file->store("stagiaires/{$stagiaire->id}/documents", 'local');
+
+            $stagiaire->documents()->create([
+                'title' => $name,
+                'type' => 'autre',
+                'file_path' => $path,
+                'file_name' => $name,
+            ]);
+        }
     }
 
     /**
@@ -370,6 +453,23 @@ class StagiaireController extends Controller
         return redirect()
             ->route('stagiaires.index')
             ->with('success', __('Le dossier du stagiaire :fullName a été supprimé.', ['fullName' => $fullName]));
+    }
+
+    /**
+     * Affichage de la photo de profil (stockée sur le disque privé).
+     * Réservé aux utilisateurs autorisés à voir le dossier du stagiaire.
+     */
+    public function showProfilePhoto(Stagiaire $stagiaire): BinaryFileResponse
+    {
+        Gate::authorize('view', $stagiaire);
+
+        $path = $stagiaire->profile_photo_path;
+
+        if (! $path || ! Storage::disk('local')->exists($path)) {
+            abort(404, __('Photo introuvable.'));
+        }
+
+        return response()->file(Storage::disk('local')->path($path));
     }
 
     /**

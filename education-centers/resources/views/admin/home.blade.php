@@ -15,7 +15,9 @@
 
     $communicationRoute = route('messages.index');
 
-    $stagiairesRoute = $isSuperAdmin
+    // La « Gestion des stagiaires » est ouverte au Super Admin (tous centres
+    // autorisés) comme à l'Admin Centre (périmètre = son centre, imposé serveur).
+    $stagiairesRoute = ($isSuperAdmin || $isCenterAdmin)
         ? route('stagiaires.index')
         : route('dashboard');
 
@@ -98,37 +100,7 @@
         </div>
     </a>
 
-    {{-- CARTE 2 : COMMUNICATION --}}
-    <a href="{{ $communicationRoute }}"
-       id="card-home-communication"
-       role="listitem"
-       class="group relative flex flex-col overflow-hidden rounded-3xl border border-cyan-200/70 bg-gradient-to-br from-cyan-50/60 to-sky-50/40 p-6 shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-xl hover:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:ring-offset-2 cursor-pointer dark:border-cyan-400/20 dark:bg-cyan-400/[0.06] dark:hover:border-cyan-400/40"
-       aria-label="{{ __('Accéder au module Communication') }}">
-        <div class="pointer-events-none absolute -top-10 -end-10 h-40 w-40 rounded-full bg-cyan-300/20 blur-2xl dark:bg-cyan-500/10" aria-hidden="true"></div>
-        <div class="relative mb-5 flex items-start justify-between">
-            <span class="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-sky-600 text-white shadow-lg shadow-cyan-500/30">
-                <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke-width="1.4" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-                </svg>
-            </span>
-            <span class="inline-flex items-center gap-1.5 rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300">
-                <span class="h-1.5 w-1.5 rounded-full bg-cyan-500"></span>
-                {{ __('Messagerie') }}
-            </span>
-        </div>
-        <div class="relative flex-1">
-            <h2 class="text-xl font-bold text-slate-900 transition-colors group-hover:text-cyan-700 dark:text-white dark:group-hover:text-cyan-300">{{ __('Communication') }}</h2>
-            <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ __('Centralisez les échanges et les communications entre les responsables des centres.') }}</p>
-        </div>
-        <div class="relative mt-6 flex items-center justify-between rounded-xl bg-cyan-100/70 px-4 py-2.5 text-sm font-semibold text-cyan-700 transition-colors group-hover:bg-cyan-200/60 dark:bg-cyan-500/10 dark:text-cyan-300 dark:group-hover:bg-cyan-500/20">
-            <span>{{ __('Accéder à la communication') }}</span>
-            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-600 text-white shadow-sm transition-transform group-hover:translate-x-1 rtl:rotate-180">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
-            </span>
-        </div>
-    </a>
-
-    {{-- CARTE 3 : STAGIAIRES --}}
+    {{-- CARTE 2 : STAGIAIRES --}}
     <a href="{{ $stagiairesRoute }}"
        id="card-home-stagiaires"
        role="listitem"
@@ -158,7 +130,7 @@
         </div>
     </a>
 
-    {{-- CARTE 4 : FINANCES --}}
+    {{-- CARTE 3 : FINANCES --}}
     <a href="{{ $financeRoute }}"
        id="card-home-finance"
        role="listitem"
@@ -183,6 +155,36 @@
         <div class="relative mt-6 flex items-center justify-between rounded-xl bg-amber-100/70 px-4 py-2.5 text-sm font-semibold text-amber-800 transition-colors group-hover:bg-amber-200/60 dark:bg-amber-500/10 dark:text-amber-300 dark:group-hover:bg-amber-500/20">
             <span>{{ __('Accéder aux finances') }}</span>
             <span class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-600 text-white shadow-sm transition-transform group-hover:translate-x-1 rtl:rotate-180">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
+            </span>
+        </div>
+    </a>
+
+    {{-- CARTE 4 : COMMUNICATION --}}
+    <a href="{{ $communicationRoute }}"
+       id="card-home-communication"
+       role="listitem"
+       class="group relative flex flex-col overflow-hidden rounded-3xl border border-cyan-200/70 bg-gradient-to-br from-cyan-50/60 to-sky-50/40 p-6 shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-xl hover:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:ring-offset-2 cursor-pointer dark:border-cyan-400/20 dark:bg-cyan-400/[0.06] dark:hover:border-cyan-400/40"
+       aria-label="{{ __('Accéder au module Communication') }}">
+        <div class="pointer-events-none absolute -top-10 -end-10 h-40 w-40 rounded-full bg-cyan-300/20 blur-2xl dark:bg-cyan-500/10" aria-hidden="true"></div>
+        <div class="relative mb-5 flex items-start justify-between">
+            <span class="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-sky-600 text-white shadow-lg shadow-cyan-500/30">
+                <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke-width="1.4" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                </svg>
+            </span>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300">
+                <span class="h-1.5 w-1.5 rounded-full bg-cyan-500"></span>
+                {{ __('Messagerie') }}
+            </span>
+        </div>
+        <div class="relative flex-1">
+            <h2 class="text-xl font-bold text-slate-900 transition-colors group-hover:text-cyan-700 dark:text-white dark:group-hover:text-cyan-300">{{ __('Communication') }}</h2>
+            <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ __('Centralisez les échanges et les communications entre les responsables des centres.') }}</p>
+        </div>
+        <div class="relative mt-6 flex items-center justify-between rounded-xl bg-cyan-100/70 px-4 py-2.5 text-sm font-semibold text-cyan-700 transition-colors group-hover:bg-cyan-200/60 dark:bg-cyan-500/10 dark:text-cyan-300 dark:group-hover:bg-cyan-500/20">
+            <span>{{ __('Accéder à la communication') }}</span>
+            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-600 text-white shadow-sm transition-transform group-hover:translate-x-1 rtl:rotate-180">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
             </span>
         </div>

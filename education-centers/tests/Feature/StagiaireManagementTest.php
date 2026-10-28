@@ -74,12 +74,13 @@ class StagiaireManagementTest extends TestCase
         $this->actingAs($this->superAdmin)
             ->get(route('stagiaires.create'))
             ->assertOk()
-            ->assertSee('Informations du stage')
-            ->assertSee('Prix du stage');
+            ->assertSee('Informations personnelles')
+            ->assertSee('Entreprise où le stagiaire effectuera son stage');
     }
 
     /**
-     * 2. Les autres rôles (non Super Admin) sont refusés avec 403.
+     * 2. Les autres rôles (professeur, étudiant) sont refusés avec 403 ;
+     * l'Admin Centre accède désormais au module (périmètre : son centre).
      */
     public function test_other_roles_are_forbidden_from_stagiaires_module(): void
     {
@@ -97,10 +98,14 @@ class StagiaireManagementTest extends TestCase
             ->get(route('stagiaires.dashboard'))
             ->assertForbidden();
 
-        // Center Admin (non super-admin pour l'instant)
+        // Center Admin : module autorisé, redirigé vers la liste de son centre.
         $this->actingAs($this->adminParis)
             ->get(route('stagiaires.dashboard'))
-            ->assertForbidden();
+            ->assertRedirect(route('stagiaires.index'));
+
+        $this->actingAs($this->adminParis)
+            ->get(route('stagiaires.index'))
+            ->assertOk();
     }
 
     /**
@@ -110,28 +115,14 @@ class StagiaireManagementTest extends TestCase
      */
     public function test_super_admin_can_create_stagiaire_with_stage_price(): void
     {
-        $payload = [
-            'first_name' => 'Karim',
-            'last_name' => 'Benani',
+        $payload = $this->stagiairePayloadWithCin([
             'gender' => 'homme',
             'birth_date' => '1998-05-14',
             'birth_place' => 'Casablanca',
-            'nationality' => 'Marocaine',
-            'phone' => '+33612345678',
-            'email' => 'karim.benani@example.com',
-            'address' => '12 Rue de Rivoli, Paris',
-            'cin_number' => 'AB123456',
             'cin_delivered_at' => '2020-01-15',
             'cin_delivered_place' => 'Préfecture Paris',
-            'stage_start_date' => '2026-11-01',
-            'stage_end_date' => '2027-04-30',
-            'stage_type' => 'Stage de fin d\'études',
-            'stage_price' => 1500.00,
-            'currency' => 'EUR',
-            'status' => 'nouveau',
             'center_id' => $this->centerParis->id,
-            'notes' => 'Candidature spontanée acceptée.',
-        ] + $this->cinFiles();
+        ]);
 
         $response = $this->actingAs($this->superAdmin)
             ->post(route('stagiaires.store'), $payload);
@@ -245,6 +236,7 @@ class StagiaireManagementTest extends TestCase
     {
         $cinRecto = UploadedFile::fake()->create('cin_recto.pdf', 300, 'application/pdf');
         $cinVerso = UploadedFile::fake()->create('cin_verso.pdf', 300, 'application/pdf');
+        $profilePhoto = UploadedFile::fake()->image('profil.jpg', 200, 200);
         $diploma1File = UploadedFile::fake()->create('licence.pdf', 500, 'application/pdf');
         $diploma2File = UploadedFile::fake()->create('master.pdf', 600, 'application/pdf');
         $otherDocFile = UploadedFile::fake()->create('attestation.pdf', 200, 'application/pdf');
@@ -260,6 +252,7 @@ class StagiaireManagementTest extends TestCase
         ]) + [
             'cin_recto' => $cinRecto,
             'cin_verso' => $cinVerso,
+            'profile_photo' => $profilePhoto,
             'diplomas' => [
                 [
                     'title' => 'Licence Fondamentale',
@@ -297,6 +290,10 @@ class StagiaireManagementTest extends TestCase
         $this->assertNotNull($stagiaire->cin_verso_path);
         Storage::disk('local')->assertExists($stagiaire->cin_recto_path);
         Storage::disk('local')->assertExists($stagiaire->cin_verso_path);
+
+        // Vérification photo de profil (stockage privé)
+        $this->assertNotNull($stagiaire->profile_photo_path);
+        Storage::disk('local')->assertExists($stagiaire->profile_photo_path);
 
         // Vérification Diplômes multiples (9)
         $this->assertCount(2, $stagiaire->diplomas);

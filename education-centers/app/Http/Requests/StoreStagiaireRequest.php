@@ -55,9 +55,11 @@ class StoreStagiaireRequest extends FormRequest
     public function rules(): array
     {
         return $this->stagiaireFieldRules() + [
-            // À la création, les deux scans de la CIN font partie du dossier : obligatoires.
+            // À la création, les deux scans de la CIN et la photo de profil font
+            // partie du dossier : obligatoires.
             'cin_recto' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
             'cin_verso' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            'profile_photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ] + $this->attachmentRowRules();
     }
 

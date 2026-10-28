@@ -5,14 +5,19 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Models\Center;
+use App\Models\Document;
 use App\Models\Enrollment;
 use App\Models\Formation;
+use App\Models\Payment;
 use App\Models\Student;
+use App\Services\FinanceService;
 use App\Support\DomainRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class StudentController extends Controller
@@ -102,14 +107,19 @@ class StudentController extends Controller
         }
 
         // Données plates pour la cascade dynamique (Alpine) centre → domaine → formation.
+        // Le tarif annuel (configuration financière existante) est transmis pour la
+        // section « Paiement » : total affiché et calcul dynamique du reste à payer.
         $formationsData = $formationsQuery
-            ->get(['id', 'center_id', 'domain', 'name'])
-            ->map(fn (Formation $formation): array => [
-                'id'        => $formation->id,
-                'center_id' => $formation->center_id,
-                'domain'    => $formation->domain,
-                'name'      => $formation->translated('name'),
-            ])
+            ->get(['id', 'center_id', 'domain', 'name', 'price', 'annual_price'])
+            ->map(function (Formation $formation): array {
+                return [
+                    'id'        => $formation->id,
+                    'center_id' => $formation->center_id,
+                    'domain'    => $formation->domain,
+                    'name'      => $formation->translated('name'),
+                    'price'     => FinanceService::getFormationAnnualPrice($formation),
+                ];
+            })
             ->values();
 
         return view('students.create', compact(
@@ -121,7 +131,13 @@ class StudentController extends Controller
 
     /**
      * Enregistrer un nouveau dossier étudiant (+ inscription à la formation
-     * sélectionnée, avec la logique métier existante des inscriptions).
+     * sélectionnée, pièces/fichiers et paiement intégré au module financier).
+     *
+     * Le dossier peut rester « dossier seul » (aucune formation / aucun paiement
+     * transmis) : les ajouts sont optionnels, conformément au fonctionnement
+     * existant. Dès qu'une formation et une option de paiement sont fournies, la
+     * transaction crée l'inscription puis un versement « paid » réutilisant la
+     * logique financière existante (visible dans Gestion financière → Paiements).
      */
     public function store(StoreStudentRequest $request): RedirectResponse
     {
@@ -139,20 +155,50 @@ class StudentController extends Controller
         $studentNumber = Student::generateStudentNumber($center);
 
         $data = $request->validated();
-        unset($data['domain'], $data['formation_id'], $data['center_id']);
+
+        // Clés hors-colonnes du students : gérées séparément (cascade, fichiers, paiement).
+        foreach (['domain', 'formation_id', 'center_id', 'payment_option', 'avance_amount', 'profile_photo', 'cin_files', 'other_files'] as $key) {
+            unset($data[$key]);
+        }
         $data['center_id'] = $centerId;
         $data['student_number'] = $studentNumber;
         // user_id est facultatif : null = dossier créé sans compte de connexion.
         $data['user_id'] = $data['user_id'] ?? null;
+        // Le statut n'est plus un champ visible : défaut « active ».
+        $data['status'] = ($data['status'] ?? 'active') ?: 'active';
 
         $formationId = $request->validated('formation_id');
+        $paymentOption = $request->validated('payment_option');
+        $schoolYear = config('app.school_year', '2026/2027');
 
-        [$student, $enrollment] = DB::transaction(function () use ($data, $formationId, $center, $centerId): array {
+        $student = DB::transaction(function () use ($data, $formationId, $center, $centerId, $request, $authUser, $paymentOption, $schoolYear): Student {
             $student = Student::create($data);
 
+            // ── Photo de profil (colonne dédiée, disque privé) ──
+            if ($request->hasFile('profile_photo')) {
+                $student->update([
+                    'profile_photo_path' => $request->file('profile_photo')
+                        ->store("students/{$centerId}/{$student->id}/profile", 'private'),
+                ]);
+            }
+
+            // ── Photos de la CIN → Documents « identity » ──
+            foreach ((array) $request->file('cin_files', []) as $cin) {
+                if ($cin instanceof UploadedFile) {
+                    $this->recordStudentDocument($cin, $student, $centerId, $authUser->id, 'identity', __('CIN'));
+                }
+            }
+
+            // ── Autres fichiers → Documents « other » ──
+            foreach ((array) $request->file('other_files', []) as $file) {
+                if ($file instanceof UploadedFile) {
+                    $this->recordStudentDocument($file, $student, $centerId, $authUser->id, 'other', $file->getClientOriginalName());
+                }
+            }
+
+            // ── Inscription à la formation (logique métier existante) ──
             $enrollment = null;
             if ($formationId) {
-                // Logique d'inscription existante : numéro généré, statut initial « en attente ».
                 $enrollment = Enrollment::create([
                     'center_id'           => $centerId,
                     'student_id'          => $student->id,
@@ -163,7 +209,35 @@ class StudentController extends Controller
                 ]);
             }
 
-            return [$student, $enrollment];
+            // ── Paiement intégré (Payé = totalité, Avance = partiel) ──
+            if ($paymentOption && $formationId) {
+                $formation = Formation::findOrFail($formationId);
+                $price = FinanceService::getFormationAnnualPrice($formation);
+
+                $amount = $paymentOption === 'paye'
+                    ? $price
+                    : max(0.0, (float) $request->validated('avance_amount'));
+
+                if ($amount > 0) {
+                    Payment::create([
+                        'center_id'     => $centerId,
+                        'student_id'    => $student->id,
+                        'enrollment_id' => $enrollment?->id,
+                        'formation_id'  => $formation->id,
+                        'school_year'   => $schoolYear,
+                        'domain'        => $formation->domain,
+                        'amount'        => $amount,
+                        'currency'      => default_currency(),
+                        'payment_date'  => now()->toDateString(),
+                        'method'        => 'cash',
+                        'reference'     => Payment::generateReference($center),
+                        'status'        => 'paid',
+                        'recorded_by'   => $authUser->id,
+                    ]);
+                }
+            }
+
+            return $student;
         });
 
         $message = __('Le dossier étudiant :student_number (:full_name) a été créé avec succès.', [
@@ -171,15 +245,45 @@ class StudentController extends Controller
             'full_name'      => $student->full_name,
         ]);
 
-        if ($enrollment) {
-            $message .= ' ' . __('Inscription :registration_number créée en attente de traitement.', [
-                'registration_number' => $enrollment->registration_number,
-            ]);
+        if ($paymentOption === 'paye') {
+            $message .= ' ' . __('Le paiement complet a été enregistré dans Gestion financière.');
+        } elseif ($paymentOption === 'avance') {
+            $message .= ' ' . __('L\'avance a été enregistrée comme paiement partiel dans Gestion financière.');
         }
 
         return redirect()
             ->route('students.show', $student)
             ->with('success', $message);
+    }
+
+    /**
+     * Enregistre un fichier du dossier étudiant dans la table `documents`
+     * (disque privé, nom assaini), sans dupliquer la logique d'upload du module
+     * Documents existant.
+     */
+    private function recordStudentDocument(
+        UploadedFile $file,
+        Student $student,
+        int $centerId,
+        ?int $uploadedBy,
+        string $type,
+        string $title,
+    ): Document {
+        $safeName = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $path = $file->storeAs("documents/{$centerId}/{$student->id}", $safeName, 'private');
+
+        return Document::create([
+            'center_id'     => $centerId,
+            'student_id'    => $student->id,
+            'type'          => $type,
+            'title'         => $title,
+            'file_path'     => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'mime_type'     => $file->getMimeType(),
+            'size'          => $file->getSize(),
+            'uploaded_by'   => $uploadedBy,
+            'status'        => 'active',
+        ]);
     }
 
     /**

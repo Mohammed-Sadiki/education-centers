@@ -132,9 +132,10 @@
             ])
         ];
 
-    } elseif ($user->isSuperAdmin() && $isStagiaires) {
+    } elseif (($user->isSuperAdmin() || $user->isCenterAdmin()) && $isStagiaires) {
         // ────────────────────────────────────────────────────────────
         // CONTEXTE DÉDIÉ : GESTION ADMINISTRATIVE DES STAGIAIRES
+        // (Super Admin : tous centres autorisés — Admin Centre : son centre)
         // ────────────────────────────────────────────────────────────
         // Espace simplifié : la liste « Tous les stagiaires » est la page principale
         // du module ; le tableau de bord statistique et le groupe Dossiers ont été retirés.
@@ -213,6 +214,12 @@
             $link(__('Certificats'), 'certificates.index', 'certificate', 'certificates.*'),
         ]);
         $groups[] = ['title' => __('Gestion'), 'items' => $ops];
+
+        // Gestion des stagiaires (Admin Centre : périmètre = son centre uniquement).
+        $groups[] = ['title' => __('Gestion des stagiaires'), 'items' => array_filter([
+            $link(__('Tous les stagiaires'), 'stagiaires.index', 'users', ['stagiaires.index', 'stagiaires.show', 'stagiaires.edit']),
+            $link(__('Ajouter un stagiaire'), 'stagiaires.create', 'plus', 'stagiaires.create'),
+        ])];
 
         $com = array_filter([
             $link(__('Notifications'), 'notifications.index', 'bell', 'notifications.*'),
@@ -369,6 +376,34 @@
                 </div>
             </div>
         @endif
+    @elseif($user->isCenterAdmin() && $isStagiaires)
+        {{-- BANNER DU CONTEXTE : GESTION DES STAGIAIRES (ADMIN CENTRE, périmètre = son centre) --}}
+        <div class="border-b border-slate-200 bg-purple-50/80 p-3 dark:border-slate-800 dark:bg-purple-950/30">
+            <div class="flex items-center justify-between gap-2" x-show="!$store.ui.sidebarCollapsed">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-purple-600 text-white shadow-2xs text-sm">
+                        🧑‍💼
+                    </span>
+                    <div class="min-w-0">
+                        <span class="block text-[10px] uppercase font-bold tracking-wider text-purple-800 dark:text-purple-300">{{ __('Espace administratif') }}</span>
+                        <span class="block truncate text-xs font-bold text-slate-900 dark:text-white">{{ __('Stagiaires') }}</span>
+                    </div>
+                </div>
+                <a href="{{ route('admin.home') }}"
+                   class="inline-flex items-center gap-1 rounded-lg border border-purple-300/80 bg-white px-2 py-1 text-[11px] font-semibold text-purple-700 hover:bg-purple-100 hover:text-purple-800 dark:border-purple-700/80 dark:bg-slate-900 dark:text-purple-300 dark:hover:bg-purple-900/40 transition-colors shadow-2xs shrink-0"
+                   title="{{ __('Retour à l\'accueil') }}">
+                    <x-icon name="home" class="h-3 w-3" />
+                    <span>{{ __('Accueil') }}</span>
+                </a>
+            </div>
+            <div class="flex justify-center" x-show="$store.ui.sidebarCollapsed">
+                <a href="{{ route('admin.home') }}"
+                   class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-2xs"
+                   title="{{ __('Stagiaires — Retour à l\'accueil') }}">
+                    <x-icon name="home" class="h-4.5 w-4.5" />
+                </a>
+            </div>
+        </div>
     @elseif($user->isCenterAdmin() && !empty($activeDomain))
         {{-- BANNER DU CONTEXTE : DOMAINE ACTIF (ADMIN CENTRE, périmètre = son centre) --}}
         <div class="border-b border-slate-200 {{ $pal['banner_bg'] }} p-3 dark:border-slate-800"

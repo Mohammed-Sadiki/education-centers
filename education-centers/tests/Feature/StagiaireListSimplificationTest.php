@@ -349,16 +349,28 @@ class StagiaireListSimplificationTest extends TestCase
         $this->assertSame(3, Stagiaire::where('center_id', $this->berlin->id)->count());
         $this->assertSame(2, Stagiaire::where('center_id', $this->munich->id)->count());
 
-        // Accès au module : réservé au Super Admin (permissions inchangées) → aucun
-        // Admin Centre ne peut voir les données d'un autre centre.
-        $this->actingAs($this->adminBerlin)
+        // Accès au module : l'Admin Centre y accède, strictement limité à son centre.
+        $pageBerlin = $this->actingAs($this->adminBerlin)
             ->get(route('stagiaires.index'))
-            ->assertForbidden();
+            ->assertOk()
+            ->assertSee('Berlin1')
+            ->assertSee('Berlin3')
+            ->assertDontSee('Munich1')
+            ->getContent();
+        $this->assertSame('3', $this->renderedTotal($pageBerlin));
+
+        $adminMunich = User::factory()->centerAdmin($this->munich->id)->create(['email' => 'am-list@test.de']);
+        $pageMunich = $this->actingAs($adminMunich)
+            ->get(route('stagiaires.index'))
+            ->assertOk()
+            ->assertSee('Munich1')
+            ->assertDontSee('Berlin1')
+            ->getContent();
+        $this->assertSame('2', $this->renderedTotal($pageMunich));
 
         // La requête de la carte applique la même restriction de centre : un Admin
-        // Centre ne compterait que les stagiaires de son centre.
+        // Centre ne compte que les stagiaires de son centre.
         $scopedBerlin = Stagiaire::query()->where('center_id', $this->adminBerlin->center_id)->count();
-        $adminMunich = User::factory()->centerAdmin($this->munich->id)->create(['email' => 'am-list@test.de']);
         $scopedMunich = Stagiaire::query()->where('center_id', $adminMunich->center_id)->count();
 
         $this->assertSame(3, $scopedBerlin);
@@ -436,11 +448,17 @@ class StagiaireListSimplificationTest extends TestCase
 
     public function test_center_filter_is_hidden_for_non_super_admins(): void
     {
-        // Le sélecteur de centre n'est réservé qu'au Super Admin ; l'accès au module
-        // lui-même reste refusé aux autres rôles (permissions inchangées).
+        // Le sélecteur de centre n'est réservé qu'au Super Admin.
+        $this->actingAs($this->superAdmin)
+            ->get(route('stagiaires.index'))
+            ->assertOk()
+            ->assertSee('name="center_id"', false);
+
+        // L'Admin Centre voit la liste de son centre, sans selecteur de centre.
         $this->actingAs($this->adminBerlin)
             ->get(route('stagiaires.index'))
-            ->assertForbidden();
+            ->assertOk()
+            ->assertDontSee('name="center_id"', false);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -554,7 +572,7 @@ class StagiaireListSimplificationTest extends TestCase
         $this->actingAs($this->superAdmin)
             ->get(route('stagiaires.create'))
             ->assertOk()
-            ->assertSee('Informations du stage');
+            ->assertSee('Entreprise où le stagiaire effectuera son stage');
     }
 
     // ──────────────────────────────────────────────────────────────────────────

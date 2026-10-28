@@ -106,32 +106,6 @@ Route::middleware('auth')->group(function () {
             ->name('super-admin.domain.dashboard')
             ->where('domain', '[a-zA-Z0-9\-]+');
 
-        Route::get('/super-admin/stagiaires/dashboard', [StagiaireController::class, 'dashboard'])
-            ->name('stagiaires.dashboard');
-        Route::get('/super-admin/stagiaires/documents', [StagiaireController::class, 'documents'])
-            ->name('stagiaires.documents');
-        Route::get('/super-admin/stagiaires/{stagiaire}/cin/{side}', [StagiaireController::class, 'downloadCin'])
-            ->name('stagiaires.download-cin');
-        Route::get('/super-admin/stagiaires/{stagiaire}/cin/{side}/get', [StagiaireController::class, 'downloadCin'])
-            ->name('stagiaires.cin-download');
-
-        Route::get('/super-admin/stagiaires/{stagiaire}/diplomas/{diploma}/download', [StagiaireController::class, 'downloadDiploma'])
-            ->name('stagiaires.download-diploma');
-        Route::get('/super-admin/stagiaires/{stagiaire}/diplomas/{diploma}/file', [StagiaireController::class, 'downloadDiploma'])
-            ->name('stagiaires.diploma-download');
-
-        Route::get('/super-admin/stagiaires/{stagiaire}/documents/{document}/download', [StagiaireController::class, 'downloadDocument'])
-            ->name('stagiaires.download-document');
-        Route::get('/super-admin/stagiaires/{stagiaire}/documents/{document}/file', [StagiaireController::class, 'downloadDocument'])
-            ->name('stagiaires.document-download');
-
-        Route::delete('/super-admin/stagiaires/{stagiaire}/diplomas/{diploma}', [StagiaireController::class, 'deleteDiploma'])
-            ->name('stagiaires.delete-diploma');
-        Route::delete('/super-admin/stagiaires/{stagiaire}/documents/{document}', [StagiaireController::class, 'deleteDocument'])
-            ->name('stagiaires.delete-document');
-        Route::resource('super-admin/stagiaires', StagiaireController::class)
-            ->names('stagiaires');
-
         // ── Gestion financière globale (Contexte indépendant Super Admin & Multi-Centres Cad Syndic) ──
         Route::prefix('super-admin/finance')->name('super-admin.finance.')->group(function () {
             // 1. Tableau de bord
@@ -193,6 +167,36 @@ Route::middleware('auth')->group(function () {
         Route::get('/center-admin/domaines/{domain}', [CenterAdminDomainController::class, 'domainDashboard'])
             ->name('center-admin.domain.dashboard')
             ->where('domain', '[a-zA-Z0-9\-]+');
+
+        // ── Gestion des stagiaires (Super Admin : tous centres autorisés,
+        //    Admin Centre : son centre uniquement, périmètre imposé côté serveur) ──
+        Route::get('/super-admin/stagiaires/dashboard', [StagiaireController::class, 'dashboard'])
+            ->name('stagiaires.dashboard');
+        Route::get('/super-admin/stagiaires/documents', [StagiaireController::class, 'documents'])
+            ->name('stagiaires.documents');
+        Route::get('/super-admin/stagiaires/{stagiaire}/cin/{side}', [StagiaireController::class, 'downloadCin'])
+            ->name('stagiaires.download-cin');
+        Route::get('/super-admin/stagiaires/{stagiaire}/cin/{side}/get', [StagiaireController::class, 'downloadCin'])
+            ->name('stagiaires.cin-download');
+        Route::get('/super-admin/stagiaires/{stagiaire}/profile-photo', [StagiaireController::class, 'showProfilePhoto'])
+            ->name('stagiaires.profile-photo');
+
+        Route::get('/super-admin/stagiaires/{stagiaire}/diplomas/{diploma}/download', [StagiaireController::class, 'downloadDiploma'])
+            ->name('stagiaires.download-diploma');
+        Route::get('/super-admin/stagiaires/{stagiaire}/diplomas/{diploma}/file', [StagiaireController::class, 'downloadDiploma'])
+            ->name('stagiaires.diploma-download');
+
+        Route::get('/super-admin/stagiaires/{stagiaire}/documents/{document}/download', [StagiaireController::class, 'downloadDocument'])
+            ->name('stagiaires.download-document');
+        Route::get('/super-admin/stagiaires/{stagiaire}/documents/{document}/file', [StagiaireController::class, 'downloadDocument'])
+            ->name('stagiaires.document-download');
+
+        Route::delete('/super-admin/stagiaires/{stagiaire}/diplomas/{diploma}', [StagiaireController::class, 'deleteDiploma'])
+            ->name('stagiaires.delete-diploma');
+        Route::delete('/super-admin/stagiaires/{stagiaire}/documents/{document}', [StagiaireController::class, 'deleteDocument'])
+            ->name('stagiaires.delete-document');
+        Route::resource('super-admin/stagiaires', StagiaireController::class)
+            ->names('stagiaires');
 
         // Utilisateurs
         Route::resource('users', UserController::class);

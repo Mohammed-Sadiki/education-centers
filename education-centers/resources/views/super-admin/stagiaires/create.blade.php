@@ -1,32 +1,16 @@
 @extends('layouts.app')
 
 @php
-    // Validation stricte : toutes les sections sont obligatoires sauf « Diplômes
-    // obtenus » et « Autres documents ». Après un refus du serveur, les lignes
-    // dynamiques commencées sont recréées depuis old() (les fichiers, eux, ne
-    // peuvent pas être restaurés par le navigateur).
-    $diplomaRows = collect(old('diplomas', []))
-        ->map(fn ($row) => [
-            'title' => trim((string) ($row['title'] ?? '')),
-            'institution' => trim((string) ($row['institution'] ?? '')),
-            'year' => trim((string) ($row['year'] ?? '')),
-        ])
-        ->filter(fn ($row) => $row['title'] !== '' || $row['institution'] !== '' || $row['year'] !== '')
-        ->values()
-        ->all() ?: [['title' => '', 'institution' => '', 'year' => '']];
-
-    $documentRows = collect(old('other_documents', []))
-        ->map(fn ($row) => [
-            'title' => trim((string) ($row['title'] ?? '')),
-            'type' => ($row['type'] ?? 'attestation') ?: 'attestation',
-        ])
-        ->filter(fn ($row) => $row['title'] !== '')
-        ->values()
-        ->all() ?: [['title' => '', 'type' => 'attestation']];
+    // Refonte du formulaire : deux cartes uniquement — « Informations personnelles »
+    // et « Entreprise où le stagiaire effectuera son stage ». Tous les champs
+    // affichés sont obligatoires, à l'exception de la section « Autres fichiers ».
+    $authUser = auth()->user();
+    $isCenterAdmin = $authUser->isCenterAdmin();
+    $forcedCenter = $isCenterAdmin ? $authUser->center : null;
 @endphp
 
-@section('title', __('Nouveau dossier Stagiaire') . ' — ' . config('app.name'))
-@section('description', __('Création d’un dossier administratif de stagiaire indépendant.'))
+@section('title', __('Ajouter un stagiaire') . ' — ' . config('app.name'))
+@section('description', __('Création d’un dossier administratif de stagiaire.'))
 
 @section('breadcrumb')
     <li class="flex items-center gap-2">
@@ -39,40 +23,52 @@
         <svg class="h-3 w-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
         </svg>
-        <span class="font-medium text-slate-700 dark:text-slate-200">{{ __('Nouveau dossier') }}</span>
+        <span class="font-medium text-slate-700 dark:text-slate-200">{{ __('Ajouter un stagiaire') }}</span>
     </li>
 @endsection
 
 @section('content')
-<div class="max-w-5xl mx-auto py-6">
+<div class="max-w-5xl mx-auto py-8"
+     x-data="stagiaireFormApp()">
 
-    {{-- En-tête --}}
+    {{-- En-tête de page --}}
     <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <div class="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200/70 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/50 dark:border-indigo-800/70 dark:text-indigo-300 mb-2">
+            <div class="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200/70 px-3 py-1 text-[0.95rem] font-semibold text-indigo-700 dark:bg-indigo-950/50 dark:border-indigo-800/70 dark:text-indigo-300 mb-3">
                 {{ __('🧑‍💼 Dossier administratif de stage') }}
             </div>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                 {{ __('Ajouter un stagiaire') }}
             </h1>
-            <p class="mt-1 text-sm text-slate-500">
-                {{ __('Créez un dossier complet de stage avec identité CIN, documents, diplômes et prix convenu.') }}
+            <p class="mt-2 text-[1.0625rem] leading-relaxed text-slate-600 dark:text-slate-300">
+                {{ __('Renseignez les informations personnelles du stagiaire et l\'entreprise où il effectuera son stage.') }}
             </p>
-            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400" id="legende-champs-obligatoires">
+            <p class="mt-2 text-[0.95rem] text-slate-500 dark:text-slate-400" id="legende-champs-obligatoires">
                 <span class="text-rose-500 font-bold">*</span> {{ __('Les champs marqués d\'un astérisque sont obligatoires.') }}
-                <span class="ms-2 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">{{ __('Facultatif') }}</span>
-                {{ __('désigne les sections qui peuvent rester entièrement vides.') }}
+                <span class="ms-2 inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[0.85rem] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">{{ __('Facultatif') }}</span>
+                {{ __('désigne la section « Autres fichiers », qui peut rester vide.') }}
             </p>
         </div>
-        <a href="{{ route('stagiaires.index') }}" class="ec-btn-secondary">
+        <a href="{{ route('stagiaires.index') }}" class="ec-btn-secondary text-[1.0625rem] shrink-0">
             {{ __('← Annuler et retour') }}
         </a>
     </div>
 
+    {{-- Bandeau centre automatique (Admin Centre) : le centre n'est pas modifiable --}}
+    @if($isCenterAdmin)
+        <div class="mb-6 flex items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50 px-5 py-4 text-[1.0625rem] text-brand-800 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-200">
+            <x-icon name="building" class="h-6 w-6 shrink-0" />
+            <div>
+                {{ __('Centre') }} : <strong>{{ $forcedCenter?->translated('name') ?? $forcedCenter?->name }}</strong>
+                — {{ __('Le centre est déterminé automatiquement à partir de votre compte et ne peut pas être modifié.') }}
+            </div>
+        </div>
+    @endif
+
     @if ($errors->any())
         <div class="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/50 dark:bg-rose-950/20">
-            <p class="text-sm font-bold text-rose-800 dark:text-rose-300 mb-1">{{ __('Veuillez corriger les erreurs suivantes :') }}</p>
-            <ul class="list-disc list-inside text-xs text-rose-700 dark:text-rose-400 space-y-0.5">
+            <p class="text-[1.0625rem] font-bold text-rose-800 dark:text-rose-300 mb-1">{{ __('Veuillez corriger les erreurs suivantes :') }}</p>
+            <ul class="list-disc list-inside text-[0.95rem] text-rose-700 dark:text-rose-400 space-y-0.5">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -83,398 +79,208 @@
     <form method="POST" action="{{ route('stagiaires.store') }}" enctype="multipart/form-data" id="form-create-stagiaire" data-stagiaire-form novalidate>
         @csrf
 
-        {{-- ────────────────────────────────────────────────────────────
-             BLOC 1 : INFORMATIONS PERSONNELLES (obligatoires)
-        ──────────────────────────────────────────────────────────── --}}
-        <div class="ec-card mb-6 p-6">
-            <div class="flex items-center gap-2 pb-4 mb-5 border-b border-slate-100 dark:border-slate-800">
-                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 font-bold text-sm dark:bg-indigo-950 dark:text-indigo-300">1</span>
-                <div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ __('Informations personnelles') }}</h2>
-                    <p class="text-xs text-slate-500">{{ __('État civil et coordonnées de contact') }}</p>
-                </div>
-            </div>
+        {{-- ══════════════════════════════════════════════════════════════
+             CARTE 1 — INFORMATIONS PERSONNELLES
+        ══════════════════════════════════════════════════════════════ --}}
+        <section class="ec-card mb-6 overflow-hidden">
+            <header class="border-b border-slate-100 bg-slate-50/60 px-6 py-5 dark:border-slate-800 dark:bg-slate-800/40">
+                <h2 class="flex items-center gap-3 text-2xl font-extrabold tracking-tight text-brand-700 dark:text-brand-300">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-[1.0625rem] font-extrabold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">1</span>
+                    <x-icon name="user" class="h-6 w-6" />
+                    {{ __('Informations personnelles') }}
+                </h2>
+            </header>
 
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="grid gap-5 p-6 sm:grid-cols-2">
                 <div>
-                    <label for="first_name" class="ec-label">{{ __('Prénom') }} <span class="text-rose-500">*</span></label>
-                    <input type="text" id="first_name" name="first_name" value="{{ old('first_name') }}" required data-required data-label="{{ __('Prénom') }}"
-                           class="ec-input w-full @error('first_name') is-invalid @enderror" placeholder="{{ __('Ex: Karim') }}">
-                    @error('first_name') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label for="last_name" class="ec-label">{{ __('Nom') }} <span class="text-rose-500">*</span></label>
+                    <label for="last_name" class="ec-label text-[1.0625rem] font-semibold">{{ __('Nom') }} <span class="text-rose-500">*</span></label>
                     <input type="text" id="last_name" name="last_name" value="{{ old('last_name') }}" required data-required data-label="{{ __('Nom') }}"
-                           class="ec-input w-full @error('last_name') is-invalid @enderror" placeholder="{{ __('Ex: El Amrani') }}">
-                    @error('last_name') <p class="ec-error">{{ $message }}</p> @enderror
+                           class="ec-input text-[1.0625rem] @error('last_name') is-invalid @enderror" placeholder="{{ __('Ex: El Amrani') }}" autocomplete="family-name">
+                    @error('last_name') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
-                    <label for="center_id" class="ec-label">{{ __('Centre de rattachement') }} <span class="text-rose-500">*</span></label>
-                    <select id="center_id" name="center_id" required data-required data-label="{{ __('Centre de rattachement') }}"
-                            class="ec-input w-full @error('center_id') is-invalid @enderror">
-                        <option value="">{{ __('-- Sélectionner un centre --') }}</option>
-                        @foreach($centers as $c)
-                            <option value="{{ $c->id }}" {{ old('center_id') == $c->id ? 'selected' : '' }}>
-                                {{ $c->translated('name') }} ({{ $c->city }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('center_id') <p class="ec-error">{{ $message }}</p> @enderror
+                    <label for="first_name" class="ec-label text-[1.0625rem] font-semibold">{{ __('Prénom') }} <span class="text-rose-500">*</span></label>
+                    <input type="text" id="first_name" name="first_name" value="{{ old('first_name') }}" required data-required data-label="{{ __('Prénom') }}"
+                           class="ec-input text-[1.0625rem] @error('first_name') is-invalid @enderror" placeholder="{{ __('Ex: Karim') }}" autocomplete="given-name">
+                    @error('first_name') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
-                    <label for="date_of_birth" class="ec-label">{{ __('Date de naissance') }} <span class="text-rose-500">*</span></label>
+                    <label for="date_of_birth" class="ec-label text-[1.0625rem] font-semibold">{{ __('Date de naissance') }} <span class="text-rose-500">*</span></label>
                     <input type="date" id="date_of_birth" name="date_of_birth" value="{{ old('date_of_birth') }}" required data-required data-label="{{ __('Date de naissance') }}"
-                           class="ec-input w-full @error('date_of_birth') is-invalid @enderror">
-                    @error('date_of_birth') <p class="ec-error">{{ $message }}</p> @enderror
+                           class="ec-input text-[1.0625rem] @error('date_of_birth') is-invalid @enderror">
+                    @error('date_of_birth') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
-                    <label for="place_of_birth" class="ec-label">{{ __('Lieu de naissance') }} <span class="text-rose-500">*</span></label>
-                    <input type="text" id="place_of_birth" name="place_of_birth" value="{{ old('place_of_birth') }}" required data-required data-label="{{ __('Lieu de naissance') }}"
-                           class="ec-input w-full @error('place_of_birth') is-invalid @enderror" placeholder="{{ __('Ex: Casablanca') }}">
-                    @error('place_of_birth') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label for="gender" class="ec-label">{{ __('Sexe') }} <span class="text-rose-500">*</span></label>
-                    <select id="gender" name="gender" required data-required data-label="{{ __('Sexe') }}"
-                            class="ec-input w-full @error('gender') is-invalid @enderror">
-                        <option value="">{{ __('-- Sélectionner --') }}</option>
-                        <option value="male"   {{ old('gender') === 'male'   ? 'selected' : '' }}>{{ __('Masculin') }}</option>
-                        <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>{{ __('Féminin') }}</option>
-                        <option value="other"  {{ old('gender') === 'other'  ? 'selected' : '' }}>{{ __('Autre') }}</option>
-                    </select>
-                    @error('gender') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label for="nationality" class="ec-label">{{ __('Nationalité') }} <span class="text-rose-500">*</span></label>
+                    <label for="nationality" class="ec-label text-[1.0625rem] font-semibold">{{ __('Nationalité') }} <span class="text-rose-500">*</span></label>
                     <input type="text" id="nationality" name="nationality" value="{{ old('nationality', 'Marocaine') }}" required data-required data-label="{{ __('Nationalité') }}"
-                           class="ec-input w-full @error('nationality') is-invalid @enderror" placeholder="{{ __('Ex: Marocaine') }}">
-                    @error('nationality') <p class="ec-error">{{ $message }}</p> @enderror
+                           class="ec-input text-[1.0625rem] @error('nationality') is-invalid @enderror" placeholder="{{ __('Ex: Marocaine') }}">
+                    @error('nationality') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
-                    <label for="phone" class="ec-label">{{ __('Téléphone') }} <span class="text-rose-500">*</span></label>
-                    <input type="text" id="phone" name="phone" value="{{ old('phone') }}" required data-required data-label="{{ __('Téléphone') }}" inputmode="tel"
-                           class="ec-input w-full @error('phone') is-invalid @enderror" placeholder="{{ __('Ex: +212 600 000000') }}">
-                    @error('phone') <p class="ec-error">{{ $message }}</p> @enderror
+                    <label for="phone" class="ec-label text-[1.0625rem] font-semibold">{{ __('Numéro de téléphone') }} <span class="text-rose-500">*</span></label>
+                    <input type="tel" id="phone" name="phone" value="{{ old('phone') }}" required data-required data-label="{{ __('Numéro de téléphone') }}" inputmode="tel"
+                           class="ec-input text-[1.0625rem] @error('phone') is-invalid @enderror" placeholder="{{ __('Ex: +212 600 000000') }}">
+                    @error('phone') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
 
-                <div>
-                    <label for="email" class="ec-label">{{ __('Adresse e-mail') }} <span class="text-rose-500">*</span></label>
-                    <input type="email" id="email" name="email" value="{{ old('email') }}" required data-required data-label="{{ __('Adresse e-mail') }}"
-                           class="ec-input w-full @error('email') is-invalid @enderror" placeholder="stagiaire@example.com">
-                    @error('email') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
+                {{-- ── CIN — Télécharger les photos ── --}}
+                <div class="sm:col-span-2 rounded-2xl border border-slate-200 bg-slate-50/50 p-5 dark:border-slate-700/80 dark:bg-slate-800/30">
+                    <h3 class="text-[1.15rem] font-bold text-slate-800 dark:text-slate-100">{{ __('CIN — Télécharger les photos') }} <span class="text-rose-500">*</span></h3>
+                    <p class="ec-help mt-1 text-[0.95rem]">{{ __('Formats autorisés : PDF, JPG, PNG — 5 Mo maximum par photo. Stockage sécurisé et privé.') }}</p>
 
-                <div class="sm:col-span-2 lg:col-span-3">
-                    <label for="address" class="ec-label">{{ __('Adresse de résidence') }} <span class="text-rose-500">*</span></label>
-                    <input type="text" id="address" name="address" value="{{ old('address') }}" required data-required data-label="{{ __('Adresse de résidence') }}"
-                           class="ec-input w-full @error('address') is-invalid @enderror" placeholder="{{ __('Numéro, rue, quartier, ville...') }}">
-                    @error('address') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-            </div>
-        </div>
-
-        {{-- ────────────────────────────────────────────────────────────
-             BLOC 2 : IDENTITÉ (CIN) (obligatoire)
-        ──────────────────────────────────────────────────────────── --}}
-        <div class="ec-card mb-6 p-6">
-            <div class="flex items-center gap-2 pb-4 mb-5 border-b border-slate-100 dark:border-slate-800">
-                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 font-bold text-sm dark:bg-indigo-950 dark:text-indigo-300">2</span>
-                <div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ __('Identité (CIN / Carte Nationale)') }}</h2>
-                    <p class="text-xs text-slate-500">{{ __('Numéro de pièce et justificatifs scannés') }}</p>
-                </div>
-            </div>
-
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div>
-                    <label for="cin_number" class="ec-label">{{ __('Numéro CIN') }} <span class="text-rose-500">*</span></label>
-                    <input type="text" id="cin_number" name="cin_number" value="{{ old('cin_number') }}" required data-required data-label="{{ __('Numéro CIN') }}"
-                           class="ec-input w-full font-mono uppercase @error('cin_number') is-invalid @enderror" placeholder="{{ __('Ex: AB123456') }}">
-                    @error('cin_number') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label for="cin_issued_date" class="ec-label">{{ __('Date de délivrance') }} <span class="text-rose-500">*</span></label>
-                    <input type="date" id="cin_issued_date" name="cin_issued_date" value="{{ old('cin_issued_date') }}" required data-required data-label="{{ __('Date de délivrance') }}"
-                           class="ec-input w-full @error('cin_issued_date') is-invalid @enderror">
-                    @error('cin_issued_date') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label for="cin_issued_place" class="ec-label">{{ __('Lieu de délivrance') }} <span class="text-rose-500">*</span></label>
-                    <input type="text" id="cin_issued_place" name="cin_issued_place" value="{{ old('cin_issued_place') }}" required data-required data-label="{{ __('Lieu de délivrance') }}"
-                           class="ec-input w-full @error('cin_issued_place') is-invalid @enderror" placeholder="{{ __('Ex: Rabat') }}">
-                    @error('cin_issued_place') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label for="cin_recto" class="ec-label">{{ __('Fichier CIN Recto (PDF, JPG, PNG)') }} <span class="text-rose-500">*</span></label>
-                    <input type="file" id="cin_recto" name="cin_recto" accept=".pdf,.jpg,.jpeg,.png" required data-required data-label="{{ __('Fichier CIN Recto') }}" data-max-kb="5120"
-                           class="ec-input w-full file:me-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1 file:text-xs file:font-semibold @error('cin_recto') is-invalid @enderror">
-                    <p class="mt-1 text-[11px] text-slate-400">{{ __('Stockage sécurisé et privé (max: 5 Mo)') }}</p>
-                    @error('cin_recto') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label for="cin_verso" class="ec-label">{{ __('Fichier CIN Verso (PDF, JPG, PNG)') }} <span class="text-rose-500">*</span></label>
-                    <input type="file" id="cin_verso" name="cin_verso" accept=".pdf,.jpg,.jpeg,.png" required data-required data-label="{{ __('Fichier CIN Verso') }}" data-max-kb="5120"
-                           class="ec-input w-full file:me-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1 file:text-xs file:font-semibold @error('cin_verso') is-invalid @enderror">
-                    <p class="mt-1 text-[11px] text-slate-400">{{ __('Stockage sécurisé et privé (max: 5 Mo)') }}</p>
-                    @error('cin_verso') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-            </div>
-        </div>
-
-        {{-- ────────────────────────────────────────────────────────────
-             BLOC 3 : INFORMATIONS DU STAGE & PRIX (obligatoires)
-        ──────────────────────────────────────────────────────────── --}}
-        <div class="ec-card mb-6 p-6 border-2 border-indigo-200/80 dark:border-indigo-800/60 bg-gradient-to-b from-indigo-50/20 to-transparent">
-            <div class="flex items-center gap-2 pb-4 mb-5 border-b border-indigo-100 dark:border-indigo-900/60">
-                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold text-sm">3</span>
-                <div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ __('Informations du stage') }}</h2>
-                    <p class="text-xs text-slate-500">{{ __('Période, type de stage et prix convenu') }}</p>
-                </div>
-            </div>
-
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div>
-                    <label for="stage_start_date" class="ec-label">{{ __('Date de début du stage') }} <span class="text-rose-500">*</span></label>
-                    <input type="date" id="stage_start_date" name="stage_start_date" value="{{ old('stage_start_date') }}" required data-required data-label="{{ __('Date de début du stage') }}"
-                           class="ec-input w-full @error('stage_start_date') is-invalid @enderror">
-                    @error('stage_start_date') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label for="stage_end_date" class="ec-label">{{ __('Date de fin prévue') }} <span class="text-rose-500">*</span></label>
-                    <input type="date" id="stage_end_date" name="stage_end_date" value="{{ old('stage_end_date') }}" required data-required data-label="{{ __('Date de fin prévue') }}"
-                           class="ec-input w-full @error('stage_end_date') is-invalid @enderror">
-                    @error('stage_end_date') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-
-                <div>
-                    <label for="stage_type" class="ec-label">{{ __('Type de stage') }} <span class="text-rose-500">*</span></label>
-                    <input type="text" id="stage_type" name="stage_type" value="{{ old('stage_type') }}" required data-required data-label="{{ __('Type de stage') }}"
-                           class="ec-input w-full @error('stage_type') is-invalid @enderror" placeholder="{{ __('Ex: Stage pratique, Stage d\'observation, Fin d\'études...') }}">
-                    @error('stage_type') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- PRIX DU STAGE & DEVISE --}}
-                <div class="sm:col-span-2 lg:col-span-2 rounded-xl border border-indigo-200 bg-white p-4 dark:border-indigo-900/80 dark:bg-slate-900 shadow-2xs">
-                    <label for="stage_price" class="block text-sm font-bold text-indigo-950 dark:text-indigo-200 mb-1">
-                        {{ __('Prix du stage') }} <span class="text-rose-500 font-bold">*</span>
-                        <span class="text-slate-400 font-normal text-xs">{{ __('(montant convenu)') }}</span>
-                    </label>
-                    <div class="flex items-center gap-2 max-w-sm">
-                        <div class="relative flex-1">
-                            <input type="number" step="0.01" min="0" max="999999.99" id="stage_price" name="stage_price"
-                                   value="{{ old('stage_price', '0.00') }}" required data-required data-label="{{ __('Prix du stage') }}"
-                                   class="ec-input w-full text-lg font-bold pe-12 @error('stage_price') is-invalid @enderror"
-                                   placeholder="0.00">
-                            <span class="absolute end-3 top-2.5 font-bold text-slate-500">DH</span>
+                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="cin_recto" class="ec-label text-[1.0625rem] font-semibold">{{ __('Photo CIN — Recto') }} <span class="text-rose-500">*</span></label>
+                            <input type="file" id="cin_recto" name="cin_recto" accept=".pdf,.jpg,.jpeg,.png" required data-required data-label="{{ __('Photo CIN — Recto') }}" data-max-kb="5120"
+                                   x-on:change="cinRectoName = $event.target.files[0]?.name ?? ''"
+                                   class="ec-input w-full text-[1rem] @error('cin_recto') is-invalid @enderror file:me-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-[1rem] file:font-semibold file:text-slate-700 hover:file:bg-slate-200 dark:file:bg-slate-800 dark:file:text-slate-200">
+                            <p x-show="cinRectoName" x-cloak class="mt-2 inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5 text-[0.95rem] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                                <span class="max-w-[240px] truncate" x-text="cinRectoName"></span>
+                                <button type="button" x-on:click="clearFile('cin_recto'); cinRectoName = ''" class="text-red-500 hover:text-red-700" :aria-label="{{ __('Retirer ce fichier') }}">&times;</button>
+                            </p>
+                            @error('cin_recto') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                         </div>
-                        <input type="hidden" name="currency" value="MAD">
-                        <span class="rounded-lg bg-indigo-50 px-3 py-2 text-sm font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
-                            MAD
-                        </span>
-                    </div>
-                    @error('stage_price') <p class="ec-error mt-1">{{ $message }}</p> @enderror
-                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                        {{ __('Montant convenu que le stagiaire doit payer pour effectuer le stage (valeur positive ou nulle, devise par défaut MAD / DH).') }}
-                    </p>
-                </div>
 
-                <div>
-                    <label for="status" class="ec-label">{{ __('Statut du dossier') }} <span class="text-rose-500">*</span></label>
-                    <select id="status" name="status" required data-required data-label="{{ __('Statut du dossier') }}"
-                            class="ec-input w-full @error('status') is-invalid @enderror">
-                        <option value="nouveau"  {{ old('status', 'nouveau') === 'nouveau'  ? 'selected' : '' }}>{{ __('Nouveau') }}</option>
-                        <option value="en_cours" {{ old('status') === 'en_cours' ? 'selected' : '' }}>{{ __('Stage en cours') }}</option>
-                        <option value="termine"  {{ old('status') === 'termine'  ? 'selected' : '' }}>{{ __('Terminé') }}</option>
-                        <option value="suspendu" {{ old('status') === 'suspendu' ? 'selected' : '' }}>{{ __('Suspendu') }}</option>
-                    </select>
-                    @error('status') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-
-                <div class="sm:col-span-2 lg:col-span-3">
-                    <label for="notes" class="ec-label">{{ __('Notes & observations particulières') }} <span class="text-rose-500">*</span></label>
-                    <textarea id="notes" name="notes" rows="2" required data-required data-label="{{ __('Notes & observations particulières') }}"
-                              class="ec-input w-full @error('notes') is-invalid @enderror" placeholder="{{ __('Commentaires internes éventuels sur la convention ou le déroulement du stage...') }}">{{ old('notes') }}</textarea>
-                    @error('notes') <p class="ec-error">{{ $message }}</p> @enderror
-                </div>
-            </div>
-        </div>
-
-        {{-- ────────────────────────────────────────────────────────────
-             BLOC 4 : DIPLÔMES — SECTION FACULTATIVE (lignes dynamiques)
-        ──────────────────────────────────────────────────────────── --}}
-        <div class="ec-card mb-6 p-6" x-data="{
-            diplomas: @js($diplomaRows),
-            addDiploma() {
-                this.diplomas.push({ title: '', institution: '', year: '' });
-            },
-            removeDiploma(index) {
-                if (this.diplomas.length > 1) {
-                    this.diplomas.splice(index, 1);
-                } else {
-                    this.diplomas = [{ title: '', institution: '', year: '' }];
-                }
-            }
-        }">
-            <div class="flex flex-wrap items-center justify-between gap-2 pb-4 mb-3 border-b border-slate-100 dark:border-slate-800">
-                <div class="flex items-center gap-2">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 font-bold text-sm dark:bg-indigo-950 dark:text-indigo-300">4</span>
-                    <div>
-                        <h2 class="text-base font-bold text-slate-900 dark:text-white">
-                            {{ __('Diplômes obtenus') }}
-                            <span class="ms-1 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">{{ __('Facultatif') }}</span>
-                        </h2>
-                        <p class="text-xs text-slate-500">{{ __('Ajoutez un ou plusieurs diplômes avec pièces jointes') }}</p>
-                    </div>
-                </div>
-                <button type="button" @click="addDiploma()"
-                        class="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 transition-colors">
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    <span>{{ __('+ Ajouter un diplôme') }}</span>
-                </button>
-            </div>
-
-            <p class="mb-4 text-[11px] text-slate-500 dark:text-slate-400">
-                {{ __('Section facultative : une ligne laissée entièrement vide n\'est pas enregistrée. Une ligne commencée doit être complétée (nom, établissement, année et fichier scanné).') }}
-            </p>
-
-            <div class="space-y-4">
-                <template x-for="(dip, index) in diplomas" :key="index">
-                    <div class="rounded-xl border border-slate-200/80 bg-slate-50/40 p-4 dark:border-slate-800 dark:bg-slate-900/40 relative" data-row-group="diplomas">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="@js(__('Diplôme')) + ' #' + (index + 1)"></span>
-                            <button type="button" @click="removeDiploma(index)" class="text-xs text-rose-600 hover:underline">
-                                {{ __('Supprimer cette ligne') }}
-                            </button>
-                        </div>
-                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                            <div>
-                                <label class="ec-label text-xs">{{ __('Nom du diplôme') }} <span class="text-rose-500" data-row-optional-star title="{{ __('Obligatoire lorsque la ligne est utilisée') }}">*</span></label>
-                                <input type="text" :name="'diplomas[' + index + '][title]'" x-model="dip.title" data-row-field="title"
-                                       class="ec-input w-full text-xs" placeholder="{{ __('Ex: Licence en Biologie') }}">
-                            </div>
-                            <div>
-                                <label class="ec-label text-xs">{{ __('Établissement') }} <span class="text-rose-500" data-row-optional-star title="{{ __('Obligatoire lorsque la ligne est utilisée') }}">*</span></label>
-                                <input type="text" :name="'diplomas[' + index + '][institution]'" x-model="dip.institution" data-row-field="institution"
-                                       class="ec-input w-full text-xs" placeholder="{{ __('Ex: Université Hassan II') }}">
-                            </div>
-                            <div>
-                                <label class="ec-label text-xs">{{ __('Année d\'obtention') }} <span class="text-rose-500" data-row-optional-star title="{{ __('Obligatoire lorsque la ligne est utilisée') }}">*</span></label>
-                                <input type="text" :name="'diplomas[' + index + '][year]'" x-model="dip.year" data-row-field="year" inputmode="numeric" data-numeric
-                                       class="ec-input w-full text-xs" placeholder="{{ __('Ex: 2023') }}">
-                            </div>
-                            <div>
-                                <label class="ec-label text-xs">{{ __('Fichier scanné (PDF, image)') }} <span class="text-rose-500" data-row-optional-star title="{{ __('Obligatoire lorsque la ligne est utilisée') }}">*</span></label>
-                                <input type="file" :name="'diplomas[' + index + '][file]'" accept=".pdf,.jpg,.jpeg,.png" data-max-kb="10240" data-row-field="file"
-                                       class="ec-input w-full text-xs file:me-2 file:rounded file:border-0 file:bg-slate-200 file:px-2 file:py-0.5 file:text-[11px]">
-                            </div>
+                        <div>
+                            <label for="cin_verso" class="ec-label text-[1.0625rem] font-semibold">{{ __('Photo CIN — Verso') }} <span class="text-rose-500">*</span></label>
+                            <input type="file" id="cin_verso" name="cin_verso" accept=".pdf,.jpg,.jpeg,.png" required data-required data-label="{{ __('Photo CIN — Verso') }}" data-max-kb="5120"
+                                   x-on:change="cinVersoName = $event.target.files[0]?.name ?? ''"
+                                   class="ec-input w-full text-[1rem] @error('cin_verso') is-invalid @enderror file:me-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-[1rem] file:font-semibold file:text-slate-700 hover:file:bg-slate-200 dark:file:bg-slate-800 dark:file:text-slate-200">
+                            <p x-show="cinVersoName" x-cloak class="mt-2 inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5 text-[0.95rem] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                                <span class="max-w-[240px] truncate" x-text="cinVersoName"></span>
+                                <button type="button" x-on:click="clearFile('cin_verso'); cinVersoName = ''" class="text-red-500 hover:text-red-700" :aria-label="{{ __('Retirer ce fichier') }}">&times;</button>
+                            </p>
+                            @error('cin_verso') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                         </div>
                     </div>
-                </template>
-            </div>
-        </div>
-
-        {{-- ────────────────────────────────────────────────────────────
-             BLOC 5 : AUTRES DOCUMENTS — SECTION FACULTATIVE (lignes dynamiques)
-        ──────────────────────────────────────────────────────────── --}}
-        <div class="ec-card mb-8 p-6" x-data="{
-            docs: @js($documentRows),
-            addDoc() {
-                this.docs.push({ title: '', type: 'autre' });
-            },
-            removeDoc(index) {
-                if (this.docs.length > 1) {
-                    this.docs.splice(index, 1);
-                } else {
-                    this.docs = [{ title: '', type: 'attestation' }];
-                }
-            }
-        }">
-            <div class="flex flex-wrap items-center justify-between gap-2 pb-4 mb-3 border-b border-slate-100 dark:border-slate-800">
-                <div class="flex items-center gap-2">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 font-bold text-sm dark:bg-indigo-950 dark:text-indigo-300">5</span>
-                    <div>
-                        <h2 class="text-base font-bold text-slate-900 dark:text-white">
-                            {{ __('Autres documents') }}
-                            <span class="ms-1 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">{{ __('Facultatif') }}</span>
-                        </h2>
-                        <p class="text-xs text-slate-500">{{ __('Attestations, certificats, conventions ou pièces complémentaires') }}</p>
-                    </div>
                 </div>
-                <button type="button" @click="addDoc()"
-                        class="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 transition-colors">
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    <span>{{ __('+ Ajouter un document') }}</span>
-                </button>
-            </div>
 
-            <p class="mb-4 text-[11px] text-slate-500 dark:text-slate-400">
-                {{ __('Section facultative : une ligne laissée sans titre ni fichier n\'est pas enregistrée. Une ligne commencée doit être complétée (titre, type et fichier scanné).') }}
-            </p>
-
-            <div class="space-y-4">
-                <template x-for="(doc, index) in docs" :key="index">
-                    <div class="rounded-xl border border-slate-200/80 bg-slate-50/40 p-4 dark:border-slate-800 dark:bg-slate-900/40 relative" data-row-group="other_documents">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="@js(__('Document')) + ' #' + (index + 1)"></span>
-                            <button type="button" @click="removeDoc(index)" class="text-xs text-rose-600 hover:underline">
-                                {{ __('Supprimer cette ligne') }}
-                            </button>
+                {{-- ── Photo de profil avec aperçu ── --}}
+                <div class="sm:col-span-2">
+                    <label class="ec-label text-[1.0625rem] font-semibold">{{ __('Photo de profil') }} <span class="text-rose-500">*</span></label>
+                    <p class="ec-help text-[0.95rem]">{{ __('Téléchargez la photo du stagiaire (JPG ou PNG, 2 Mo maximum). Un aperçu s\'affiche avant l\'enregistrement.') }}</p>
+                    <div class="mt-2 flex items-center gap-4">
+                        <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400 dark:border-slate-600 dark:bg-slate-800">
+                            <img x-show="profilePreview" x-cloak :src="profilePreview" alt="{{ __('Aperçu de la photo') }}" class="h-full w-full object-cover">
+                            <x-icon name="user" x-show="!profilePreview" x-cloak class="h-9 w-9 text-slate-400" />
                         </div>
-                        <div class="grid gap-3 sm:grid-cols-3">
-                            <div>
-                                <label class="ec-label text-xs">{{ __('Titre / Description') }} <span class="text-rose-500" data-row-optional-star title="{{ __('Obligatoire lorsque la ligne est utilisée') }}">*</span></label>
-                                <input type="text" :name="'other_documents[' + index + '][title]'" x-model="doc.title" data-row-field="title"
-                                       class="ec-input w-full text-xs" placeholder="{{ __('Ex: Convention tripartite signée') }}">
-                            </div>
-                            <div>
-                                <label class="ec-label text-xs">{{ __('Type de pièce') }} <span class="text-rose-500" data-row-optional-star title="{{ __('Obligatoire lorsque la ligne est utilisée') }}">*</span></label>
-                                <select :name="'other_documents[' + index + '][type]'" x-model="doc.type" data-row-field="type" data-row-preset
-                                        class="ec-input w-full text-xs">
-                                    <option value="convention">{{ __('Convention de stage') }}</option>
-                                    <option value="attestation">{{ __('Attestation') }}</option>
-                                    <option value="certificat">{{ __('Certificat') }}</option>
-                                    <option value="cv">CV</option>
-                                    <option value="autre">{{ __('Autre document') }}</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="ec-label text-xs">{{ __('Fichier scanné (PDF, image)') }} <span class="text-rose-500" data-row-optional-star title="{{ __('Obligatoire lorsque la ligne est utilisée') }}">*</span></label>
-                                <input type="file" :name="'other_documents[' + index + '][file]'" accept=".pdf,.jpg,.jpeg,.png" data-max-kb="10240" data-row-field="file"
-                                       class="ec-input w-full text-xs file:me-2 file:rounded file:border-0 file:bg-slate-200 file:px-2 file:py-0.5 file:text-[11px]">
-                            </div>
+                        <div class="w-full sm:max-w-md">
+                            <input type="file" id="profile_photo" name="profile_photo" x-ref="profileInput" accept="image/jpeg,image/png" required data-required data-label="{{ __('Photo de profil') }}" data-max-kb="2048"
+                                   x-on:change="onProfileChange($event)"
+                                   class="block w-full text-[1rem] @error('profile_photo') is-invalid @enderror file:me-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2 file:text-[1rem] file:font-semibold file:text-brand-700 hover:file:bg-brand-100 dark:file:bg-brand-500/10 dark:file:text-brand-300">
                         </div>
                     </div>
-                </template>
+                    <p x-show="profileName" x-cloak class="ec-help mt-1 text-[0.95rem]" x-text="profileName"></p>
+                    @error('profile_photo') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label for="whatsapp" class="ec-label text-[1.0625rem] font-semibold">{{ __('Numéro WhatsApp') }} <span class="text-rose-500">*</span></label>
+                    <input type="tel" id="whatsapp" name="whatsapp" value="{{ old('whatsapp') }}" required data-required data-label="{{ __('Numéro WhatsApp') }}" inputmode="tel"
+                           class="ec-input text-[1.0625rem] @error('whatsapp') is-invalid @enderror" placeholder="{{ __('Ex: +212 6 00 00 00 00') }}">
+                    @error('whatsapp') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label for="emergency_contact_phone" class="ec-label text-[1.0625rem] font-semibold">{{ __('Numéro de téléphone d\'urgence') }} <span class="text-rose-500">*</span></label>
+                    <input type="tel" id="emergency_contact_phone" name="emergency_contact_phone" value="{{ old('emergency_contact_phone') }}" required data-required data-label="{{ __('Numéro de téléphone d\'urgence') }}" inputmode="tel"
+                           class="ec-input text-[1.0625rem] @error('emergency_contact_phone') is-invalid @enderror" placeholder="{{ __('Ex: +212 6 11 22 33 44') }}">
+                    @error('emergency_contact_phone') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- ── Autres fichiers (section facultative) ── --}}
+                <div class="sm:col-span-2 rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-5 dark:border-slate-600 dark:bg-slate-800/30">
+                    <h3 class="text-[1.15rem] font-bold text-slate-800 dark:text-slate-100">
+                        {{ __('Autres fichiers') }}
+                        <span class="ms-2 inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[0.85rem] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">{{ __('Facultatif') }}</span>
+                    </h3>
+                    <p class="ec-help mt-1 text-[0.95rem]">{{ __('PDF, JPG, PNG, DOC, DOCX — 8 Mo maximum par fichier. Chaque fichier peut être retiré avant l\'enregistrement.') }}</p>
+
+                    <input type="file" name="other_files[]" x-ref="otherInput" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" multiple data-optional-files data-max-kb="8192"
+                           x-on:change="addOtherFiles($event)" class="sr-only" tabindex="-1">
+                    <ul x-show="otherFiles.length" x-cloak class="mt-3 flex flex-wrap gap-2">
+                        <template x-for="(f, i) in otherFiles" :key="i">
+                            <li class="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5 text-[0.95rem] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                                <span class="max-w-[220px] truncate" x-text="f.name"></span>
+                                <button type="button" x-on:click="removeOtherFile(i)" class="text-red-500 hover:text-red-700" :aria-label="{{ __('Retirer ce fichier') }}">&times;</button>
+                            </li>
+                        </template>
+                    </ul>
+                    <div class="mt-3">
+                        <button type="button" id="btn-add-other-file" x-on:click="$refs.otherInput.click()"
+                                class="inline-flex items-center gap-2 rounded-xl border border-dashed border-brand-300 px-5 py-2.5 text-[1.0625rem] font-semibold text-brand-700 hover:bg-brand-50 dark:border-brand-500/40 dark:text-brand-300 dark:hover:bg-brand-500/10 transition-colors">
+                            <x-icon name="plus" class="h-5 w-5" /> {{ __('Ajouter un fichier') }}
+                        </button>
+                    </div>
+                    @error('other_files.*') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Rattachement : sélecteur conservé pour le Super Admin uniquement.
+                     Admin Centre : centre imposé côté serveur (bandeau ci-dessus). --}}
+                @unless ($isCenterAdmin)
+                    <div class="sm:col-span-2">
+                        <label for="center_id" class="ec-label text-[1.0625rem] font-semibold">{{ __('Centre de rattachement') }} <span class="text-rose-500">*</span></label>
+                        <select id="center_id" name="center_id" required data-required data-label="{{ __('Centre de rattachement') }}"
+                                class="ec-select text-[1.0625rem] @error('center_id') is-invalid @enderror">
+                            <option value="">{{ __('— Sélectionner un centre —') }}</option>
+                            @foreach($centers as $c)
+                                <option value="{{ $c->id }}" @selected(old('center_id') == $c->id)>
+                                    {{ $c->translated('name') }} ({{ $c->city }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('center_id') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                    </div>
+                @endunless
             </div>
-        </div>
+        </section>
+
+        {{-- ══════════════════════════════════════════════════════════════
+             CARTE 2 — ENTREPRISE OÙ LE STAGIAIRE EFFECTUERA SON STAGE
+        ══════════════════════════════════════════════════════════════ --}}
+        <section class="ec-card mb-6 overflow-hidden">
+            <header class="border-b border-slate-100 bg-slate-50/60 px-6 py-5 dark:border-slate-800 dark:bg-slate-800/40">
+                <h2 class="flex items-center gap-3 text-2xl font-extrabold tracking-tight text-brand-700 dark:text-brand-300">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-[1.0625rem] font-extrabold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">2</span>
+                    <x-icon name="building" class="h-6 w-6" />
+                    {{ __('Entreprise où le stagiaire effectuera son stage') }}
+                </h2>
+            </header>
+
+            <div class="grid gap-5 p-6 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                    <label for="company_name" class="ec-label text-[1.0625rem] font-semibold">{{ __('Nom de l\'entreprise') }} <span class="text-rose-500">*</span></label>
+                    <input type="text" id="company_name" name="company_name" value="{{ old('company_name') }}" required data-required data-label="{{ __('Nom de l\'entreprise') }}"
+                           class="ec-input text-[1.0625rem] @error('company_name') is-invalid @enderror" placeholder="{{ __('Ex: Atlas Technologies') }}">
+                    @error('company_name') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label for="company_phone" class="ec-label text-[1.0625rem] font-semibold">{{ __('Numéro de téléphone de l\'entreprise') }} <span class="text-rose-500">*</span></label>
+                    <input type="tel" id="company_phone" name="company_phone" value="{{ old('company_phone') }}" required data-required data-label="{{ __('Numéro de téléphone de l\'entreprise') }}" inputmode="tel"
+                           class="ec-input text-[1.0625rem] @error('company_phone') is-invalid @enderror" placeholder="{{ __('Ex: +212 522 00 00 00') }}">
+                    @error('company_phone') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label for="company_location" class="ec-label text-[1.0625rem] font-semibold">{{ __('Lieu de l\'entreprise') }} <span class="text-rose-500">*</span></label>
+                    <input type="text" id="company_location" name="company_location" value="{{ old('company_location') }}" required data-required data-label="{{ __('Lieu de l\'entreprise') }}"
+                           class="ec-input text-[1.0625rem] @error('company_location') is-invalid @enderror" placeholder="{{ __('Ex: Casablanca, Maroc') }}">
+                    @error('company_location') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                </div>
+            </div>
+        </section>
 
         {{-- Boutons d'action --}}
-        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <a href="{{ route('stagiaires.index') }}" class="ec-btn-secondary px-6">
-                {{ __('Annuler') }}
-            </a>
-            <button type="submit" id="btn-submit-stagiaire" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-all">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
-                <span>{{ __('Enregistrer le stagiaire') }}</span>
+        <div class="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+            <a href="{{ route('stagiaires.index') }}" class="ec-btn-secondary text-[1.0625rem] px-6">{{ __('Annuler') }}</a>
+            <button type="submit" id="btn-submit-stagiaire" class="ec-btn-primary px-6 text-[1.0625rem]">
+                <x-icon name="check" class="h-5 w-5" />
+                {{ __('Enregistrer le stagiaire') }}
             </button>
         </div>
     </form>
@@ -482,6 +288,48 @@
 @endsection
 
 @push('scripts')
-    {{-- Validation stricte partagée avec le formulaire de modification. --}}
+<script>
+    function stagiaireFormApp() {
+        return {
+            profileName: '',
+            profilePreview: '',
+            cinRectoName: '',
+            cinVersoName: '',
+            otherFiles: [],
+
+            onProfileChange(event) {
+                const file = event.target.files[0];
+                if (!file) { this.profileName = ''; this.profilePreview = ''; return; }
+                this.profileName = file.name;
+                const reader = new FileReader();
+                reader.onload = (e) => { this.profilePreview = e.target.result; };
+                reader.readAsDataURL(file);
+            },
+
+            clearFile(id) {
+                const input = document.getElementById(id);
+                if (input) input.value = '';
+            },
+
+            addOtherFiles(event) {
+                const input = event.target;
+                const dt = new DataTransfer();
+                this.otherFiles.forEach(f => dt.items.add(f));
+                Array.from(input.files).forEach(f => dt.items.add(f));
+                this.otherFiles = Array.from(dt.files);
+                input.files = dt.files;
+            },
+
+            removeOtherFile(index) {
+                const dt = new DataTransfer();
+                this.otherFiles.forEach((f, i) => { if (i !== index) dt.items.add(f); });
+                this.otherFiles = Array.from(dt.files);
+                if (this.$refs.otherInput) this.$refs.otherInput.files = dt.files;
+            },
+        };
+    }
+</script>
+
+    {{-- Validation côté navigateur partagée avec le formulaire de modification. --}}
     @include('super-admin.stagiaires.partials.form-validation')
 @endpush

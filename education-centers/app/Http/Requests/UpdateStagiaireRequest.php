@@ -66,6 +66,12 @@ class UpdateStagiaireRequest extends FormRequest
                 Rule::requiredIf(fn () => ! $stagiaire || ! $stagiaire->cin_verso_path),
                 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120',
             ],
+            // La photo de profil est exigée sauf si une photo est déjà enregistrée
+            // (préservation des dossiers existants lors de la modification).
+            'profile_photo' => [
+                Rule::requiredIf(fn () => ! $stagiaire || ! $stagiaire->profile_photo_path),
+                'image', 'mimes:jpg,jpeg,png', 'max:2048',
+            ],
         ] + $this->attachmentRowRules();
     }
 

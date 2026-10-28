@@ -264,7 +264,12 @@ class StagiaireInterfaceSimplificationTest extends TestCase
     {
         $this->actingAs($this->superAdmin)
             ->post(route('stagiaires.store'), [])
-            ->assertSessionHasErrors(['first_name', 'last_name', 'center_id', 'email', 'stage_price']);
+            ->assertSessionHasErrors([
+                'first_name', 'last_name', 'center_id', 'date_of_birth', 'nationality',
+                'phone', 'whatsapp', 'emergency_contact_phone',
+                'cin_recto', 'cin_verso', 'profile_photo',
+                'company_name', 'company_phone', 'company_location',
+            ]);
     }
 
     public function test_show_edit_and_documents_pages_remain_accessible(): void
@@ -326,11 +331,13 @@ class StagiaireInterfaceSimplificationTest extends TestCase
 
     public function test_non_super_admin_roles_keep_previous_access_rules(): void
     {
-        // Comportement inchangé : le module Stagiaires reste réservé au Super Admin.
-        $this->actingAs($this->adminBerlin)->get(route('stagiaires.index'))->assertForbidden();
+        // L'Admin Centre accède au module (refonte : permissions Berlin/Munich).
+        $this->actingAs($this->adminBerlin)->get(route('stagiaires.index'))->assertOk();
         $this->actingAs($this->adminBerlin)
             ->get(route('stagiaires.dashboard'))
-            ->assertForbidden();
+            ->assertRedirect(route('stagiaires.index'));
+
+        // Inchangé pour les autres rôles : professeur et étudiant exclus.
         $this->actingAs($this->teacher)->get(route('stagiaires.index'))->assertForbidden();
         $this->actingAs($this->studentUser)->get(route('stagiaires.index'))->assertForbidden();
     }
