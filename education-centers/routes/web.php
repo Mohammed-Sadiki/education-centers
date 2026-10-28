@@ -8,6 +8,7 @@ use App\Http\Controllers\CenterController;
 use App\Http\Controllers\CenterAdminDomainController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\ClassController;
+use App\Http\Controllers\ClassPlanController;
 use App\Http\Controllers\ClassTeacherController;
 use App\Http\Controllers\ContentTranslationController;
 use App\Http\Controllers\DashboardController;
@@ -197,6 +198,11 @@ Route::middleware('auth')->group(function () {
             ->name('stagiaires.delete-document');
         Route::resource('super-admin/stagiaires', StagiaireController::class)
             ->names('stagiaires');
+
+        // ── Plan de classe (lecture seule) ──
+        Route::get('/plan-de-classe', [ClassPlanController::class, 'index'])->name('class-plan.index');
+        Route::get('/api/class-plan/teachers/{teacher}/classes', [ClassPlanController::class, 'getTeacherClasses'])->name('class-plan.teacher.classes');
+        Route::get('/api/class-plan/classes/{class}/students', [ClassPlanController::class, 'getClassStudents'])->name('class-plan.class.students');
 
         // Utilisateurs
         Route::resource('users', UserController::class);
