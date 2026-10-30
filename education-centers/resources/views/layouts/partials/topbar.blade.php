@@ -82,6 +82,12 @@
                     {{ $topbarDomain['label'] }}
                 </span>
             @endif
+        @elseif($user->isCenterAdmin() && $isFinance)
+            {{-- Badge de contexte financier : identique au Super Admin (module partagé). --}}
+            <span class="hidden items-center gap-1.5 rounded-full bg-turquoise-50 px-2.5 py-1 text-xs font-semibold text-turquoise-600 ring-1 ring-turquoise-500/25 md:inline-flex dark:bg-turquoise-500/15 dark:text-turquoise-400">
+                <x-icon name="chart" class="h-3.5 w-3.5" />
+                {{ __('Gestion financière') }}
+            </span>
         @endif
 
         {{-- Global search (admins only — routes to a real filtered list) --}}

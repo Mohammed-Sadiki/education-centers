@@ -319,15 +319,38 @@ class FinanceExpensesSalariesTest extends TestCase
             ->assertSee('Lea Muni');
     }
 
-    public function test_center_admin_cannot_manage_salaries_via_expenses(): void
+    public function test_center_admin_manages_salaries_scoped_to_their_center(): void
     {
-        // Module financier réservé au Super Admin ⇒ l'Admin Berlin est 403 (périmètre inchangé).
-        $this->actingAs($this->adminBerlin)
-            ->post(route('super-admin.finance.expenses.store'), $this->salaryPayload())
-            ->assertForbidden();
+        // Le module financier est désormais ouvert à l'Admin Centre, mais STRICTEMENT
+        // limité à SON centre (périmètre imposé côté serveur).
 
+        // Consultation autorisée.
         $this->actingAs($this->adminBerlin)
             ->get(route('super-admin.finance.expenses'))
+            ->assertOk();
+
+        // Salaire d'un professeur de SON centre : accepté.
+        $this->actingAs($this->adminBerlin)
+            ->post(route('super-admin.finance.expenses.store'), $this->salaryPayload())
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('teacher_salaries', [
+            'teacher_id' => $this->teacherBerlin->id,
+            'center_id' => $this->berlin->id,
+            'month' => 10,
+            'year' => 2026,
+            'status' => 'paid',
+        ]);
+
+        // Salaire d'un professeur d'un AUTRE centre : refusé (403), la garde
+        // d'appartenance empêche toute évasion de périmètre.
+        $this->actingAs($this->adminBerlin)
+            ->post(route('super-admin.finance.expenses.store'), $this->salaryPayload([
+                'teacher_id' => $this->teacherMunich->id,
+                'center_id' => $this->berlin->id,
+                'expected_amount' => 5000.00,
+                'paid_amount' => 5000.00,
+            ]))
             ->assertForbidden();
     }
 

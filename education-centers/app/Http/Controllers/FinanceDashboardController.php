@@ -60,13 +60,38 @@ class FinanceDashboardController extends Controller
      */
     private function resolveCenterScope(Request $request): ?int
     {
+        $ctx = user_context();
+
+        // Admin Centre : périmètre TOUJOURS son propre centre, jamais celui fourni
+        // par l'URL. Le middleware ResolveDomainContext a déjà figé le contexte ;
+        // on ignore donc volontairement tout ?center_id malveillant.
+        if ($ctx->isCenterAdmin()) {
+            return $ctx->centerId();
+        }
+
+        // Super Admin : restriction volontaire via ?center_id, sinon le centre du
+        // contexte (null = vue globale multi-centres).
         if ($centerId = $request->query('center_id')) {
             return (int) $centerId;
         }
 
-        $ctx = user_context();
-
         return $ctx->hasCenter() ? $ctx->centerId() : null;
+    }
+
+    /**
+     * Garantie d'appartenance pour les actions d'écriture : un Admin Centre ne
+     * peut manipuler que les données de SON centre. No-op pour le Super Admin.
+     *
+     * @param  int|string|null  $centerId  centre de l'entité ciblée (étudiant,
+     *                                     professeur, dépense, écriture bancaire…)
+     */
+    private function guardOwnCenter(int|string|null $centerId): void
+    {
+        $user = auth()->user();
+
+        if ($user?->isCenterAdmin() && (int) $centerId !== (int) $user->center_id) {
+            abort(403, __('Accès refusé : cette donnée n\'appartient pas à votre centre.'));
+        }
     }
 
     /**
@@ -94,10 +119,19 @@ class FinanceDashboardController extends Controller
         $schoolYears = FinanceService::SCHOOL_YEARS;
         $centers = Center::orderBy('name')->get();
 
-        // Récupérer les étudiants et formations pour le modal d'ajout rapide de paiement
-        $studentsList = Student::with('center')->where('status', 'active')->orderBy('last_name')->get();
-        $formationsList = Formation::with('center')->where('status', 'active')->orderBy('name')->get();
-        $teachersList = Teacher::with('center')->where('status', 'active')->orderBy('last_name')->get();
+        // Récupérer les étudiants et formations pour le modal d'ajout rapide de paiement.
+        // Pour un Admin Centre, on restreint ces listes à SON centre (le Super Admin
+        // conserve la vue globale / son filtre volontaire).
+        $centerScoped = user_context()->isCenterAdmin() ? $centerId : null;
+        $studentsList = Student::with('center')->where('status', 'active')
+            ->when($centerScoped, fn ($q) => $q->where('center_id', $centerScoped))
+            ->orderBy('last_name')->get();
+        $formationsList = Formation::with('center')->where('status', 'active')
+            ->when($centerScoped, fn ($q) => $q->where('center_id', $centerScoped))
+            ->orderBy('name')->get();
+        $teachersList = Teacher::with('center')->where('status', 'active')
+            ->when($centerScoped, fn ($q) => $q->where('center_id', $centerScoped))
+            ->orderBy('last_name')->get();
 
         // Données JSON pour pré-remplissage dynamique dans le modal de paiement
         $studentFinancialMap = $studentRows->keyBy('student.id')->map(function ($row) {
@@ -346,13 +380,24 @@ class FinanceDashboardController extends Controller
     /**
      * Page de configuration des prix annuels et des salaires mensuels.
      */
-    public function configuration(): View
+    public function configuration(Request $request): View
     {
-        $formations = Formation::with('center')->orderBy('name')->get();
-        $teachers = Teacher::with(['user', 'center'])->orderBy('last_name')->get();
+        $centerId = $this->resolveCenterScope($request);
+
+        $formationsQuery = Formation::with('center')->orderBy('name');
+        $teachersQuery = Teacher::with(['user', 'center'])->orderBy('last_name');
+
+        // Admin Centre : uniquement les formations/professeurs de SON centre.
+        if ($centerId) {
+            $formationsQuery->where('center_id', $centerId);
+            $teachersQuery->where('center_id', $centerId);
+        }
+
+        $formations = $formationsQuery->get();
+        $teachers = $teachersQuery->get();
         $domains = FinanceService::getDomains();
 
-        return view('super-admin.finance.configuration', compact('formations', 'teachers', 'domains'));
+        return view('super-admin.finance.configuration', compact('formations', 'teachers', 'domains', 'centerId'));
     }
 
     /**
@@ -362,21 +407,31 @@ class FinanceDashboardController extends Controller
     {
         $data = $request->validated();
 
+        // Admin Centre : ne peut modifier que les prix/salaires de SON centre.
+        // La clause centre_id est ajoutée à chaque UPDATE pour bloquer toute
+        // identifiant d'une autre structure (défensif, même si la liste est déjà
+        // filtrée côté vue).
+        $centerId = $this->resolveCenterScope($request);
+
         if (! empty($data['formations'])) {
             foreach ($data['formations'] as $fData) {
-                Formation::where('id', $fData['id'])->update([
-                    'annual_price' => $fData['annual_price'],
-                    'domain' => $fData['domain'] ?? null,
-                ]);
+                Formation::where('id', $fData['id'])
+                    ->when($centerId, fn ($q) => $q->where('center_id', $centerId))
+                    ->update([
+                        'annual_price' => $fData['annual_price'],
+                        'domain' => $fData['domain'] ?? null,
+                    ]);
             }
         }
 
         if (! empty($data['teachers'])) {
             foreach ($data['teachers'] as $tData) {
-                Teacher::where('id', $tData['id'])->update([
-                    'monthly_salary' => $tData['monthly_salary'],
-                    'domain' => $tData['domain'] ?? null,
-                ]);
+                Teacher::where('id', $tData['id'])
+                    ->when($centerId, fn ($q) => $q->where('center_id', $centerId))
+                    ->update([
+                        'monthly_salary' => $tData['monthly_salary'],
+                        'domain' => $tData['domain'] ?? null,
+                    ]);
             }
         }
 
@@ -391,6 +446,8 @@ class FinanceDashboardController extends Controller
     {
         $data = $request->validated();
         $student = Student::with('center')->findOrFail($data['student_id']);
+        // Multi-centres : un Admin Centre ne peut encaisser qu'un étudiant de son périmètre.
+        $this->guardOwnCenter($student->center_id);
         $formation = ! empty($data['formation_id']) ? Formation::find($data['formation_id']) : null;
 
         // Vérification de sécurité métier : vérifier que le montant ne dépasse pas le solde restant si l'inscription existe
@@ -448,6 +505,8 @@ class FinanceDashboardController extends Controller
     {
         $data = $request->validated();
         $teacher = Teacher::with('center')->findOrFail($data['teacher_id']);
+        // Multi-centres : un Admin Centre ne peut salayer qu'un professeur de son périmètre.
+        $this->guardOwnCenter($teacher->center_id);
 
         $expected = ! empty($data['expected_amount']) && (float) $data['expected_amount'] > 0
             ? (float) $data['expected_amount']
@@ -1004,6 +1063,8 @@ class FinanceDashboardController extends Controller
      */
     public function cancelExpense(Expense $expense): RedirectResponse
     {
+        $this->guardOwnCenter($expense->center_id);
+
         if ($expense->status === 'cancelled') {
             return back()->with('error', __('Cette dépense est déjà annulée.'));
         }
@@ -1036,6 +1097,8 @@ class FinanceDashboardController extends Controller
      */
     public function destroyExpense(Expense $expense): RedirectResponse
     {
+        $this->guardOwnCenter($expense->center_id);
+
         // Supprimer les transactions bancaires et comptables liées
         BankTransaction::where('expense_id', $expense->id)->delete();
         $expense->delete();
@@ -1048,6 +1111,8 @@ class FinanceDashboardController extends Controller
      */
     public function downloadExpenseReceipt(Expense $expense)
     {
+        $this->guardOwnCenter($expense->center_id);
+
         if (! $expense->receipt_path || ! Storage::disk('public')->exists($expense->receipt_path)) {
             return back()->with('error', __('Aucun justificatif trouvé pour cette dépense.'));
         }
@@ -1062,6 +1127,8 @@ class FinanceDashboardController extends Controller
      */
     public function expenseReceiptPdf(Request $request, Expense $expense, PdfService $pdf): Response
     {
+        $this->guardOwnCenter($expense->center_id);
+
         $expense->load(['center', 'category', 'items', 'recorder']);
 
         $filename = 'recu-'.($expense->reference ?: $expense->id).'.pdf';
@@ -1181,6 +1248,11 @@ class FinanceDashboardController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'reference' => 'nullable|string|max:100',
         ]);
+
+        // Un Admin Centre ne peut pas dévier du centre : ré-ancrage serveur défensif.
+        if ($request->user()?->isCenterAdmin()) {
+            $validated['center_id'] = $request->user()->center_id;
+        }
 
         $lastBalance = (float) BankTransaction::where('center_id', $validated['center_id'])->latest('id')->value('running_balance') ?? 0;
         $amount = (float) $validated['amount'];

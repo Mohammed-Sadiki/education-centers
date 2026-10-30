@@ -21,9 +21,10 @@
         ? route('stagiaires.index')
         : route('dashboard');
 
-    $financeRoute = $isSuperAdmin
-        ? route('super-admin.finance.dashboard')
-        : route('dashboard');
+    // Le module financier est ouvert aux deux rôles : le Super Admin voit la vue
+    // globale multi-centres, l'Admin Centre voit UNIQUEMENT son centre (périmètre
+    // imposé côté serveur par FinanceDashboardController::resolveCenterScope()).
+    $financeRoute = route('super-admin.finance.dashboard');
 @endphp
 
 @section('content')
@@ -143,12 +144,12 @@
         </div>
     </a>
 
-    {{-- CARTE 3 : FINANCES (Super Admin uniquement — l'Admin Centre gère les finances depuis les pages dédiées) --}}
-    @if($isSuperAdmin)
+    {{-- CARTE : FINANCES (Super Admin = vue globale ; Admin Centre = vue centrée,
+         périmètre forcé sur son centre côté serveur). --}}
     <a href="{{ $financeRoute }}"
        id="card-home-finance"
        role="listitem"
-       class="group relative flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-gradient-to-br from-amber-50/60 to-orange-50/40 p-6 shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-xl hover:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:ring-offset-2 cursor-pointer dark:border-amber-400/20 dark:bg-amber-400/[0.06] dark:hover:border-amber-400/40"
+       class="group relative flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-gradient-to-br from-amber-50/60 to-orange-50/40 p-6 shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-xl hover:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:ring-offset-2 cursor-pointer dark:border-amber-400/20 dark:bg-amber-400/[0.06] dark:hover:border-amber-400/40{{ $isCenterAdmin ? ' order-4' : '' }}"
        aria-label="{{ __('Accéder au module Gestion financière') }}">
         <div class="pointer-events-none absolute -top-10 -end-10 h-40 w-40 rounded-full bg-amber-300/20 blur-2xl dark:bg-amber-500/10" aria-hidden="true"></div>
         <div class="relative mb-5 flex items-start justify-between">
@@ -167,19 +168,18 @@
             <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ __('Suivez les factures, paiements, salaires, dépenses et statistiques financières.') }}</p>
         </div>
         <div class="relative mt-6 flex items-center justify-between rounded-xl bg-amber-100/70 px-4 py-2.5 text-sm font-semibold text-amber-800 transition-colors group-hover:bg-amber-200/60 dark:bg-amber-500/10 dark:text-amber-300 dark:group-hover:bg-amber-500/20">
-            <span>{{ __('Accéder aux finances') }}</span>
+            <span>{{ $isSuperAdmin ? __('Accéder aux finances') : __('Accéder à la gestion financière') }}</span>
             <span class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-600 text-white shadow-sm transition-transform group-hover:translate-x-1 rtl:rotate-180">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
             </span>
         </div>
     </a>
-    @endif
 
-    {{-- CARTE 4 : COMMUNICATION --}}
+    {{-- CARTE : COMMUNICATION --}}
     <a href="{{ $communicationRoute }}"
        id="card-home-communication"
        role="listitem"
-       class="group relative flex flex-col overflow-hidden rounded-3xl border border-cyan-200/70 bg-gradient-to-br from-cyan-50/60 to-sky-50/40 p-6 shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-xl hover:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:ring-offset-2 cursor-pointer dark:border-cyan-400/20 dark:bg-cyan-400/[0.06] dark:hover:border-cyan-400/40"
+       class="group relative flex flex-col overflow-hidden rounded-3xl border border-cyan-200/70 bg-gradient-to-br from-cyan-50/60 to-sky-50/40 p-6 shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-xl hover:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:ring-offset-2 cursor-pointer dark:border-cyan-400/20 dark:bg-cyan-400/[0.06] dark:hover:border-cyan-400/40{{ $isCenterAdmin ? ' order-3' : '' }}"
        aria-label="{{ __('Accéder au module Communication') }}">
         <div class="pointer-events-none absolute -top-10 -end-10 h-40 w-40 rounded-full bg-cyan-300/20 blur-2xl dark:bg-cyan-500/10" aria-hidden="true"></div>
         <div class="relative mb-5 flex items-start justify-between">

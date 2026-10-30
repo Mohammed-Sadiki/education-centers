@@ -55,13 +55,21 @@
         <div>
             <div class="inline-flex items-center gap-1.5 rounded-full bg-[#ECFDF5] px-2.5 py-0.5 text-xs font-semibold text-[#0DAD98] border border-[#0DAD98]/20 dark:bg-[#0DAD98]/15 dark:text-[#0DAD98] mb-1.5 shadow-2xs">
                 <span>📊</span>
-                <span>{{ __('Gestion financière · Vue globale') }}</span>
+                @if(user_context()->isCenterAdmin())
+                    <span>{{ __('Gestion financière · Vue centre') }}</span>
+                @else
+                    <span>{{ __('Gestion financière · Vue globale') }}</span>
+                @endif
             </div>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                 {{ __('Gestion financière') }}
             </h1>
             <p class="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                {{ __('Vue d\'ensemble des finances des centres de formation.') }}
+                @if(user_context()->isCenterAdmin())
+                    {{ __('Vue d\'ensemble des finances de votre centre.') }}
+                @else
+                    {{ __('Vue d\'ensemble des finances des centres de formation.') }}
+                @endif
             </p>
         </div>
 
@@ -102,18 +110,25 @@
                 </select>
             </div>
 
-            {{-- Filtre Centre --}}
+            {{-- Filtre Centre : sélecteur réservé au Super Admin. Un Admin Centre
+                 est figé sur SON centre (imposé côté serveur). --}}
             <div>
                 <label for="filter-center" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
                     {{ __('Centre') }}
                 </label>
-                <select name="center_id" id="filter-center" onchange="this.form.submit()"
-                        class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                    <option value="" {{ empty($centerId) ? 'selected' : '' }}>{{ __('Tous les centres') }}</option>
-                    @foreach($centers as $c)
-                        <option value="{{ $c->id }}" {{ $centerId === $c->id ? 'selected' : '' }}>{{ $c->translated('name') }}</option>
-                    @endforeach
-                </select>
+                @if(user_context()->canSwitchCenter())
+                    <select name="center_id" id="filter-center" onchange="this.form.submit()"
+                            class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                        <option value="" {{ empty($centerId) ? 'selected' : '' }}>{{ __('Tous les centres') }}</option>
+                        @foreach($centers as $c)
+                            <option value="{{ $c->id }}" {{ $centerId === $c->id ? 'selected' : '' }}>{{ $c->translated('name') }}</option>
+                        @endforeach
+                    </select>
+                @else
+                    <div class="w-full truncate rounded-lg border border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        {{ auth()->user()->center?->translated('name') ?? auth()->user()->center?->name }}
+                    </div>
+                @endif
             </div>
 
             {{-- Filtre Année scolaire --}}

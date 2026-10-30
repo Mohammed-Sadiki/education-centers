@@ -12,6 +12,7 @@ use App\Models\TeacherSalary;
 use App\Models\User;
 use App\Services\FinanceService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class FinanceManagementTest extends TestCase
@@ -170,13 +171,368 @@ class FinanceManagementTest extends TestCase
     }
 
     /**
-     * 6. Center Admin ne peut pas accéder au dashboard financier réservé au Super Admin.
+     * 6. L'Admin Centre peut désormais accéder au dashboard financier, mais
+     *    UNIQUEMENT sur le périmètre de SON centre (exigence produit).
      */
-    public function test_center_admin_cannot_access_finance_dashboard(): void
+    public function test_center_admin_can_access_finance_dashboard_scoped_to_their_center(): void
     {
-        $this->actingAs($this->adminBerlin)
+        $response = $this->actingAs($this->adminBerlin)
             ->get(route('super-admin.finance.dashboard'))
+            ->assertOk()
+            ->assertSee('Gestion financière')
+            // Vue centrée et non globale pour un Admin Centre.
+            ->assertSee('Vue centre');
+    }
+
+    /**
+     * 6b. Le filtre ?center_id est IGNORE pour un Admin Centre : le périmètre
+     *     reste son propre centre (sécurité multi-centres).
+     */
+    public function test_center_admin_cannot_escape_center_scope_via_query(): void
+    {
+        // Formation appartenant à un AUTRE centre (Munich).
+        Formation::create([
+            'center_id' => $this->centerMunich->id,
+            'name' => 'Config Munich Segrete',
+            'code' => 'MUN-SEG',
+            'domain' => 'informatique',
+            'price' => 9000.00,
+            'annual_price' => 9000.00,
+            'currency' => 'MAD',
+            'status' => 'active',
+        ]);
+
+        // Même en tentant de forcer ?center_id = Munich, l'Admin de Berlin ne voit
+        // que SON centre : la requête est ignorée côté serveur.
+        $this->actingAs($this->adminBerlin)
+            ->get(route('super-admin.finance.configuration', ['center_id' => $this->centerMunich->id]))
+            ->assertOk()
+            ->assertSee('Développement Web')
+            ->assertDontSee('Config Munich Segrete', false);
+    }
+
+    /**
+     * 6c. La carte « Gestion financière » est visible sur /admin/accueil pour un
+     *     Admin Centre, en 4ᵉ position (bas à droite) avec son libellé dédié.
+     */
+    public function test_finance_card_visible_and_ordered_for_center_admin(): void
+    {
+        $html = $this->actingAs($this->adminBerlin)
+            ->get(route('admin.home'))
+            ->assertOk()
+            ->assertSee('id="card-home-finance"', false)
+            ->assertSee('Gestion financière')
+            ->assertSee('Vue centre')
+            ->assertSee('Accéder à la gestion financière')
+            ->getContent();
+
+        // La mise en page 2×2 est obtenue par les classes CSS « order » :
+        // Communication = order-3, Finance = order-4 → Finance s'affiche en bas à
+        // droite (dernière case visible), sans modifier l'ordre du DOM Super Admin.
+        $this->assertStringContainsString('order-4', $html);
+        $this->assertStringContainsString('order-3', $html);
+
+        // La carte financière porte bien order-4 et la carte communication order-3.
+        $financeTag = $this->extractCardTag($html, 'card-home-finance');
+        $commTag = $this->extractCardTag($html, 'card-home-communication');
+        $this->assertStringContainsString('order-4', $financeTag);
+        $this->assertStringContainsString('order-3', $commTag);
+
+        // Les quatre cartes sont présentes.
+        foreach (['card-home-formations', 'card-home-stagiaires', 'card-home-communication', 'card-home-finance'] as $id) {
+            $this->assertStringContainsString($id, $html);
+        }
+    }
+
+    /**
+     * Extrait la balise d'ouverture <a …id="…"> d'une carte de l'Accueil.
+     */
+    private function extractCardTag(string $html, string $id): string
+    {
+        $pos = strpos($html, 'id="' . $id . '"');
+        $this->assertNotFalse($pos, "Carte #{$id} absente.");
+        $start = strrpos(substr($html, 0, $pos), '<a');
+        $end = strpos($html, '>', $pos);
+
+        return substr($html, $start, $end - $start + 1);
+    }
+
+    /**
+     * 6d. Le Super Admin conserve son Accueil inchangé : carte financière en
+     *     position « globale », sans classes d'ordre, libellé d'origine.
+     */
+    public function test_super_admin_home_finance_card_unchanged(): void
+    {
+        $html = $this->actingAs($this->superAdmin)
+            ->get(route('admin.home'))
+            ->assertOk()
+            ->assertSee('id="card-home-finance"', false)
+            ->assertSee('Vue globale')
+            ->assertSee('Accéder aux finances')
+            ->getContent();
+
+        $this->assertStringNotContainsString('order-4', $html);
+        $this->assertStringNotContainsString('order-3', $html);
+    }
+
+    /**
+     * 6e. Un Admin Centre ne peut PAS voir la rubrique financière dans sa sidebar
+     *     (exigence : la carte de l'Accueil est le seul point d'entrée).
+     */
+    public function test_finance_not_in_center_admin_sidebar(): void
+    {
+        // Une page du centre utilisant la sidebar (Formations) ne doit contenir
+        // aucun lien vers les routes financières.
+        $html = $this->actingAs($this->adminBerlin)
+            ->get(route('formations.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('super-admin/finance', $html);
+        $this->assertStringNotContainsString('admin/finance', $html);
+    }
+
+    // ─── Interface financière UNIFIÉE Super Admin / Admin Centre ─────────────
+    // Mission : l'Admin Centre doit utiliser exactement le même layout, la même
+    // sidebar dédiée et la même organisation visuelle que le Super Admin. La
+    // barre de navigation horizontale (partial _nav-center-admin) est supprimée.
+
+    /**
+     * Extrait le HTML de la sidebar (<aside>…</aside>) d'une réponse.
+     */
+    private function sidebarHtml($response): string
+    {
+        $html = $response->getContent();
+        $start = strpos($html, '<aside');
+        $end = strpos($html, '</aside>', $start ?: 0);
+
+        $this->assertNotFalse($start, 'La sidebar (<aside>) doit être rendue.');
+        $this->assertNotFalse($end, 'La sidebar doit être correctement fermée.');
+
+        return substr($html, $start, $end - $start);
+    }
+
+    /**
+     * 6g. L'Admin Centre obtient la SIDEBAR DÉDIÉE « Gestion financière »
+     *     (Contexte actif + Accueil + les 6 entrées) dès qu'il entre dans le
+     *     module, avec l'état actif turquoise identique au Super Admin.
+     */
+    public function test_center_admin_sees_dedicated_finance_sidebar(): void
+    {
+        $response = $this->actingAs($this->adminBerlin)
+            ->get(route('super-admin.finance.dashboard'))
+            ->assertOk();
+
+        $sidebar = $this->sidebarHtml($response);
+
+        // Bloc « CONTEXTE ACTIF — Gestion financière » + bouton « Accueil ».
+        $this->assertStringContainsString(__('Contexte actif'), $sidebar);
+        $this->assertStringContainsString('id="sidebar-changer-finance"', $sidebar);
+        $this->assertStringContainsString(route('admin.home'), $sidebar);
+
+        // Les six entrées de la navigation verticale.
+        foreach ([
+            'super-admin.finance.dashboard',
+            'super-admin.finance.statistics',
+            'super-admin.finance.students',
+            'super-admin.finance.expenses',
+            'super-admin.finance.recovery',
+            'super-admin.finance.configuration',
+        ] as $name) {
+            $this->assertStringContainsString(route($name), $sidebar, "Entrée manquante dans la sidebar : {$name}");
+        }
+
+        // Lien actif : style turquoise du module (bordure + fond #0DAD98).
+        $this->assertStringContainsString('border-[#0DAD98]', $sidebar);
+        $this->assertStringContainsString('aria-current="page"', $sidebar);
+
+        // La sidebar générale (Pédagogie/Communication) ne doit PAS être affichée
+        // simultanément dans le contexte financier.
+        $this->assertStringNotContainsString(route('formations.index'), $sidebar);
+        $this->assertStringNotContainsString(route('announcements.index'), $sidebar);
+    }
+
+    /**
+     * 6h. La barre de navigation HORIZONTALE financière a été supprimée chez
+     *     l'Admin Centre : les liens ne vivent plus que dans la sidebar.
+     */
+    public function test_no_horizontal_finance_nav_for_center_admin(): void
+    {
+        $html = $this->actingAs($this->adminBerlin)
+            ->get(route('super-admin.finance.dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('finance-nav-center-admin', $html);
+        $this->assertStringNotContainsString(__('Navigation Gestion financière'), $html);
+    }
+
+    /**
+     * 6i. L'Admin Centre peut naviguer entre TOUTES les pages financières, et
+     *     le layout dédié (sidebar financière) est conservé sur chaque page.
+     */
+    public function test_center_admin_can_navigate_all_finance_pages_with_dedicated_layout(): void
+    {
+        $pages = [
+            'super-admin.finance.dashboard',
+            'super-admin.finance.statistics',
+            'super-admin.finance.students',
+            'super-admin.finance.expenses',
+            'super-admin.finance.recovery',
+            'super-admin.finance.configuration',
+        ];
+
+        foreach ($pages as $name) {
+            $response = $this->actingAs($this->adminBerlin)
+                ->get(route($name))
+                ->assertOk();
+
+            // Layout dédié conservé partout : bannière de contexte financier.
+            $this->assertStringContainsString(
+                'id="sidebar-changer-finance"',
+                $this->sidebarHtml($response),
+                "Le layout financier dédié doit être présent sur {$name}."
+            );
+        }
+    }
+
+    /**
+     * 6j. Hors module financier, la sidebar de l'Admin Centre reste générale :
+     *     aucune rubrique financière (l'Accueil utilise le layout portal sans
+     *     sidebar ; on vérifie donc sur une page avec sidebar).
+     */
+    public function test_finance_sidebar_only_inside_finance_module_for_center_admin(): void
+    {
+        $sidebar = $this->sidebarHtml(
+            $this->actingAs($this->adminBerlin)->get(route('formations.index'))
+        );
+
+        $this->assertStringNotContainsString('super-admin/finance', $sidebar);
+        $this->assertStringNotContainsString(__('Contexte actif'), $sidebar);
+    }
+
+    /**
+     * 6k. Le Super Admin conserve une interface financière strictement identique :
+     *     mêmes blocs et entrées de sidebar que l'Admin Centre (unification).
+     */
+    public function test_super_admin_finance_sidebar_matches_center_admin_structure(): void
+    {
+        $saSidebar = $this->sidebarHtml(
+            $this->actingAs($this->superAdmin)->get(route('super-admin.finance.dashboard'))
+        );
+        $caSidebar = $this->sidebarHtml(
+            $this->actingAs($this->adminBerlin)->get(route('super-admin.finance.dashboard'))
+        );
+
+        // Même bannière « Contexte actif » et mêmes six entrées pour les deux rôles.
+        foreach (['Contexte actif', 'Tableau de bord', 'Statistiques', 'Paiements', 'Dépenses', 'Recouvrement', 'Configuration des prix'] as $needle) {
+            $this->assertStringContainsString(__($needle), $saSidebar);
+            $this->assertStringContainsString(__($needle), $caSidebar);
+        }
+
+        // Aucune barre horizontale non plus pour le Super Admin (elle n'a jamais
+        // été rendue, et le partial supprimé ne doit plus exister).
+        $this->assertStringNotContainsString('finance-nav-center-admin', $saSidebar);
+    }
+
+    /**
+     * 6l. Les quatre centres concernés (Tanger, Essaouira, Agadir, Tétouane) :
+     *     chaque Admin Centre obtient la sidebar financière dédiée et ne voit
+     *     que SON centre dans le filtre.
+     */
+    public static function centerProvider(): array
+    {
+        return [
+            'Tanger'    => ['Tanger', 'TGR'],
+            'Essaouira' => ['Essaouira', 'ESS'],
+            'Agadir'    => ['Agadir', 'AGD'],
+            'Tétouane'  => ['Tétouane', 'TET'],
+        ];
+    }
+
+    #[DataProvider('centerProvider')]
+    public function test_each_center_admin_gets_finance_sidebar_scoped_to_their_center(string $centerName, string $code): void
+    {
+        $center = Center::factory()->create(['name' => $centerName, 'code' => $code]);
+        $admin = User::factory()->centerAdmin($center->id)->create([
+            'email' => 'admin.' . strtolower($code) . '.finance@test.com',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('super-admin.finance.dashboard'))
+            ->assertOk()
+            ->assertSee('Vue centre');
+
+        $sidebar = $this->sidebarHtml($response);
+
+        // Sidebar dédiée : bannière de contexte + bouton Accueil.
+        $this->assertStringContainsString(__('Contexte actif'), $sidebar);
+        $this->assertStringContainsString('id="sidebar-changer-finance"', $sidebar);
+
+        // Le filtre Centre affiche SON centre et uniquement lui (bloc lecture seule).
+        $this->assertStringContainsString($center->translated('name'), $sidebar . $response->getContent());
+        $this->assertStringNotContainsString('finance-nav-center-admin', $response->getContent());
+    }
+
+    /**
+     * 6f. La page « Configuration des prix » est filtrée sur le centre de l'Admin.
+     */
+    public function test_center_admin_configuration_scoped_to_their_center(): void
+    {
+        $foreignFormation = Formation::create([
+            'center_id' => $this->centerMunich->id,
+            'name' => 'Formation Munich Exclusive',
+            'code' => 'MUN-EXCL',
+            'domain' => 'informatique',
+            'price' => 12000.00,
+            'annual_price' => 12000.00,
+            'currency' => 'MAD',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($this->adminBerlin)
+            ->get(route('super-admin.finance.configuration'))
+            ->assertOk()
+            ->assertSee('Développement Web')          // formation de Berlin
+            ->assertDontSee('Formation Munich Exclusive', false); // pas Munich
+    }
+
+    /**
+     * 6g. Garde d'écriture : un Admin Centre ne peut pas manipuler une dépense
+     *     d'un AUTRE centre (annulation → 403).
+     */
+    public function test_center_admin_cannot_cancel_foreign_expense(): void
+    {
+        $category = \App\Models\ExpenseCategory::create(['name' => 'Fournitures', 'code' => 'FRN-TEST']);
+        $foreignExpense = \App\Models\Expense::create([
+            'center_id' => $this->centerMunich->id,
+            'category_id' => $category->id,
+            'title' => 'Dépense Munich',
+            'amount' => 500.00,
+            'currency' => 'MAD',
+            'expense_date' => now()->toDateString(),
+            'payment_method' => 'cash',
+            'school_year' => '2026/2027',
+            'status' => 'paid',
+            'recorded_by' => $this->superAdmin->id,
+        ]);
+
+        $this->actingAs($this->adminBerlin)
+            ->patch(route('super-admin.finance.expenses.cancel', $foreignExpense))
             ->assertForbidden();
+
+        // La dépense d'un autre centre peut en revanche être annulée par son propre admin.
+        $this->actingAs($this->adminBerlin)
+            ->post(route('super-admin.finance.expenses.store'), [
+                'center_id' => $this->centerBerlin->id,
+                'category_id' => $category->id,
+                'title' => 'Dépense Berlin autorisée',
+                'amount' => 120.00,
+                'expense_date' => now()->toDateString(),
+                'payment_method' => 'cash',
+            ])
+            ->assertSessionHas('success');
     }
 
     /**

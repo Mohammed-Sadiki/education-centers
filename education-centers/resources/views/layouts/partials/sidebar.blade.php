@@ -100,9 +100,12 @@
 
     $groups = [];
 
-    if ($user->isSuperAdmin() && $isFinance) {
+    if (($user->isSuperAdmin() || $user->isCenterAdmin()) && $isFinance) {
         // ────────────────────────────────────────────────────────────
-        // CONTEXTE DÉDIÉ : GESTION FINANCIÈRE GLOBALE (CAD SYNDIC)
+        // CONTEXTE DÉDIÉ : GESTION FINANCIÈRE (CAD SYNDIC)
+        // Super Admin : vue globale (tous les centres).
+        // Admin Centre : même interface, périmètre forcé sur SON centre
+        // (imposé côté serveur, pas seulement côté affichage).
         // ────────────────────────────────────────────────────────────
         // Navigation simplifiée : Trésorerie & Comptabilité (Compte bancaire,
         // Comptabilité), Rapports financiers et la rubrique autonome « Salaires
@@ -276,9 +279,10 @@
         </button>
     </div>
 
-    @if($user->isSuperAdmin())
+    @if($user->isSuperAdmin() || ($user->isCenterAdmin() && $isFinance))
         @if($isFinance)
-            {{-- BANNER DU CONTEXTE : GESTION FINANCIÈRE GLOBALE (STYLE CAD SYNDIC) --}}
+            {{-- BANNER DU CONTEXTE : GESTION FINANCIÈRE (STYLE CAD SYNDIC) --}}
+            {{-- Identique pour Super Admin (vue globale) et Admin Centre (vue centre). --}}
             <div class="p-3 border-b border-slate-200/80 dark:border-slate-800">
                 <div class="rounded-xl border border-slate-200/90 bg-white p-2.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900" x-show="!$store.ui.sidebarCollapsed">
                     <div class="flex items-center gap-2.5 mb-2">

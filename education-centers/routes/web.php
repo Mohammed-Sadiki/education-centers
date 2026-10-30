@@ -107,7 +107,14 @@ Route::middleware('auth')->group(function () {
             ->name('super-admin.domain.dashboard')
             ->where('domain', '[a-zA-Z0-9\-]+');
 
-        // ── Gestion financière globale (Contexte indépendant Super Admin & Multi-Centres Cad Syndic) ──
+    });
+
+    // ── Gestion financière (Super Admin global + Admin Centre) ──
+    // Le module est ouvert à l'Admin Centre, mais chaque requête est forcée sur
+    // SON centre côté serveur (Controller::resolveCenterScope + garanties
+    // d'appartenance dans les actions d'écriture). Le Super Admin garde la vue
+    // multi-centres (restriction volontaire via ?center_id).
+    Route::middleware('role:super_admin,center_admin')->group(function () {
         Route::prefix('super-admin/finance')->name('super-admin.finance.')->group(function () {
             // 1. Tableau de bord
             Route::get('/', [FinanceDashboardController::class, 'index'])->name('dashboard');
@@ -140,7 +147,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/historique', [FinanceDashboardController::class, 'history'])->name('history');
             Route::get('/rapports', [FinanceDashboardController::class, 'reports'])->name('reports');
         });
+    });
 
+    // ── SUPER ADMIN uniquement (suite) ──
+    Route::middleware('role:super_admin')->group(function () {
         Route::resource('centers', CenterController::class);
         Route::patch('centers/{center}/toggle-status', [CenterController::class, 'toggleStatus'])
             ->name('centers.toggle-status');

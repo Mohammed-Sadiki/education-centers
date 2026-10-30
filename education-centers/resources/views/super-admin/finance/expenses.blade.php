@@ -141,13 +141,19 @@
             </div>
             <div>
                 <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{{ __('Centre') }}</label>
-                <select name="center_id" onchange="this.form.submit()"
-                        class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98]">
-                    <option value="" {{ empty($centerId) ? 'selected' : '' }}>{{ __('Tous centres') }}</option>
-                    @foreach($centers as $c)
-                        <option value="{{ $c->id }}" {{ $centerId === $c->id ? 'selected' : '' }}>{{ $c->translated('name') }}</option>
-                    @endforeach
-                </select>
+                @if(user_context()->canSwitchCenter())
+                    <select name="center_id" onchange="this.form.submit()"
+                            class="w-full rounded-lg border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-medium text-slate-800 focus:border-[#0DAD98] focus:bg-white focus:ring-1 focus:ring-[#0DAD98]">
+                        <option value="" {{ empty($centerId) ? 'selected' : '' }}>{{ __('Tous centres') }}</option>
+                        @foreach($centers as $c)
+                            <option value="{{ $c->id }}" {{ $centerId === $c->id ? 'selected' : '' }}>{{ $c->translated('name') }}</option>
+                        @endforeach
+                    </select>
+                @else
+                    <div class="w-full truncate rounded-lg border border-slate-200 bg-slate-50/50 py-1.5 px-2.5 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        {{ auth()->user()->center?->translated('name') ?? auth()->user()->center?->name }}
+                    </div>
+                @endif
             </div>
             <div>
                 <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{{ __('Catégorie') }}</label>
@@ -389,11 +395,19 @@
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                             {{ __('Centre concerné') }} <span class="text-rose-500">*</span>
                         </label>
-                        <select name="center_id" required class="w-full rounded-lg border-slate-200 text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
-                            @foreach($centers as $c)
-                                <option value="{{ $c->id }}" {{ $centerId === $c->id ? 'selected' : '' }}>{{ $c->translated('name') }}</option>
-                            @endforeach
-                        </select>
+                        @if(user_context()->canSwitchCenter())
+                            <select name="center_id" required class="w-full rounded-lg border-slate-200 text-xs text-slate-800 focus:border-[#0DAD98] focus:ring-1 focus:ring-[#0DAD98]">
+                                @foreach($centers as $c)
+                                    <option value="{{ $c->id }}" {{ $centerId === $c->id ? 'selected' : '' }}>{{ $c->translated('name') }}</option>
+                                @endforeach
+                            </select>
+                        @else
+                            {{-- Admin Centre : centre forcé sur le sien (champ caché + affichage). --}}
+                            <input type="hidden" name="center_id" value="{{ auth()->user()->center_id }}">
+                            <div class="w-full truncate rounded-lg border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                                {{ auth()->user()->center?->translated('name') ?? auth()->user()->center?->name }}
+                            </div>
+                        @endif
                     </div>
                 </div>
 
