@@ -312,12 +312,15 @@ Route::middleware('auth')->group(function () {
     });
 
     // ──────────────────────────────────────────────────────────────────────────
-    //  MESSAGERIE INTERNE (Super Admin + Center Admin + Teacher en lecture seule)
+    //  MESSAGERIE INTERNE (Super Admin + Center Admin + Teacher avec droit de réponse)
     // ──────────────────────────────────────────────────────────────────────────
+    Route::middleware('role:super_admin,center_admin,teacher')->group(function () {
+        Route::post('/messages/conversations/{conversation}', [MessageController::class, 'sendMessage'])->name('messages.send');
+    });
+
     Route::middleware('role:super_admin,center_admin')->group(function () {
         Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
         Route::post('/messages/start-direct/{target}', [MessageController::class, 'startDirect'])->name('messages.start-direct');
-        Route::post('/messages/conversations/{conversation}', [MessageController::class, 'sendMessage'])->name('messages.send');
     });
 
     // Routes de consultation des messages (Super Admin, Center Admin, Teacher)

@@ -1,6 +1,6 @@
 @extends('layouts.communication')
 
-@section('title', __('Messages reçus') . ' — ' . config('app.name'))
+@section('title', __('Messagerie') . ' — ' . config('app.name'))
 
 @section('content')
 <div class="flex min-h-0 flex-1 overflow-hidden bg-slate-100 dark:bg-slate-950"
@@ -9,7 +9,7 @@
      id="teacher-messages-app">
 
     {{-- ═══════════════════════════════════════════════════════════════════════
-         PANNEAU GAUCHE — LISTE DES MESSAGES REÇUS (lecture seule)
+         PANNEAU GAUCHE — LISTE DES CONVERSATIONS
     ══════════════════════════════════════════════════════════════════════════ --}}
     <aside class="flex w-full shrink-0 flex-col border-e border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900 sm:w-[32%] sm:min-w-[320px] sm:max-w-[440px]"
            :class="activeConversationId && isMobile ? 'hidden' : 'flex'">
@@ -18,15 +18,15 @@
         <div class="shrink-0 space-y-3 border-b border-slate-100 p-4 dark:border-slate-800">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">{{ __('Messages reçus') }}</h1>
+                    <h1 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">{{ __('Messagerie') }}</h1>
                     <p class="text-xs text-slate-400" x-text="totalUnread > 0 ? totalUnread + ' ' + @js(__('message(s) non lu(s)')) : @js(__('Tous vos messages sont lus'))"></p>
                 </div>
-                {{-- Indication discrète : lecture seule --}}
-                <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                {{-- Indication : réponses autorisées vers l'administration --}}
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
                     <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
                     </svg>
-                    {{ __('Lecture seule') }}
+                    {{ __('Réponses autorisées') }}
                 </span>
             </div>
 
@@ -126,7 +126,7 @@
     </aside>
 
     {{-- ═══════════════════════════════════════════════════════════════════════
-         PANNEAU DROIT — LECTURE DES MESSAGES (AUCUN CHAMP D'ENVOI NI RÉPONSE)
+         PANNEAU DROIT — CONVERSATION AVEC DROIT DE RÉPONSE
     ══════════════════════════════════════════════════════════════════════════ --}}
     <section class="flex min-w-0 flex-1 flex-col bg-[#F7F8FC] dark:bg-slate-950"
              :class="!activeConversationId && isMobile ? 'hidden' : 'flex'">
@@ -144,7 +144,7 @@
             </div>
         </template>
 
-        {{-- Message actif en lecture seule --}}
+        {{-- Conversation active --}}
         <template x-if="activeConversationId">
             <div class="flex h-full min-h-0 flex-col">
 
@@ -173,11 +173,11 @@
                         <p class="truncate text-xs text-slate-500 dark:text-slate-400" x-text="currentOther ? currentOther.center_name : ''"></p>
                     </div>
 
-                    <span class="hidden items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 md:inline-flex dark:bg-slate-800 dark:text-slate-300">
-                        <svg class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                    <span class="hidden items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 md:inline-flex dark:bg-brand-900/40 dark:text-brand-300">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
                         </svg>
-                        <span>{{ __('Communication en lecture seule') }}</span>
+                        <span>{{ __('Réponses autorisées') }}</span>
                     </span>
                 </div>
 
@@ -209,16 +209,21 @@
                                 </div>
                             </template>
 
-                            {{-- Bulle du message reçu (toujours alignée à gauche) --}}
-                            <div class="mb-3 flex justify-start">
+                            {{-- Bulle du message (reçu à gauche, envoyé à droite) --}}
+                            <div class="mb-3 flex" :class="msg.is_mine ? 'justify-end' : 'justify-start'">
                                 <div class="max-w-[85%] sm:max-w-[70%]">
+                                    <template x-if="!msg.is_mine">
                                     <div class="mb-1 flex items-baseline gap-2 text-xs">
                                         <span class="font-bold text-slate-900 dark:text-white" x-text="msg.sender_name"></span>
                                         <span class="text-[10px] text-slate-400" x-text="msg.sender_role + ' · ' + msg.sender_center"></span>
                                     </div>
+                                    </template>
 
                                     <template x-if="msg.content">
-                                        <div class="rounded-2xl rounded-tl-md bg-white p-4 text-sm text-slate-800 shadow-2xs ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-700">
+                                        <div class="rounded-2xl p-4 text-sm shadow-2xs"
+                                             :class="msg.is_mine
+                                                 ? 'rounded-tr-md bg-gradient-to-br from-brand-600 to-indigo-500 text-white'
+                                                 : 'rounded-tl-md bg-white text-slate-800 ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-700'">
                                             <p class="leading-relaxed whitespace-pre-wrap" x-text="msg.content"></p>
                                         </div>
                                     </template>
@@ -257,21 +262,79 @@
                                         </div>
                                     </template>
 
-                                    <p class="mt-1 px-1 text-[10px] text-slate-400" x-text="msg.time"></p>
+                                    <p class="mt-1 px-1 text-[10px] text-slate-400"
+                                       :class="msg.is_mine ? 'text-end' : 'text-start'"
+                                       x-text="msg.time"></p>
                                 </div>
                             </div>
                         </div>
                     </template>
                 </div>
 
-                {{-- Note informative en bas (strictement aucun champ de saisie ni bouton d'envoi) --}}
-                <div class="shrink-0 border-t border-slate-200/80 bg-white px-5 py-3 text-center text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-                    <span class="inline-flex items-center gap-1.5">
-                        <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                {{-- Barre de composition (réponses vers l'administration) --}}
+                <div class="shrink-0 border-t border-slate-200/80 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 sm:px-6">
+
+                    {{-- Aperçu du fichier sélectionné --}}
+                    <div x-show="selectedFile" x-cloak class="mb-2 flex items-center gap-2 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700 dark:bg-brand-950/40 dark:text-brand-300">
+                        <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                         </svg>
-                        {{ __('Cet espace est un canal d\'information officiel en lecture seule. Pour toute demande relative à vos cours, contactez l\'administration de votre centre.') }}
-                    </span>
+                        <span class="flex-1 truncate text-xs font-medium" x-text="selectedFile ? selectedFile.name : ''"></span>
+                        <button type="button" @click="selectedFile = null; $refs.fileInput.value = ''" class="text-brand-700/70 transition-colors hover:text-red-500 dark:text-brand-300" aria-label="{{ __('Retirer la pièce jointe') }}">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="sendMessage()" class="flex items-end gap-2">
+                        {{-- Pièces jointes (mêmes validations serveur que l'espace admin) --}}
+                        <input type="file"
+                               x-ref="fileInput"
+                               @change="selectedFile = $event.target.files[0]"
+                               accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp"
+                               class="hidden">
+                        <button type="button"
+                                @click="$refs.fileInput.click()"
+                                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-400 transition-colors hover:border-brand-500 hover:bg-brand-50 hover:text-brand-600 dark:border-slate-700 dark:hover:border-brand-500 dark:hover:bg-brand-950/30"
+                                aria-label="{{ __('Joindre un fichier') }}"
+                                title="{{ __('Joindre un fichier') }}">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+                            </svg>
+                        </button>
+
+                        {{-- Champ de rédaction --}}
+                        <div class="relative flex-1">
+                            <textarea x-ref="messageInput"
+                                      x-model="messageText"
+                                      @keydown.enter.prevent="if (!$event.shiftKey) sendMessage()"
+                                      placeholder="{{ __('Écrire un message…') }}"
+                                      rows="1"
+                                      class="w-full resize-none overflow-hidden rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500"
+                                      style="min-height:44px; max-height:120px;"
+                                      aria-label="{{ __('Écrire un message') }}"></textarea>
+                        </div>
+
+                        {{-- Bouton Envoyer --}}
+                        <button type="submit"
+                                :disabled="sending || (!messageText.trim() && !selectedFile)"
+                                class="flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-500 px-5 text-sm font-bold text-white shadow-md shadow-brand-600/20 transition hover:from-brand-700 hover:to-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                id="btn-send-message">
+                            <template x-if="!sending">
+                                <svg class="h-4 w-4 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                                </svg>
+                            </template>
+                            <template x-if="sending">
+                                <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                            </template>
+                            <span>{{ __('Envoyer') }}</span>
+                        </button>
+                    </form>
                 </div>
 
             </div>
@@ -293,13 +356,22 @@ function teacherMessagesApp() {
         activeFilter: 'all',
         pollingInterval: null,
         isMobile: window.innerWidth < 640,
+        messageText: '',
+        selectedFile: null,
+        sending: false,
+
+        // CSRF token
+        csrfToken: document.querySelector('meta[name="csrf-token"]')?.content || '',
 
         translations: {
             filterAll: @js(__('Toutes')),
             filterUnread: @js(__('Non lues')),
+            attachment: @js(__('📎 Fichier joint')),
+            sendError: @js(__('Erreur lors de l\'envoi.')),
+            networkSendError: @js(__('Erreur réseau lors de l\'envoi.')),
         },
 
-        // Filtres pertinents pour un professeur (lecture seule)
+        // Filtres de la messagerie professeur
         get filters() {
             const unread = this.conversations.filter(c => c.unread_count > 0).length;
             return [
@@ -417,6 +489,51 @@ function teacherMessagesApp() {
                     this.$nextTick(() => this.scrollToBottom());
                 }
             } catch (e) {}
+        },
+
+        async sendMessage() {
+            if (this.sending) return;
+            if (!this.messageText.trim() && !this.selectedFile) return;
+            if (!this.activeConversationId) return;
+
+            this.sending = true;
+            try {
+                const formData = new FormData();
+                if (this.messageText.trim()) formData.append('content', this.messageText.trim());
+                if (this.selectedFile) formData.append('file', this.selectedFile);
+                formData.append('_token', this.csrfToken);
+
+                const res = await fetch(`/messages/conversations/${this.activeConversationId}`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: formData,
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.currentMessages.push(data.message);
+                    this.messageText = '';
+                    this.selectedFile = null;
+                    if (this.$refs.fileInput) this.$refs.fileInput.value = '';
+                    // Met à jour l'aperçu dans la liste
+                    const conv = this.conversations.find(c => c.id === this.activeConversationId);
+                    if (conv) {
+                        conv.last_message = {
+                            content: data.message.content || (data.message.attachments?.length ? this.translations.attachment : ''),
+                            time: data.message.time,
+                            is_mine: true,
+                        };
+                        this.conversations = [conv, ...this.conversations.filter(c => c.id !== this.activeConversationId)];
+                    }
+                    this.$nextTick(() => this.scrollToBottom());
+                } else {
+                    alert(data.error || this.translations.sendError);
+                }
+            } catch (e) {
+                console.error(e);
+                alert(this.translations.networkSendError);
+            } finally {
+                this.sending = false;
+            }
         },
 
         scrollToBottom() {

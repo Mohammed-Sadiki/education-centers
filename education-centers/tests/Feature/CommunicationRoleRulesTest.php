@@ -256,7 +256,8 @@ class CommunicationRoleRulesTest extends TestCase
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // 13, 14 & 15. Professeur ne peut JAMAIS envoyer ou répondre
+    // 13, 14 & 15. Professeur : réponses autorisées vers l'administration,
+    // initiation de conversation et professeur <-> professeur INTERDITES
     // ──────────────────────────────────────────────────────────────────────────
 
     public function test_teacher_cannot_send_to_super_admin(): void
@@ -280,7 +281,28 @@ class CommunicationRoleRulesTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_teacher_cannot_reply_in_conversation_via_http(): void
+    public function test_teacher_can_reply_to_admin_in_existing_conversation(): void
+    {
+        $res = $this->actingAs($this->adminBerlin)
+            ->postJson(route('messages.start-direct', $this->teacherUserBerlin))
+            ->assertOk();
+
+        $conversation = Conversation::find($res->json('conversation_id'));
+
+        // L'admin envoie d'abord un message
+        $this->actingAs($this->adminBerlin)
+            ->postJson(route('messages.send', $conversation), ['content' => 'Note de service Berlin'])
+            ->assertOk();
+
+        // Le professeur répond dans la conversation existante
+        $this->actingAs($this->teacherUserBerlin)
+            ->postJson(route('messages.send', $conversation), ['content' => 'Bien reçu, merci'])
+            ->assertOk();
+
+        $this->assertDatabaseHas('messages', ['content' => 'Bien reçu, merci', 'sender_id' => $this->teacherUserBerlin->id]);
+    }
+
+    public function test_teacher_can_reply_to_super_admin_in_existing_conversation(): void
     {
         $res = $this->actingAs($this->superAdmin)
             ->postJson(route('messages.start-direct', $this->teacherUserBerlin))
@@ -288,9 +310,29 @@ class CommunicationRoleRulesTest extends TestCase
 
         $conversation = Conversation::find($res->json('conversation_id'));
 
-        // Professeur tente d'envoyer un message en POST direct
         $this->actingAs($this->teacherUserBerlin)
-            ->postJson(route('messages.send', $conversation), ['content' => 'Tentative de réponse'])
+            ->postJson(route('messages.send', $conversation), ['content' => 'Réponse au Super Admin'])
+            ->assertOk();
+    }
+
+    public function test_teacher_cannot_reply_to_another_center_admin(): void
+    {
+        // Conversation Munich -> Prof Berlin n'existe pas (communication interdite),
+        // mais même forcée, la réponse vers un admin d'un autre centre est refusée.
+        $conversation = Conversation::create(['type' => 'direct', 'center_id' => $this->centerMunich->id]);
+        $conversation->participants()->create(['user_id' => $this->adminMunich->id]);
+        $conversation->participants()->create(['user_id' => $this->teacherUserBerlin->id]);
+
+        $this->actingAs($this->teacherUserBerlin)
+            ->postJson(route('messages.send', $conversation), ['content' => 'Tentative hors centre'])
+            ->assertForbidden();
+    }
+
+    public function test_teacher_cannot_initiate_conversation_via_http(): void
+    {
+        // Le professeur ne peut pas initier : la route start-direct lui est fermée
+        $this->actingAs($this->teacherUserBerlin)
+            ->postJson(route('messages.start-direct', $this->superAdmin))
             ->assertForbidden();
     }
 
@@ -309,18 +351,17 @@ class CommunicationRoleRulesTest extends TestCase
         $this->actingAs($this->superAdmin)
             ->postJson(route('messages.send', $conversation), ['content' => 'Message officiel pour Berlin']);
 
-        // Professeur Berlin accède à la page messages reçus
+        // Professeur Berlin accède à la page messagerie
         $this->actingAs($this->teacherUserBerlin)
             ->get(route('teacher.messages'))
             ->assertOk()
-            ->assertSee('Messages reçus');
+            ->assertSee('Messagerie');
 
-        // Professeur lit les messages via JSON
+        // Professeur lit les messages via JSON (messagerie bidirectionnelle)
         $this->actingAs($this->teacherUserBerlin)
             ->getJson(route('messages.show', $conversation))
             ->assertOk()
-            ->assertJsonPath('can_reply', false)
-            ->assertJsonPath('is_one_way', true)
+            ->assertJsonPath('can_reply', true)
             ->assertJsonPath('messages.0.content', 'Message officiel pour Berlin');
     }
 

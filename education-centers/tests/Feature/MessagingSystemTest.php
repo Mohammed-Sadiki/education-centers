@@ -351,7 +351,7 @@ class MessagingSystemTest extends TestCase
             ->assertDontSee(route('invoices.index'), false);
     }
 
-    public function test_teacher_messages_page_is_independent_and_read_only(): void
+    public function test_teacher_messages_page_is_independent_with_reply_composer(): void
     {
         $teacher = User::factory()->create([
             'role' => User::ROLE_TEACHER,
@@ -364,8 +364,8 @@ class MessagingSystemTest extends TestCase
             ->assertOk()
             ->assertSee('teacher-messages-app', false)
             ->assertSee('comm-back-home', false)
-            // Lecture seule : aucun bouton d'envoi ni champ de rédaction
-            ->assertDontSee('btn-send-message', false)
+            // Droit de réponse : champ de rédaction et bouton d'envoi présents
+            ->assertSee('btn-send-message', false)
             // Aucune sidebar pédagogique (ni celle du domaine ni celle du professeur)
             ->assertDontSee(route('teacher.classes'), false);
     }

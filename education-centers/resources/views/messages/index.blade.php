@@ -87,9 +87,6 @@
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center justify-between gap-1">
                             <p class="truncate text-sm font-semibold text-slate-900 dark:text-white">{{ $contact->name }}</p>
-                            @if($contact->isTeacher())
-                                <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">{{ __('Sens unique') }}</span>
-                            @endif
                         </div>
                         <p class="truncate text-xs text-slate-500">
                             {{ match($contact->role) {
@@ -224,16 +221,6 @@
                         </div>
                         <p class="truncate text-xs text-slate-500 dark:text-slate-400" x-text="currentOther ? currentOther.center_name : ''"></p>
                     </div>
-
-                    {{-- Badge conversation à sens unique (vers professeur) --}}
-                    <template x-if="isOneWay">
-                        <span class="hidden items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-200 md:inline-flex dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-800/40">
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-                            </svg>
-                            <span>{{ __('Sens unique') }}</span>
-                        </span>
-                    </template>
                 </div>
 
                 {{-- Zone de messages (défilement indépendant) --}}
@@ -331,16 +318,8 @@
                     </template>
                 </div>
 
-                {{-- Barre de composition (admins uniquement — cette page n'est pas accessible aux professeurs) --}}
+                {{-- Barre de composition (admins) --}}
                 <div class="shrink-0 border-t border-slate-200/80 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 sm:px-6">
-
-                    {{-- Information : le destinataire professeur ne peut pas répondre --}}
-                    <div x-show="isOneWay" x-cloak class="mb-2 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-1.5 text-xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/50">
-                        <svg class="h-4 w-4 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                        </svg>
-                        <span>{{ __('Information : Ce destinataire est un professeur. Il pourra lire votre message mais ne pourra pas y répondre.') }}</span>
-                    </div>
 
                     {{-- Aperçu du fichier sélectionné --}}
                     <div x-show="selectedFile" x-cloak class="mb-2 flex items-center gap-2 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700 dark:bg-brand-950/40 dark:text-brand-300">
@@ -418,7 +397,6 @@ function messagingApp() {
         conversations: [],
         currentMessages: [],
         currentOther: null,
-        isOneWay: false,
         activeConversationId: {{ $activeConversationId ? (int)$activeConversationId : 'null' }},
         loading: true,
         loadingMessages: false,
@@ -560,7 +538,6 @@ function messagingApp() {
                 const data = await res.json();
                 this.currentMessages = data.messages || [];
                 this.currentOther = data.other_user || null;
-                this.isOneWay = !!data.is_one_way;
                 this.totalUnread = data.total_unread ?? this.totalUnread;
                 // Marque la conversation comme lue dans la liste
                 const conv = this.conversations.find(c => c.id === conversationId);

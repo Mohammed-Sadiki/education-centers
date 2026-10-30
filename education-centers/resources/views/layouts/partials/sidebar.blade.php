@@ -223,7 +223,7 @@
     } elseif ($user->isTeacher()) {
         $groups[] = ['title' => __('Mon espace'), 'items' => array_filter([
             $link(__('Tableau de bord'), 'dashboard', 'home', 'dashboard'),
-            $link(__('Messages reçus'), 'teacher.messages', 'message', 'teacher.messages*'),
+            $link(__('Messagerie'), 'teacher.messages', 'message', 'teacher.messages*'),
             $link(__('Mes classes'), 'teacher.classes', 'classes', ['teacher.classes', 'teacher.classes.show']),
             $link(__('Mon emploi du temps'), 'teacher.schedule', 'calendar', 'teacher.schedule'),
             $link(__('Mes salaires'), 'teacher.salaries', 'banknotes', 'teacher.salaries'),

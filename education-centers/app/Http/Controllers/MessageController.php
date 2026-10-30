@@ -38,7 +38,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Espace "Messages reçus" dédié aux professeurs (lecture seule).
+     * Espace "Messagerie" dédié aux professeurs (lectures + réponses aux admins).
      */
     public function teacherIndex(Request $request)
     {
@@ -126,6 +126,14 @@ class MessageController extends Controller
     {
         $currentUser = $request->user();
 
+        // Un professeur ne peut pas initier une conversation : il répond uniquement
+        // dans les conversations ouvertes par l'administration.
+        if ($currentUser->isTeacher()) {
+            return response()->json([
+                'error' => __('Les professeurs répondent uniquement aux messages de l\'administration.'),
+            ], 403);
+        }
+
         // Vérification stricte des autorisations d'échange
         if (! $this->canCommunicate($currentUser, $target)) {
             return response()->json([
@@ -175,13 +183,8 @@ class MessageController extends Controller
             default => $other?->role ?? __('Utilisateur'),
         };
 
-        // Indique si la conversation est en mode unidirectionnel (ex: communication vers un professeur)
-        $isOneWay = false;
-        if ($user->isTeacher()) {
-            $isOneWay = true; // Le professeur ne peut pas répondre
-        } elseif ($other && $other->isTeacher()) {
-            $isOneWay = true; // L'administrateur parle à un professeur qui ne peut pas répondre
-        }
+        // La messagerie est bidirectionnelle : les professeurs peuvent répondre
+        // aux administrateurs dans les conversations existantes.
 
         $formatted = $messages->map(function ($msg) use ($user) {
             return [
@@ -214,8 +217,7 @@ class MessageController extends Controller
 
         return response()->json([
             'conversation_id' => $conversation->id,
-            'is_one_way' => $isOneWay,
-            'can_reply' => ! $user->isTeacher(),
+            'can_reply' => true,
             'other_user' => [
                 'id' => $other?->id,
                 'name' => $other?->name ?? __('Utilisateur'),
@@ -236,9 +238,10 @@ class MessageController extends Controller
     {
         $user = $request->user();
 
-        // 1. Un professeur n'a JAMAIS le droit d'envoyer un message
-        if ($user->isTeacher()) {
-            abort(403, __('Les professeurs disposent d\'un accès en lecture seule et ne peuvent pas envoyer de messages.'));
+        // 1. Un professeur ne peut que répondre dans une conversation existante ouverte
+        // par l'administration (jamais en initier une — voir canCommunicate).
+        if ($user->isTeacher() && $conversation->type !== 'direct') {
+            abort(403, __('Les professeurs ne peuvent répondre que dans les conversations de l\'administration.'));
         }
 
         // 2. Vérification que l'utilisateur participe à la conversation
@@ -379,8 +382,18 @@ class MessageController extends Controller
      */
     public function canCommunicate(User $sender, User $target): bool
     {
-        // Règle 1 : Un professeur ne peut JAMAIS envoyer de message
+        // Règle 1 : Un professeur ne peut communiquer qu'avec l'administration
+        // (Super Admin ou Admin du centre auquel il est rattaché) — jamais avec
+        // un autre professeur, et jamais pour initier une conversation.
         if ($sender->isTeacher()) {
+            if ($target->isSuperAdmin()) {
+                return true;
+            }
+
+            if ($target->isCenterAdmin()) {
+                return in_array((int) $target->center_id, $sender->centerIds(), true);
+            }
+
             return false;
         }
 
