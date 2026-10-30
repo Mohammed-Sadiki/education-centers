@@ -224,6 +224,36 @@ class StagiaireController extends Controller
             return $stagiaire;
         });
 
+        // ── Notifications internes (événement réel, après commit) ──────────
+        $notifier = app(\App\Services\NotificationService::class);
+        $doerId = $request->user()->id;
+        $stagiaireCenterId = (int) $stagiaire->center_id;
+
+        $notifier->notifyCenterAdmins(
+            centerId: $stagiaireCenterId,
+            type: 'stagiaire',
+            title: __('Nouveau stagiaire'),
+            message: __(':name vient d\'être enregistré comme stagiaire.', ['name' => $stagiaire->full_name]),
+            link: route('stagiaires.show', $stagiaire),
+            exceptUserId: $doerId,
+            relatedType: \App\Models\Stagiaire::class,
+            relatedId: $stagiaire->id,
+        );
+
+        // Dossier réellement incomplet : CIN (recto/verso) obligatoire absente.
+        if (! $stagiaire->cin_recto_path || ! $stagiaire->cin_verso_path) {
+            $notifier->notifyCenterAdmins(
+                centerId: $stagiaireCenterId,
+                type: 'dossier_incomplete',
+                title: __('Dossier de stage incomplet'),
+                message: __('Le dossier de :name est incomplet : CIN manquante.', ['name' => $stagiaire->full_name]),
+                link: route('stagiaires.show', $stagiaire),
+                exceptUserId: $doerId,
+                relatedType: \App\Models\Stagiaire::class,
+                relatedId: $stagiaire->id,
+            );
+        }
+
         return redirect()
             ->route('stagiaires.show', $stagiaire)
             ->with('success', __('Le dossier du stagiaire :full_name a été créé avec succès.', ['full_name' => $stagiaire->full_name]));

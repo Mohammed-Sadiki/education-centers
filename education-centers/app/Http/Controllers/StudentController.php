@@ -259,6 +259,64 @@ class StudentController extends Controller
             return $student;
         });
 
+        // ── Notifications internes (événement réel, après commit) ──────────
+        // Ne notifie jamais l'auteur de l'action ; notifie les Admin Centre du
+        // centre concerné. Le Super Admin n'est pas alerté pour un acte mineur.
+        $notifier = app(\App\Services\NotificationService::class);
+        $formationName = $formation?->name ?? __('Formation inconnue');
+
+        if ($formationId) {
+            $notifier->notifyCenterAdmins(
+                centerId: $centerId,
+                type: 'enrollment',
+                title: __('Nouvelle inscription'),
+                message: __(':name inscrit(e) à :formation.', ['name' => $student->full_name, 'formation' => $formationName]),
+                link: route('students.show', $student),
+                exceptUserId: $authUser->id,
+                relatedType: Student::class,
+                relatedId: $student->id,
+            );
+        }
+
+        // Dossier incomplet : CIN (document « identity ») absente → information
+        // réellement obligatoire. On ne traite pas les champs facultatifs comme requis.
+        $hasCin = $student->documents()->where('type', 'identity')->exists();
+        if (! $hasCin) {
+            $notifier->notifyCenterAdmins(
+                centerId: $centerId,
+                type: 'dossier_incomplete',
+                title: __('Dossier étudiant incomplet'),
+                message: __('Le dossier de :name est incomplet : CIN manquante.', ['name' => $student->full_name]),
+                link: route('students.show', $student),
+                exceptUserId: $authUser->id,
+                relatedType: Student::class,
+                relatedId: $student->id,
+            );
+        }
+
+        // Paiement encaissé à l'inscription (paye / avance) → responsable du centre.
+        if ($paymentOption && $formationId) {
+            $paidAmount = $paymentOption === 'paye'
+                ? ($finalPrice ?? $officialPrice)
+                : max(0.0, (float) $request->validated('avance_amount'));
+            if ($paidAmount > 0) {
+                $notifier->notifyCenterAdmins(
+                    centerId: $centerId,
+                    type: 'payment',
+                    title: __('Nouveau paiement encaissé'),
+                    message: __('Paiement de :amount encaissé pour :name.', [
+                        'amount' => format_price($paidAmount, 'MAD'),
+                        'name'   => $student->full_name,
+                    ]),
+                    link: route('students.show', $student),
+                    exceptUserId: $authUser->id,
+                    relatedType: Student::class,
+                    relatedId: $student->id,
+                    metadata: ['amount' => $paidAmount],
+                );
+            }
+        }
+
         $message = __('Le dossier étudiant :student_number (:full_name) a été créé avec succès.', [
             'student_number' => $student->student_number,
             'full_name'      => $student->full_name,

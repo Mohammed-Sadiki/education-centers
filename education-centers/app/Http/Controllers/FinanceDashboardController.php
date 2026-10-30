@@ -500,6 +500,23 @@ class FinanceDashboardController extends Controller
             'recorded_by' => $request->user()->id,
         ]);
 
+        // Notification interne : paiement réellement encaissé. Le responsable du
+        // centre est alerté (sauf s'il est l'auteur de l'encaissement).
+        app(\App\Services\NotificationService::class)->notifyCenterAdmins(
+            centerId: $student->center_id,
+            type: 'payment',
+            title: __('Nouveau paiement encaissé'),
+            message: __('Paiement de :amount encaissé pour :name.', [
+                'amount' => format_price($data['amount'], $data['currency']),
+                'name'   => $student->full_name,
+            ]),
+            link: route('super-admin.finance.students'),
+            exceptUserId: $request->user()->id,
+            relatedType: Student::class,
+            relatedId: $student->id,
+            metadata: ['amount' => (float) $data['amount']],
+        );
+
         return back()->with('success', __('Paiement de :amount :currency enregistré avec succès pour :full_name.', ['amount' => $data['amount'], 'currency' => $data['currency'], 'full_name' => $student->full_name]));
     }
 
@@ -981,6 +998,24 @@ class FinanceDashboardController extends Controller
                 'cumulative_balance' => -$finalAmount,
                 'recorded_by' => $request->user()->id,
             ]);
+
+            // Dépasse le seuil « important » configurable → alerte le Super Admin.
+            if ($finalAmount > (float) config('notifications.expense_threshold', 5000)) {
+                app(\App\Services\NotificationService::class)->notifySuperAdmins(
+                    type: 'expense',
+                    title: __('Dépense importante'),
+                    message: __('Dépense de :amount (:title) au centre :center.', [
+                        'amount' => format_price($finalAmount, 'MAD'),
+                        'title'  => $validated['title'],
+                        'center' => $expense->center?->name ?? '—',
+                    ]),
+                    link: route('super-admin.finance.expenses'),
+                    centerId: $validated['center_id'],
+                    relatedType: Expense::class,
+                    relatedId: $expense->id,
+                    metadata: ['amount' => $finalAmount],
+                );
+            }
         });
 
         return back()->with('success', __('Achat de :amount enregistré avec succès.', ['amount' => format_price($finalAmount, 'MAD')]));

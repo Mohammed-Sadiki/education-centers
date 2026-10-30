@@ -24,6 +24,21 @@ class ClassTeacherController extends Controller
 
         $class->teachers()->syncWithoutDetaching([$teacher->id]);
 
+        // Notification pédagogique : le professeur affecté (via son compte).
+        if ($teacher->user) {
+            app(\App\Services\NotificationService::class)->sendUnique(
+                $teacher->user,
+                'teacher_assignment',
+                __('Nouvelle affectation de classe'),
+                __('Vous avez été affecté(e) à la classe :code.', ['code' => $class->code]),
+                route('teacher.classes'),
+                'bi-academic',
+                $class->center_id,
+                \App\Models\ClassRoom::class,
+                $class->id,
+            );
+        }
+
         return redirect()
             ->route('classes.show', $class)
             ->with('success', __('Le professeur :full_name (:teacher_number) a été affecté à la classe :code.', ['full_name' => $teacher->full_name, 'teacher_number' => $teacher->teacher_number, 'code' => $class->code]));

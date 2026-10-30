@@ -36,7 +36,6 @@
     // Retour à l'accueil : admins → /admin/accueil, professeurs → leur espace
     $commHomeUrl = ($user && !$user->isTeacher()) ? route('admin.home') : route('dashboard');
     $unreadNotifCount = \App\Models\AppNotification::where('user_id', $user?->id)->whereNull('read_at')->count();
-    $unreadNotifList = \App\Models\AppNotification::where('user_id', $user?->id)->whereNull('read_at')->latest()->take(6)->get();
 @endphp
 <body class="h-screen overflow-hidden bg-slate-100 text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-100 flex flex-col">
 
@@ -101,47 +100,43 @@
             </button>
 
             {{-- Notifications --}}
-            <div class="relative" @click.outside="notifOpen = false">
+            <div class="relative"
+                 x-data="{
+                     unread: {{ $unreadNotifCount }},
+                     refresh() {
+                         fetch('{{ route('notifications.dropdown') }}', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                             .then(r => r.ok ? r.text() : '')
+                             .then(html => {
+                                 const box = $refs.body;
+                                 if (! box || ! html) return;
+                                 box.innerHTML = html;
+                                 const card = box.querySelector('[data-notif-body]');
+                                 if (card) { unread = parseInt(card.getAttribute('data-unread') || '0', 10) || 0; }
+                             })
+                             .catch(() => {});
+                     },
+                 }"
+                 x-init="refresh(); setInterval(() => { if (! document.hidden) refresh(); }, {{ (int) config('notifications.poll_interval', 45) }} * 1000);"
+                 @click.outside="notifOpen = false"
+                 @keydown.escape.window="notifOpen = false">
                 <button type="button"
                         class="relative rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                        x-on:click="notifOpen = !notifOpen"
+                        x-on:click="notifOpen = !notifOpen; if(notifOpen) refresh()"
                         aria-label="{{ __('Notifications') }}"
                         aria-haspopup="true"
                         :aria-expanded="notifOpen">
                     <x-icon name="bell" class="h-5 w-5" />
-                    @if($unreadNotifCount > 0)
-                        <span class="absolute end-1 top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white">{{ $unreadNotifCount > 9 ? '9+' : $unreadNotifCount }}</span>
-                    @endif
+                    <span x-show="unread > 0" x-cloak x-text="unread > 9 ? '9+' : unread"
+                          class="absolute end-1 top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white"></span>
                 </button>
-                <div x-show="notifOpen" x-cloak
+                <div x-ref="body" x-show="notifOpen" x-cloak
                      x-transition:enter="transition ease-out duration-200"
                      x-transition:enter-start="opacity-0 -translate-y-1 scale-95"
                      x-transition:enter-end="opacity-100 translate-y-0 scale-100"
                      x-transition:leave="transition ease-in duration-150"
                      x-transition:leave-start="opacity-100 scale-100"
-                     x-transition:leave-end="opacity-0 scale-95"
-                     class="absolute end-0 mt-2 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                    <div class="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 dark:border-slate-800">
-                        <p class="text-sm font-semibold">{{ __('Notifications') }}</p>
-                        @if($unreadNotifCount > 0)
-                            <form method="POST" action="{{ route('notifications.read-all') }}">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" class="text-xs font-medium text-brand-700 hover:underline dark:text-brand-400">{{ __('Tout marquer comme lu') }}</button>
-                            </form>
-                        @endif
-                    </div>
-                    <ul class="max-h-80 overflow-y-auto">
-                        @forelse($unreadNotifList as $n)
-                            <li class="border-b border-slate-50 px-4 py-3 text-sm last:border-0 dark:border-slate-800">
-                                <p class="font-medium text-slate-800 dark:text-slate-100">{{ $n->title }}</p>
-                                <p class="mt-0.5 line-clamp-2 text-xs text-slate-500">{{ $n->message }}</p>
-                            </li>
-                        @empty
-                            <li class="px-4 py-6 text-center text-sm text-slate-500">{{ __('Aucune notification non lue') }}</li>
-                        @endforelse
-                    </ul>
-                    <a href="{{ route('notifications.index') }}" class="block bg-slate-50 px-4 py-2 text-center text-xs font-medium text-brand-700 dark:bg-slate-800 dark:text-brand-400">{{ __('Voir tout') }}</a>
+                     x-transition:leave-end="opacity-0 scale-95">
+                    @include('notifications.partials.dropdown', ['user' => $user])
                 </div>
             </div>
 

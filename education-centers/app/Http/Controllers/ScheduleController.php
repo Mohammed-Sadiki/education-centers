@@ -299,7 +299,35 @@ class ScheduleController extends Controller
             unset($data['center_id']);
         }
 
+        $previousTeacherId = $schedule->teacher_id;
         $schedule->update($data);
+        $schedule->refresh();
+
+        // Notification emploi du temps modifié : professeurs réellement concernés
+        // (nouvel affecté + ancien si réaffectation). Un seul destinataire par user.
+        $notifier = app(\App\Services\NotificationService::class);
+        $dateLabel = $schedule->date?->format('d/m/Y') ?? '';
+        $affectedTeacherIds = array_filter([$schedule->teacher_id, $previousTeacherId]);
+        foreach ($affectedTeacherIds as $teacherId) {
+            $teacherUser = \App\Models\Teacher::with('user')->find($teacherId)?->user;
+            if (! $teacherUser) {
+                continue;
+            }
+            $notifier->sendUnique(
+                $teacherUser,
+                'schedule_change',
+                __('Emploi du temps modifié'),
+                __('Votre séance du :date a été modifiée (:créneau).', [
+                    'date'    => $dateLabel,
+                    'créneau' => trim(($schedule->start_time ?? '').'-'.($schedule->end_time ?? ''), '-'),
+                ]),
+                route('schedules.show', $schedule),
+                'bi-calendar',
+                $schedule->center_id,
+                \App\Models\Schedule::class,
+                $schedule->id,
+            );
+        }
 
         return redirect()
             ->route('schedules.show', $schedule)

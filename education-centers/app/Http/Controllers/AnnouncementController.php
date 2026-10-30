@@ -56,6 +56,10 @@ class AnnouncementController extends Controller
         }
         $a = Announcement::create($data);
 
+        if ($a->status === 'published') {
+            $this->notifyAudience($a, $user->id);
+        }
+
         return redirect()->route('announcements.show', $a)->with('success', __('Annonce \\":title\\" créée.', ['title' => $a->title]));
     }
 
@@ -88,7 +92,45 @@ class AnnouncementController extends Controller
         }
         $announcement->update($data);
 
+        if ($announcement->fresh()->status === 'published') {
+            $this->notifyAudience($announcement, $request->user()->id);
+        }
+
         return redirect()->route('announcements.show', $announcement)->with('success', __('Annonce mise à jour.'));
+    }
+
+    /**
+     * Notifie UNIQUEMENT les destinataires visés par l'annonce :
+     * - annonce rattachée à un centre → admins + professeurs de CE centre ;
+     * - annonce globale (center_id null) → tous les admins de centre + professeurs.
+     * L'auteur n'est jamais notifié. Dédupliqué (pas de doublon à la re-publication).
+     */
+    private function notifyAudience(Announcement $announcement, int $authorId): void
+    {
+        $query = \App\Models\User::query()
+            ->whereIn('role', [\App\Models\User::ROLE_CENTER_ADMIN, \App\Models\User::ROLE_TEACHER])
+            ->whereKeyNot($authorId);
+
+        if ($announcement->center_id) {
+            $query->where('center_id', $announcement->center_id);
+        }
+
+        $notifier = app(\App\Services\NotificationService::class);
+        $link = route('announcements.show', $announcement);
+
+        foreach ($query->get() as $recipient) {
+            $notifier->sendUnique(
+                $recipient,
+                'announcement',
+                __('Nouvelle annonce'),
+                $announcement->title,
+                $link,
+                'bi-megaphone',
+                $recipient->center_id,
+                Announcement::class,
+                $announcement->id,
+            );
+        }
     }
 
     public function destroy(Announcement $announcement): RedirectResponse

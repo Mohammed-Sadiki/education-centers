@@ -83,6 +83,22 @@ class PaymentController extends Controller
         $data['recorded_by'] = $user->id;
         $payment = Payment::create($data);
 
+        // Notification interne : paiement réellement encaissé (jamais annulé/échoué).
+        app(\App\Services\NotificationService::class)->notifyCenterAdmins(
+            centerId: $centerId,
+            type: 'payment',
+            title: __('Nouveau paiement encaissé'),
+            message: __('Paiement de :amount encaissé pour :name.', [
+                'amount' => format_price($payment->amount, $payment->currency),
+                'name'   => $student->full_name,
+            ]),
+            link: route('payments.show', $payment),
+            exceptUserId: $user->id,
+            relatedType: Payment::class,
+            relatedId: $payment->id,
+            metadata: ['amount' => (float) $payment->amount],
+        );
+
         return redirect()->route('payments.show', $payment)->with('success', __('Paiement :reference enregistré.', ['reference' => $payment->reference]));
     }
 

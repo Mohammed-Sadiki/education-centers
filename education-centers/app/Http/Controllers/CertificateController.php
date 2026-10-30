@@ -76,6 +76,21 @@ class CertificateController extends Controller
         $enrollment = isset($data['enrollment_id']) ? Enrollment::find($data['enrollment_id']) : null;
         $certificate = $this->certificateService->createAndGenerate($student, $data['type'], $enrollment, $user);
 
+        // Certificat disponible → notifie l'Admin Centre concerné (jamais l'auteur).
+        app(\App\Services\NotificationService::class)->notifyCenterAdmins(
+            centerId: $centerId,
+            type: 'certificate',
+            title: __('Certificat disponible'),
+            message: __('Certificat :number généré pour :name.', [
+                'number' => $certificate->certificate_number,
+                'name'   => $student->full_name,
+            ]),
+            link: route('certificates.show', $certificate),
+            exceptUserId: $user->id,
+            relatedType: Certificate::class,
+            relatedId: $certificate->id,
+        );
+
         return redirect()->route('certificates.show', $certificate)->with('success', __('Certificat :certificate_number généré.', ['certificate_number' => $certificate->certificate_number]));
     }
 
