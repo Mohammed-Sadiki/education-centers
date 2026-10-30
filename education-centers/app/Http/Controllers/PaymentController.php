@@ -21,6 +21,9 @@ class PaymentController extends Controller
         if ($user->isCenterAdmin()) {
             $query->where('center_id', $user->center_id);
         }
+        // Filtrage par domaine actif (contexte domaine) — cohérent avec le
+        // compte « Revenus (payés) » du tableau de bord de domaine.
+        $query = $this->applyDomainScope($query);
         if ($status = $request->input('status')) {
             $query->where('status', $status);
         }

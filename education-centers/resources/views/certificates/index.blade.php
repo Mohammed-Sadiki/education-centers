@@ -2,17 +2,24 @@
 @section('title', __('Certificats'))
 
 @section('content')
+<x-domain-back />
 <x-ui.page-header :title="__('Certificats')" :description="__('Attestations et documents officiels.')">
     @can('create', \App\Models\Certificate::class)
         <a href="{{ route('certificates.create') }}" class="ec-btn-primary"><x-icon name="plus" class="h-4 w-4" /> {{ __('Générer') }}</a>
     @endcan
 </x-ui.page-header>
 <x-ui.card class="mb-4">
-    <form method="GET" class="flex max-w-sm gap-2">
+    <form method="GET" class="flex max-w-2xl gap-2">
         <select name="type" class="ec-select">
             <option value="">{{ __('Tous les types') }}</option>
             @foreach(['enrollment'=>'Inscription','completion'=>'Formation','attendance'=>'Présence','grades_report'=>'Notes','receipt'=>'Reçu','other'=>'Autre'] as $k=>$v)
                 <option value="{{ $k }}" @selected(request('type')===$k)>{{ __($v) }}</option>
+            @endforeach
+        </select>
+        <select name="status" class="ec-select">
+            <option value="">{{ __('Tous les statuts') }}</option>
+            @foreach(['draft'=>'Brouillon','issued'=>'Délivré','revoked'=>'Révoqué'] as $k=>$v)
+                <option value="{{ $k }}" @selected(request('status')===$k)>{{ __($v) }}</option>
             @endforeach
         </select>
         <button class="ec-btn-secondary">{{ __('Filtrer') }}</button>

@@ -1,4 +1,4 @@
-@props(['label', 'value', 'icon' => 'chart', 'tone' => 'primary', 'delta' => null, 'hint' => null])
+@props(['label', 'value', 'icon' => 'chart', 'tone' => 'primary', 'delta' => null, 'hint' => null, 'href' => null])
 
 @php
     $chips = [
@@ -11,9 +11,22 @@
     ];
     $chip = $chips[$tone] ?? $chips['primary'];
     $deltaUp = is_string($delta) ? !str_starts_with(trim($delta), '-') : (is_numeric($delta) ? $delta >= 0 : true);
+
+    // Carte cliquable : rendue en <a> accessible quand un href est fourni
+    // (sinon <div> comme avant). Design strictement identique via .ec-kpi ;
+    // au survol, la carte se soulève déjà (translateY + ombre en CSS).
+    $cardAttrs = $attributes->merge([
+        'class' => $href
+            ? 'ec-kpi cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40'
+            : 'ec-kpi',
+    ]);
 @endphp
 
-<div {{ $attributes->merge(['class' => 'ec-kpi']) }}>
+@if($href)
+    <a href="{{ $href }}" {{ $cardAttrs }}>
+@else
+    <div {{ $cardAttrs }}>
+@endif
     <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
             <p class="ec-kpi__label truncate">{{ $label }}</p>
@@ -36,4 +49,8 @@
             @endif
         </div>
     @endif
-</div>
+@if($href)
+    </a>
+@else
+    </div>
+@endif

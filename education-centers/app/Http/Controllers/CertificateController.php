@@ -29,8 +29,14 @@ class CertificateController extends Controller
         } elseif ($user->isStudent()) {
             $query->where('student_id', $user->student?->id)->where('center_id', $user->center_id);
         }
+        // Filtrage par domaine actif (contexte domaine) — cohérent avec le
+        // compte « Certificats délivrés » du tableau de bord de domaine.
+        $query = $this->applyDomainScope($query);
         if ($type = $request->input('type')) {
             $query->where('type', $type);
+        }
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
         }
         if ($studentId = $request->input('student_id')) {
             $query->where('student_id', $studentId);

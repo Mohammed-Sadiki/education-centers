@@ -83,15 +83,34 @@
     @endif
 
     {{-- ── KPI ────────────────────────────────────────────────────────── --}}
+    {{-- Cartes cliquables : chaque destination est filtrée centre + domaine
+         côté serveur (session active_domain + isolation propre au rôle).
+         Le paramètre ?domain rend en plus les URL explicites et partageables. --}}
+    @php
+        $domainQuery = ['domain' => $domain];
+        $cardUrls = [
+            'students'    => route('students.index', $domainQuery),
+            'teachers'    => route('teachers.index', $domainQuery),
+            'formations'  => route('formations.index', $domainQuery),
+            'classes'     => route('classes.index', $domainQuery),
+            'enrollments' => route('enrollments.index', $domainQuery),
+            // Certificats délivrés uniquement (même critère que la stat).
+            'certificates' => route('certificates.index', $domainQuery + ['status' => 'issued']),
+            // Présences du jour pour les classes du domaine (même critère que la stat).
+            'attendances' => route('attendances.index', $domainQuery + ['date' => now()->toDateString()]),
+            // Paiements réellement encaissés dans le domaine (même critère que la stat).
+            'payments' => route('payments.index', $domainQuery + ['status' => 'paid']),
+        ];
+    @endphp
     <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-ui.stat :label="__('Étudiants')" :value="format_number($stats['students'])" icon="users" tone="primary" :hint="__('inscrits')" />
-        <x-ui.stat :label="__('Professeurs')" :value="format_number($stats['teachers'])" icon="user" tone="info" :hint="__('enseignants')" />
-        <x-ui.stat :label="__('Formations')" :value="format_number($stats['formations'])" icon="book" tone="success" :hint="__('disponibles')" />
-        <x-ui.stat :label="__('Classes')" :value="format_number($stats['classes'])" icon="classes" tone="info" :hint="__('actives')" />
-        <x-ui.stat :label="__('Inscriptions')" :value="format_number($stats['enrollments'])" icon="clipboard" tone="primary" :hint="__('au total')" />
-        <x-ui.stat :label="__('Certificats')" :value="format_number($stats['certificates_issued'])" icon="certificate" tone="success" :hint="__('délivrés')" />
-        <x-ui.stat :label="__('Présences (jour)')" :value="format_number($stats['attendances_today'])" icon="clock" tone="info" :hint="__('aujourd\'hui')" />
-        <x-ui.stat :label="__('Revenus (payés)')" :value="format_price($stats['payments_total'])" icon="banknotes" tone="warning" :hint="__('encaissés')" />
+        <x-ui.stat :label="__('Étudiants')" :value="format_number($stats['students'])" icon="users" tone="primary" :hint="__('inscrits')" :href="$cardUrls['students']" />
+        <x-ui.stat :label="__('Professeurs')" :value="format_number($stats['teachers'])" icon="user" tone="info" :hint="__('enseignants')" :href="$cardUrls['teachers']" />
+        <x-ui.stat :label="__('Formations')" :value="format_number($stats['formations'])" icon="book" tone="success" :hint="__('disponibles')" :href="$cardUrls['formations']" />
+        <x-ui.stat :label="__('Classes')" :value="format_number($stats['classes'])" icon="classes" tone="info" :hint="__('actives')" :href="$cardUrls['classes']" />
+        <x-ui.stat :label="__('Inscriptions')" :value="format_number($stats['enrollments'])" icon="clipboard" tone="primary" :hint="__('au total')" :href="$cardUrls['enrollments']" />
+        <x-ui.stat :label="__('Certificats')" :value="format_number($stats['certificates_issued'])" icon="certificate" tone="success" :hint="__('délivrés')" :href="$cardUrls['certificates']" />
+        <x-ui.stat :label="__('Présences (jour)')" :value="format_number($stats['attendances_today'])" icon="clock" tone="info" :hint="__('aujourd\'hui')" :href="$cardUrls['attendances']" />
+        <x-ui.stat :label="__('Revenus (payés)')" :value="format_price($stats['payments_total'])" icon="banknotes" tone="warning" :hint="__('encaissés')" :href="$cardUrls['payments']" />
     </div>
 
     {{-- Filtre centre secondaire (Super Admin) : périmètre du domaine --}}
