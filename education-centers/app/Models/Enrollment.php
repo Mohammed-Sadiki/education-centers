@@ -38,6 +38,8 @@ class Enrollment extends Model
         'formation_id',
         'class_id',
         'school_year',
+        'official_price',
+        'final_price',
         'registration_number',
         'application_date',
         'status',
@@ -55,7 +57,67 @@ class Enrollment extends Model
             'decision_date' => 'date',
             'accepted_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'official_price' => 'decimal:2',
+            'final_price' => 'decimal:2',
         ];
+    }
+
+    /**
+     * Tarif officiel de référence de l'inscription.
+     *
+     * Priorité à la trace enregistrée au moment de l'inscription (`official_price`) ;
+     * à défaut (inscriptions antérieures, ou création « dossier seul » sans prix),
+     * on retombe sur le tarif actuel du catalogue via FinanceService. Ne renvoie
+     * JAMAIS null : c'est la base de comparaison de la réduction.
+     */
+    public function officialPriceReference(): float
+    {
+        if ($this->official_price !== null) {
+            return (float) $this->official_price;
+        }
+
+        // Tracé absent (ancienne inscription) : référence = tarif catalogue. La
+        // relation est déjà chargée dans les boucles financières (eager loading) ;
+        // sinon Eloquent la charge à la demande.
+        $formation = $this->formation;
+
+        return $formation ? \App\Services\FinanceService::getFormationAnnualPrice($formation) : 0.0;
+    }
+
+    /**
+     * Montant réellement dû pour CETTE inscription : le prix final accordé s'il a
+     * été saisi, sinon le tarif officiel (aucune réduction). C'est la valeur que
+     * tous les calculs financiers doivent utiliser — jamais le catalogue brut.
+     */
+    public function getPayableAmount(): float
+    {
+        if ($this->final_price !== null) {
+            return max(0.0, (float) $this->final_price);
+        }
+
+        // Inscription sans prix final explicite (création « dossier seul » ou
+        // données antérieures) : référence = tarif officiel.
+        return $this->officialPriceReference();
+    }
+
+    /**
+     * Réduction accordée (tarif officiel − prix final), jamais négative.
+     */
+    public function getDiscountAmount(): float
+    {
+        if ($this->final_price === null) {
+            return 0.0;
+        }
+
+        return max(0.0, $this->officialPriceReference() - (float) $this->final_price);
+    }
+
+    /**
+     * Une réduction a-t-elle été appliquée à cette inscription ?
+     */
+    public function hasDiscount(): bool
+    {
+        return $this->getDiscountAmount() > 0.01;
     }
 
     /**

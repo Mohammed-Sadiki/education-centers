@@ -459,7 +459,12 @@ class FinanceDashboardController extends Controller
 
         $targetFormation = $formation ?? $enrollment?->formation;
         if ($targetFormation) {
-            $expected = FinanceService::getFormationAnnualPrice($targetFormation);
+            // Référence du solde dû : le PRIX FINAL de l'inscription s'il a été
+            // accordé (réduction), sinon le tarif officiel du catalogue. On ne se
+            // fie jamais au prix envoyé par le navigateur.
+            $expected = ($enrollment && $enrollment->final_price !== null)
+                ? $enrollment->getPayableAmount()
+                : FinanceService::getFormationAnnualPrice($targetFormation);
             $alreadyPaid = (float) Payment::where('student_id', $student->id)
                 ->where('school_year', $data['school_year'])
                 ->where('status', 'paid')

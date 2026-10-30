@@ -161,7 +161,14 @@ class FinanceService
             }
 
             $formationDomain = $formation->domain ?? 'informatique';
-            $expectedAmount = self::getFormationAnnualPrice($formation);
+
+            // Référence financière de l'inscription = PRIX FINAL accordé s'il a été
+            // enregistré (réduction), sinon tarif officiel. Les anciennes
+            // inscriptions (final_price null) conservent exactement le tarif
+            // catalogue : aucun recalcul, aucune écrasement (§11).
+            $expectedAmount = $enrollment->getPayableAmount();
+            $officialAmount = $enrollment->officialPriceReference();
+            $discountAmount = $enrollment->getDiscountAmount();
 
             // Additionner tous les paiements enregistrés pour cet étudiant (et cette formation si rattachée)
             $studentPayments = $paymentsGrouped->get($student->id, collect());
@@ -192,6 +199,8 @@ class FinanceService
                 'domain' => $formationDomain,
                 'domain_label' => self::getDomains()[$formationDomain] ?? ucfirst($formationDomain),
                 'annual_price' => $expectedAmount,
+                'official_price' => $officialAmount,
+                'discount_amount' => $discountAmount,
                 'paid_amount' => $paidAmount,
                 'remaining_amount' => $remainingAmount,
                 'payment_percentage' => $expectedAmount > 0 ? min(100.0, round(($paidAmount / $expectedAmount) * 100, 1)) : 0.0,

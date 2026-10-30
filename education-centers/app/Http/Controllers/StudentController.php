@@ -157,7 +157,7 @@ class StudentController extends Controller
         $data = $request->validated();
 
         // Clés hors-colonnes du students : gérées séparément (cascade, fichiers, paiement).
-        foreach (['domain', 'formation_id', 'center_id', 'payment_option', 'avance_amount', 'profile_photo', 'cin_files', 'other_files'] as $key) {
+        foreach (['domain', 'formation_id', 'center_id', 'payment_option', 'avance_amount', 'final_price', 'profile_photo', 'cin_files', 'other_files'] as $key) {
             unset($data[$key]);
         }
         $data['center_id'] = $centerId;
@@ -171,7 +171,19 @@ class StudentController extends Controller
         $paymentOption = $request->validated('payment_option');
         $schoolYear = config('app.school_year', '2026/2027');
 
-        $student = DB::transaction(function () use ($data, $formationId, $center, $centerId, $request, $authUser, $paymentOption, $schoolYear): Student {
+        // Tarifs financiers résolus côté serveur (le navigateur ne fait jamais foi) :
+        // - tarif officiel relu depuis la base ;
+        // - prix final accordé = valeur transmise et validable, sinon tarif officiel.
+        $formation = $formationId ? Formation::find($formationId) : null;
+        $officialPrice = $formation ? FinanceService::getFormationAnnualPrice($formation) : 0.0;
+        $finalPriceInput = $request->validated('final_price');
+        $finalPrice = $formation
+            ? ($finalPriceInput !== null && $finalPriceInput !== ''
+                ? min((float) $finalPriceInput, $officialPrice)
+                : $officialPrice)
+            : null;
+
+        $student = DB::transaction(function () use ($data, $formationId, $center, $centerId, $request, $authUser, $paymentOption, $schoolYear, $officialPrice, $finalPrice): Student {
             $student = Student::create($data);
 
             // ── Photo de profil (colonne dédiée, disque privé) ──
@@ -206,13 +218,20 @@ class StudentController extends Controller
                     'application_date'    => now()->toDateString(),
                     'status'              => Enrollment::STATUS_PENDING,
                     'registration_number' => Enrollment::generateRegistrationNumber($center),
+                    // Prix final personnalisé propre à CETTE inscription (le
+                    // catalogue n'est jamais modifié). Le tarif officiel est tracé
+                    // comme référence de la réduction.
+                    'official_price'      => $officialPrice,
+                    'final_price'         => $finalPrice,
                 ]);
             }
 
             // ── Paiement intégré (Payé = totalité, Avance = partiel) ──
             if ($paymentOption && $formationId) {
                 $formation = Formation::findOrFail($formationId);
-                $price = FinanceService::getFormationAnnualPrice($formation);
+                // Référence financière : le PRIX FINAL accordé (réduction incluse),
+                // jamais le tarif catalogue brut.
+                $price = $finalPrice ?? FinanceService::getFormationAnnualPrice($formation);
 
                 $amount = $paymentOption === 'paye'
                     ? $price

@@ -112,6 +112,13 @@ class StoreStudentRequest extends FormRequest
             // ── Paiement intégré (facultif : absent pour la création « dossier seul ») ──
             'payment_option' => ['nullable', 'in:avance,paye'],
             'avance_amount' => ['nullable', 'numeric', 'min:0'],
+
+            // ── Prix final personnalisé accordé à l'étudiant ──────────────────
+            // Facultatif : absent ⇒ le contrôleur enregistre le tarif officiel
+            // (aucune réduction). Les bornes supérieures (tarif officiel, 2
+            // décimales) sont contrôlées dans withValidator côté serveur, le
+            // montant du navigateur n'étant JAMAIS utilisé comme référence.
+            'final_price' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 
@@ -152,6 +159,26 @@ class StoreStudentRequest extends FormRequest
                 if ($this->filled('domain') && $formation->domain !== $this->input('domain')) {
                     $validator->errors()->add('formation_id', __('La formation sélectionnée n\'appartient pas au domaine choisi.'));
                 }
+
+                // ── Prix final personnalisé : le tarif officiel fait foi, side DB ──
+                // On ne fait JAMAIS confiance à un prix envoyé par le navigateur :
+                // le tarif officiel est relu depuis la base, puis le prix final
+                // transmis est contrôlé (bornes + décimales).
+                $official = FinanceService::getFormationAnnualPrice($formation);
+
+                if ($this->filled('final_price')) {
+                    $finalPrice = $this->input('final_price');
+
+                    // Deux décimales maximum.
+                    if (! preg_match('/^\d+(\.\d{1,2})?$/', (string) $finalPrice)) {
+                        $validator->errors()->add('final_price', __('Le prix final ne peut contenir que deux décimales au maximum.'));
+                    } elseif ((float) $finalPrice > $official + 0.01) {
+                        // Aucun dépassement du tarif officiel.
+                        $validator->errors()->add('final_price', __('Le prix final ne peut pas dépasser le tarif officiel de la formation (:price).', [
+                            'price' => format_price($official, 'MAD'),
+                        ]));
+                    }
+                }
             }
 
             // ── Contrôles du paiement intégré (uniquement si une option est transmise) ──
@@ -162,8 +189,12 @@ class StoreStudentRequest extends FormRequest
                     return;
                 }
 
-                // Tarif de référence : configuration financière existante.
-                $price = FinanceService::getFormationAnnualPrice($formation);
+                // Tarif de référence : prix final accordé s'il est fourni et valide,
+                // sinon tarif officiel (configuration financière existante).
+                $official = FinanceService::getFormationAnnualPrice($formation);
+                $price = $this->filled('final_price')
+                    ? min((float) $this->input('final_price'), $official)
+                    : $official;
                 $option = $this->input('payment_option');
 
                 if ($option === 'avance') {
@@ -217,6 +248,7 @@ class StoreStudentRequest extends FormRequest
             'other_files.*' => __('fichier'),
             'payment_option' => __('type de paiement'),
             'avance_amount' => __('montant de l\'avance'),
+            'final_price' => __('prix final accordé'),
         ];
     }
 }

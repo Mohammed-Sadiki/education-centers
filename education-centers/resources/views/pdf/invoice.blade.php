@@ -14,6 +14,14 @@
             ?? '—';
         $paid = (float) $invoice->total_paid;
         $remaining = (float) $invoice->remaining_amount;
+
+        // Réduction accordée à l'inscription (si un prix final personnalisé a été
+        // appliqué) : affichée explicitement sur le document financier (§8).
+        $enrollment = $invoice->enrollment;
+        $hasDiscount = $enrollment && $enrollment->hasDiscount();
+        $officialPrice = $hasDiscount ? $enrollment->officialPriceReference() : 0.0;
+        $finalPrice = $hasDiscount ? $enrollment->getPayableAmount() : 0.0;
+        $discountPrice = $hasDiscount ? $enrollment->getDiscountAmount() : 0.0;
     @endphp
 
     <h1 class="doc-title">{{ __('Facture') }}</h1>
@@ -65,6 +73,24 @@
             </tr>
         </tbody>
     </table>
+
+    @if($hasDiscount)
+        <h2>{{ __('Détail de la réduction accordée') }}</h2>
+        <table class="totals">
+            <tr>
+                <td>{{ __('Tarif officiel') }}</td>
+                <td class="amount">{{ format_price($officialPrice, $invoice->currency) }}</td>
+            </tr>
+            <tr>
+                <td>{{ __('Réduction accordée') }}</td>
+                <td class="amount status-unpaid">− {{ format_price($discountPrice, $invoice->currency) }}</td>
+            </tr>
+            <tr>
+                <td>{{ __('Prix final de la formation') }}</td>
+                <td class="amount">{{ format_price($finalPrice, $invoice->currency) }}</td>
+            </tr>
+        </table>
+    @endif
 
     <table class="totals">
         <tr>

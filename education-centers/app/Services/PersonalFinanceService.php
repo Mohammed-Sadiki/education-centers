@@ -88,7 +88,9 @@ class PersonalFinanceService
                 continue;
             }
 
-            $expected = FinanceService::getFormationAnnualPrice($formation);
+            // Référence = prix final de l'inscription (réduction incluse), sinon
+            // tarif officiel. Cohérent avec le module Finance administrateur.
+            $expected = $enrollment->getPayableAmount();
 
             // Versements réellement encaissés pour CETTE inscription. Une
             // tranche rattachée à une inscription est comptée une seule fois ;

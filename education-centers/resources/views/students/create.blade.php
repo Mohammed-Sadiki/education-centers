@@ -261,10 +261,40 @@
                     <span x-text="visibleFormationCount"></span> {{ __('formation(s) disponible(s) pour ce centre et ce domaine.') }}
                 </p>
 
-                {{-- Tarif affiché automatiquement --}}
-                <div x-show="selectedFormation" x-cloak class="mt-4 flex items-center justify-between rounded-xl border border-brand-200 bg-brand-50/60 px-4 py-3 text-[1.0625rem] dark:border-brand-500/30 dark:bg-brand-500/10">
-                    <span class="font-semibold text-brand-800 dark:text-brand-200">{{ __('Tarif de la formation') }}</span>
-                    <span class="font-extrabold text-brand-800 dark:text-brand-200" x-text="money(formationPrice)"></span>
+                {{-- A. Tarif officiel (lecture seule, source = base de données) --}}
+                <div x-show="selectedFormation" x-cloak class="mt-4 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-[1.0625rem] dark:border-slate-700 dark:bg-slate-800/50">
+                    <span class="font-semibold text-slate-600 dark:text-slate-300">{{ __('Tarif officiel de la formation') }}</span>
+                    <span class="font-extrabold text-slate-800 dark:text-slate-100" x-text="money(formationPrice)"></span>
+                </div>
+
+                {{-- B/C/D. Prix final accordé + réduction + montant final à payer --}}
+                <div x-show="selectedFormation" x-cloak class="mt-4 space-y-4 rounded-2xl border border-brand-200 bg-brand-50/40 p-5 dark:border-brand-500/30 dark:bg-brand-500/5">
+                    <div>
+                        <label for="final_price" class="ec-label text-[1.0625rem] font-semibold">{{ __('Prix final accordé à l\'étudiant') }} <span class="text-red-500">*</span></label>
+                        <div class="mt-1 flex items-center gap-2">
+                            <input type="number" id="final_price" name="final_price"
+                                   class="ec-input text-[1.0625rem] @error('final_price') is-invalid @enderror"
+                                   step="0.01" min="0" inputmode="decimal"
+                                   :max="formationPrice"
+                                   x-model="finalPriceInput"
+                                   x-on:input="clampFinalPrice()">
+                            <span class="text-[1.0625rem] font-semibold text-slate-500 dark:text-slate-400">{{ $currencySymbol }}</span>
+                        </div>
+                        <p class="ec-help mt-1 text-[0.95rem]">{{ __('L\'administrateur peut diminuer ce montant. Il ne peut jamais dépasser le tarif officiel ni être négatif.') }}</p>
+                        @error('final_price') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- C. Réduction calculée automatiquement --}}
+                    <div class="flex items-center justify-between text-[1.0625rem]">
+                        <span class="font-semibold text-slate-600 dark:text-slate-300">{{ __('Réduction appliquée') }}</span>
+                        <span class="font-bold" :class="discount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'" x-text="money(discount)"></span>
+                    </div>
+
+                    {{-- D. Montant final à payer --}}
+                    <div class="flex items-center justify-between border-t border-brand-200 pt-4 text-[1.15rem] dark:border-brand-500/30">
+                        <span class="font-extrabold text-brand-800 dark:text-brand-200">{{ __('Montant final à payer') }}</span>
+                        <span class="font-extrabold text-brand-800 dark:text-brand-200" x-text="money(finalPayable)"></span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -302,8 +332,8 @@
                 {{-- Récapitulatif de calcul --}}
                 <div x-show="paymentOption" x-cloak class="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-5 dark:border-slate-700 dark:bg-slate-800/40">
                     <div class="flex items-center justify-between text-[1.0625rem]">
-                        <span class="font-semibold text-slate-600 dark:text-slate-300">{{ __('Prix total de la formation') }}</span>
-                        <span class="font-bold text-slate-800 dark:text-slate-100" x-text="money(formationPrice)"></span>
+                        <span class="font-semibold text-slate-600 dark:text-slate-300">{{ __('Prix final de la formation') }}</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-100" x-text="money(finalPayable)"></span>
                     </div>
 
                     {{-- Champ avance uniquement pour « Avance » --}}
@@ -351,6 +381,10 @@
             formationId: @js((string) old('formation_id', '')),
             visibleFormationCount: 0,
 
+            // Prix final accordé : initialisé sur le tarif officiel de la formation
+            // pré-sélectionnée (ou valeur conservée après échec de validation).
+            finalPriceInput: @js(old('final_price', '')),
+
             paymentOption: @js(old('payment_option', '')),
             avanceAmount: {{ Js::from((float) old('avance_amount', 0)) }},
 
@@ -383,10 +417,23 @@
             get formationPrice() {
                 return this.selectedFormation ? Number(this.selectedFormation.price) : 0;
             },
+            // Prix final réellement dû : borné à [0, tarif officiel]. Une valeur
+            // vide ou invalide retombe sur le tarif officiel (aucune réduction).
+            get finalPayable() {
+                const raw = this.finalPriceInput;
+                if (raw === '' || raw === null || raw === undefined) return this.formationPrice;
+                const n = Number(raw);
+                if (Number.isNaN(n)) return this.formationPrice;
+                return Math.max(0, Math.min(n, this.formationPrice));
+            },
+            get discount() {
+                return Math.max(0, this.formationPrice - this.finalPayable);
+            },
             get remaining() {
+                const base = this.finalPayable;
                 if (this.paymentOption === 'paye') return 0;
-                if (this.paymentOption === 'avance') return Math.max(0, this.formationPrice - (Number(this.avanceAmount) || 0));
-                return this.formationPrice;
+                if (this.paymentOption === 'avance') return Math.max(0, base - (Number(this.avanceAmount) || 0));
+                return base;
             },
 
             money(value) {
@@ -401,6 +448,28 @@
                 domainSelect?.addEventListener('change', () => { this.domain = domainSelect.value; this.applyCascade(); });
                 if (this.isCenterAdmin && centerSelect) this.centerId = this.forcedCenterId;
                 this.applyCascade();
+
+                // Le prix final suit automatiquement le tarif officiel de la formation
+                // choisie : on ne conserve jamais le prix personnalisé de la formation
+                // précédente (§4).
+                this.$watch('formationId', () => {
+                    this.finalPriceInput = this.selectedFormation ? Number(this.selectedFormation.price) : '';
+                });
+
+                // Première synchronisation (formation pré-sélectionnée après échec de
+                // validation) : ne jamais écraser une saisie déjà conservée.
+                if (this.selectedFormation && (this.finalPriceInput === '' || this.finalPriceInput === null)) {
+                    this.finalPriceInput = Number(this.selectedFormation.price);
+                }
+            },
+
+            // Bornage immédiat de la saisie : jamais négatif, jamais supérieur au
+            // tarif officiel (le backend revalide de toute façon ces bornes).
+            clampFinalPrice() {
+                if (this.finalPriceInput === '' || this.finalPriceInput === null) return;
+                const n = Number(this.finalPriceInput);
+                if (Number.isNaN(n)) return;
+                this.finalPriceInput = Math.max(0, Math.min(n, this.formationPrice));
             },
 
             applyCascade() {
