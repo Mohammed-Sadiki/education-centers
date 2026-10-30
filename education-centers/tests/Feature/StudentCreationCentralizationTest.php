@@ -423,19 +423,17 @@ class StudentCreationCentralizationTest extends TestCase
             ->assertDontSee(route('students.create'), false);
     }
 
-    public function test_students_list_link_still_functional_in_sidebar(): void
+    public function test_students_list_link_removed_from_sidebar_per_simplification_mission(): void
     {
-        // Le module « Étudiants » reste accessible depuis la sidebar des dashboards.
         $this->actingAs($this->superAdmin)
             ->get(route('students.index'))
             ->assertOk()
-            ->assertSee(route('students.index'), false)
-            ->assertSee('Étudiants');
+            ->assertDontSee('href="' . route('students.index') . '"', false);
 
         $this->actingAs($this->adminBerlin)
             ->get(route('teachers.index'))
             ->assertOk()
-            ->assertSee(route('students.index'), false);
+            ->assertDontSee('href="' . route('students.index') . '"', false);
     }
 
     // ──────────────────────────────────────────────────────────────────────────

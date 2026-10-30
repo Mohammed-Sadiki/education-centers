@@ -45,11 +45,11 @@ class TeacherPolicy
 
     /**
      * create : créer un dossier professeur.
-     * Super Admin (géré par before) et Admin Centre.
+     * Exclusivité Super Admin : aucun Admin Centre ne peut créer de dossier professeur.
      */
     public function create(User $authUser): bool
     {
-        return $authUser->isCenterAdmin();
+        return false;
     }
 
     /**

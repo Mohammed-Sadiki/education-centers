@@ -287,15 +287,39 @@ class StudentController extends Controller
     }
 
     /**
-     * Consulter un dossier étudiant.
+     * Consulter un dossier étudiant (Détails de l'étudiant).
      */
-    public function show(Student $student): View
+    public function show(Request $request, Student $student): View
     {
         Gate::authorize('view', $student);
 
-        $student->load(['user', 'center']);
+        $student->load([
+            'user',
+            'center',
+            'documents',
+            'enrollments.formation',
+            'enrollments.classRoom.teachers.user',
+            'payments',
+        ]);
 
-        return view('students.show', compact('student'));
+        $financeSituation = app(\App\Services\PersonalFinanceService::class)->studentSituation($student);
+
+        // Paramètres de retour contextuel (ex: depuis le plan de classe)
+        $returnTeacherId = $request->input('return_teacher_id');
+        $returnClassId = $request->input('return_class_id');
+
+        // Layout : pour un Admin Centre venant du Plan de classe (ou consultant depuis ce flux),
+        // présentation indépendante en pleine largeur sans sidebar administrative.
+        // Pour le Super Admin, conservation du layout habituel si aucun flux spécifique n'est demandé.
+        $isStandalone = $request->user()->isCenterAdmin() || $request->filled('standalone');
+
+        return view('students.show', compact(
+            'student',
+            'financeSituation',
+            'returnTeacherId',
+            'returnClassId',
+            'isStandalone'
+        ));
     }
 
     /**

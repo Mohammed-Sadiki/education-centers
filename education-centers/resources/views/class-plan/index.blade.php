@@ -220,19 +220,21 @@
                 {{-- Grille des élèves : 4 par ligne desktop, 3 tablette, 2 mobile --}}
                 <div class="students-grid grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                     <template x-for="(student, index) in students" :key="student.id">
-                        <div class="student-seat flex flex-col items-center gap-2 group cursor-default"
-                             x-data="{ hovered: false }"
-                             x-on:mouseenter="hovered = true"
-                             x-on:mouseleave="hovered = false"
+                        <a :href="'/students/' + student.id + '?return_teacher_id=' + selectedTeacherId + '&return_class_id=' + selectedClassId"
+                           class="student-seat flex flex-col items-center gap-2 group cursor-pointer transition transform hover:-translate-y-1 focus:outline-none"
+                           x-data="{ hovered: false }"
+                           x-on:mouseenter="hovered = true"
+                           x-on:mouseleave="hovered = false"
+                           :title="'{{ __('Consulter le dossier de') }} ' + student.full_name"
                         >
                             {{-- Numéro de siège --}}
-                            <span class="text-[10px] font-bold text-slate-300 dark:text-slate-600 mb-0.5" x-text="index + 1"></span>
+                            <span class="text-[10px] font-bold text-slate-300 dark:text-slate-600 mb-0.5 group-hover:text-brand-500" x-text="index + 1"></span>
 
                             {{-- Cercle photo --}}
                             <div class="relative">
                                 <div
-                                    class="h-16 w-16 rounded-full border-2 border-slate-200 bg-slate-100 overflow-hidden transition-all duration-200 shadow-sm group-hover:border-brand-400 group-hover:shadow-md group-hover:shadow-brand-400/20 dark:border-slate-700 dark:bg-slate-800 dark:group-hover:border-brand-500 flex items-center justify-center"
-                                    :class="{ 'scale-105 border-brand-400': hovered }"
+                                    class="h-16 w-16 rounded-full border-2 border-slate-200 bg-slate-100 overflow-hidden transition-all duration-200 shadow-sm group-hover:border-brand-500 group-hover:shadow-md group-hover:shadow-brand-500/20 dark:border-slate-700 dark:bg-slate-800 dark:group-hover:border-brand-400 flex items-center justify-center"
+                                    :class="{ 'scale-105 border-brand-500': hovered }"
                                 >
                                     <template x-if="student.profile_photo_url">
                                         <img
@@ -244,7 +246,7 @@
                                     </template>
                                     {{-- Icône par défaut si pas de photo --}}
                                     <div :class="student.profile_photo_url ? 'hidden' : 'flex'" class="flex h-full w-full items-center justify-center">
-                                        <svg class="h-8 w-8 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <svg class="h-8 w-8 text-slate-400 dark:text-slate-500 group-hover:text-brand-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
                                         </svg>
                                     </div>
@@ -255,20 +257,20 @@
 
                             {{-- Nom --}}
                             <div class="text-center max-w-[90px]">
-                                <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight truncate" x-text="student.first_name"></p>
+                                <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight truncate group-hover:text-brand-600 dark:group-hover:text-brand-400" x-text="student.first_name"></p>
                                 <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight truncate" x-text="student.last_name"></p>
                             </div>
 
-                            {{-- Tooltip : nom complet --}}
+                            {{-- Tooltip : nom complet + action --}}
                             <div
                                 x-show="hovered"
                                 x-transition:enter="transition ease-out duration-150"
                                 x-transition:enter-start="opacity-0 translate-y-1"
                                 x-transition:enter-end="opacity-100 translate-y-0"
                                 class="absolute z-10 mt-2 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-lg pointer-events-none"
-                                x-text="student.full_name"
+                                x-text="student.full_name + ' — {{ __('Voir détails') }}'"
                             ></div>
-                        </div>
+                        </a>
                     </template>
                 </div>
             </div>

@@ -166,8 +166,6 @@
 
         $adminItems = array_filter([
             $link(__('Centres'), 'centers.index', 'building', 'centers.*'),
-            $link(__('Étudiants'), 'students.index', 'academic', 'students.*'),
-            $link(__('Professeurs'), 'teachers.index', 'user', 'teachers.*'),
             $link(__('Formations'), 'formations.index', 'book', 'formations.*'),
             $link(__('Classes'), 'classes.index', 'classes', 'classes.*'),
             $link(__('Salles'), 'rooms.index', 'door', 'rooms.*'),
@@ -197,8 +195,6 @@
         ])];
 
         $adminItems = array_filter([
-            $link(__('Étudiants'), 'students.index', 'academic', 'students.*'),
-            $link(__('Professeurs'), 'teachers.index', 'user', 'teachers.*'),
             $link(__('Formations'), 'formations.index', 'book', 'formations.*'),
             $link(__('Classes'), 'classes.index', 'classes', 'classes.*'),
             $link(__('Salles'), 'rooms.index', 'door', 'rooms.*'),
@@ -214,12 +210,6 @@
             $link(__('Certificats'), 'certificates.index', 'certificate', 'certificates.*'),
         ]);
         $groups[] = ['title' => __('Gestion'), 'items' => $ops];
-
-        // Gestion des stagiaires (Admin Centre : périmètre = son centre uniquement).
-        $groups[] = ['title' => __('Gestion des stagiaires'), 'items' => array_filter([
-            $link(__('Tous les stagiaires'), 'stagiaires.index', 'users', ['stagiaires.index', 'stagiaires.show', 'stagiaires.edit']),
-            $link(__('Ajouter un stagiaire'), 'stagiaires.create', 'plus', 'stagiaires.create'),
-        ])];
 
         $com = array_filter([
             $link(__('Notifications'), 'notifications.index', 'bell', 'notifications.*'),

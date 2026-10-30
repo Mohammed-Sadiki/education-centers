@@ -44,11 +44,11 @@ class UserPolicy
 
     /**
      * create : créer un utilisateur.
-     * Super Admin → oui | Admin Centre → oui (dans son centre uniquement).
+     * Exclusivité Super Admin : aucun Admin Centre ne peut créer d'utilisateur (ni prof, ni admin).
      */
     public function create(User $authUser): bool
     {
-        return $authUser->isSuperAdmin() || $authUser->isCenterAdmin();
+        return $authUser->isSuperAdmin();
     }
 
     /**

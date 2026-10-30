@@ -102,6 +102,8 @@ class TeacherController extends Controller
      */
     public function store(StoreTeacherRequest $request): RedirectResponse
     {
+        Gate::authorize('create', Teacher::class);
+
         $authUser = $request->user();
         $targetUser = User::findOrFail($request->validated('user_id'));
 

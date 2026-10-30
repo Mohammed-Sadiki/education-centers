@@ -196,7 +196,7 @@ class TeacherManagementTest extends TestCase
         $this->assertDatabaseMissing('teachers', ['first_name' => 'Hacked Teacher']);
     }
 
-    public function test_center_admin_can_create_teacher_for_own_center(): void
+    public function test_center_admin_cannot_create_teacher(): void
     {
         $newBerlinTeacher = User::factory()->teacher($this->centerBerlin->id)->create([
             'name' => 'Stefan Zweig',
@@ -205,6 +205,29 @@ class TeacherManagementTest extends TestCase
 
         $response = $this->actingAs($this->adminBerlin)->post(route('teachers.store'), [
             'user_id' => $newBerlinTeacher->id,
+            'first_name' => 'Stefan',
+            'last_name' => 'Zweig',
+            'specialization' => 'Littérature',
+            'status' => 'active',
+        ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseMissing('teachers', [
+            'user_id' => $newBerlinTeacher->id,
+            'first_name' => 'Stefan',
+        ]);
+    }
+
+    public function test_super_admin_can_create_teacher(): void
+    {
+        $newBerlinTeacher = User::factory()->teacher($this->centerBerlin->id)->create([
+            'name' => 'Stefan Zweig',
+            'email' => 'stefan@test.de',
+        ]);
+
+        $response = $this->actingAs($this->superAdmin)->post(route('teachers.store'), [
+            'user_id' => $newBerlinTeacher->id,
+            'center_id' => $this->centerBerlin->id,
             'first_name' => 'Stefan',
             'last_name' => 'Zweig',
             'specialization' => 'Littérature',
@@ -233,7 +256,7 @@ class TeacherManagementTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response->assertSessionHasErrors('user_id');
+        $response->assertForbidden();
         $this->assertDatabaseMissing('teachers', ['user_id' => $munichTeacherUser->id]);
     }
 
@@ -244,7 +267,7 @@ class TeacherManagementTest extends TestCase
             'email' => 'hanna.berlin@test.de',
         ]);
 
-        // Tentative d'envoyer center_id de Munich
+        // Tentative d'envoyer center_id de Munich par Admin Centre -> refusé 403
         $response = $this->actingAs($this->adminBerlin)->post(route('teachers.store'), [
             'user_id' => $newBerlinTeacher->id,
             'center_id' => $this->centerMunich->id,
@@ -253,22 +276,16 @@ class TeacherManagementTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response->assertRedirect();
-        // Le serveur a forcé le center_id à Berlin
-        $this->assertDatabaseHas('teachers', [
-            'user_id' => $newBerlinTeacher->id,
-            'center_id' => $this->centerBerlin->id,
-        ]);
+        $response->assertForbidden();
         $this->assertDatabaseMissing('teachers', [
             'user_id' => $newBerlinTeacher->id,
-            'center_id' => $this->centerMunich->id,
         ]);
     }
 
     public function test_cannot_create_teacher_for_non_teacher_role(): void
     {
-        // Tentative de créer un dossier professeur pour un étudiant
-        $response = $this->actingAs($this->adminBerlin)->post(route('teachers.store'), [
+        // Tentative de créer un dossier professeur pour un étudiant par Super Admin
+        $response = $this->actingAs($this->superAdmin)->post(route('teachers.store'), [
             'user_id' => $this->studentUserBerlin->id,
             'first_name' => 'Faux',
             'last_name' => 'Prof',
@@ -281,7 +298,7 @@ class TeacherManagementTest extends TestCase
 
     public function test_cannot_create_duplicate_teacher_record_for_same_user(): void
     {
-        $response = $this->actingAs($this->adminBerlin)->post(route('teachers.store'), [
+        $response = $this->actingAs($this->superAdmin)->post(route('teachers.store'), [
             'user_id' => $this->teacherUserBerlin->id,
             'first_name' => 'Johannes',
             'last_name' => 'Bis',
@@ -342,15 +359,17 @@ class TeacherManagementTest extends TestCase
         $user1 = User::factory()->teacher($this->centerBerlin->id)->create();
         $user2 = User::factory()->teacher($this->centerBerlin->id)->create();
 
-        $this->actingAs($this->adminBerlin)->post(route('teachers.store'), [
+        $this->actingAs($this->superAdmin)->post(route('teachers.store'), [
             'user_id' => $user1->id,
+            'center_id' => $this->centerBerlin->id,
             'first_name' => 'Prof',
             'last_name' => 'Un',
             'status' => 'active',
         ]);
 
-        $this->actingAs($this->adminBerlin)->post(route('teachers.store'), [
+        $this->actingAs($this->superAdmin)->post(route('teachers.store'), [
             'user_id' => $user2->id,
+            'center_id' => $this->centerBerlin->id,
             'first_name' => 'Prof',
             'last_name' => 'Deux',
             'status' => 'active',

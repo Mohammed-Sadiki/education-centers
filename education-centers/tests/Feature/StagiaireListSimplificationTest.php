@@ -576,6 +576,57 @@ class StagiaireListSimplificationTest extends TestCase
     }
 
     // ──────────────────────────────────────────────────────────────────────────
+    // 16bis. Sidebar Admin Centre : rubrique « Gestion des stagiaires » retirée
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function test_center_admin_sidebar_has_no_stagiaires_section(): void
+    {
+        // Page classique de l'Admin Centre (layout avec sidebar) : le groupe
+        // « Gestion des stagiaires » doit avoir disparu du menu latéral.
+        $page = $this->actingAs($this->adminBerlin)
+            ->get(route('formations.index'))
+            ->assertOk()
+            ->getContent();
+
+        $start = strpos($page, '<aside');
+        $sidebar = substr($page, $start, strpos($page, '</aside>', $start) - $start);
+
+        // Rubrique entièrement absente : titre, flèche accordéon et deux liens.
+        $this->assertStringNotContainsString('Gestion des stagiaires', $sidebar);
+        $this->assertStringNotContainsString('Tous les stagiaires', $sidebar);
+        $this->assertStringNotContainsString('Ajouter un stagiaire', $sidebar);
+        $this->assertStringNotContainsString(route('stagiaires.index'), $sidebar);
+        $this->assertStringNotContainsString(route('stagiaires.create'), $sidebar);
+
+        // Les autres rubriques restent en place (pas d'espace vide orphelin).
+        $this->assertStringContainsString('Pédagogie', $sidebar);
+        $this->assertStringContainsString('Gestion', $sidebar);
+        $this->assertStringContainsString('Communication', $sidebar);
+
+        // La carte « Gestion des stagiaires » reste visible et fonctionnelle sur Accueil.
+        $home = $this->actingAs($this->adminBerlin)
+            ->get(route('admin.home'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('card-home-stagiaires', $home);
+        $this->assertStringContainsString(route('stagiaires.index'), $home);
+
+        // Le module reste accessible depuis Accueil avec isolation centre,
+        // et la sidebar du contexte Stagiaires (Super Admin) est inchangée.
+        $this->actingAs($this->adminBerlin)
+            ->get(route('stagiaires.index'))
+            ->assertOk();
+
+        $saSidebar = (function ($html) {
+            $s = strpos($html, '<aside');
+            return substr($html, $s, strpos($html, '</aside>', $s) - $s);
+        })($this->actingAs($this->superAdmin)->get(route('stagiaires.index'))->getContent());
+        $this->assertStringContainsString('Gestion des stagiaires', $saSidebar);
+        $this->assertStringContainsString('Tous les stagiaires', $saSidebar);
+        $this->assertStringContainsString('Ajouter un stagiaire', $saSidebar);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
     // 17 & 18. Données documents / financières intactes
     // ──────────────────────────────────────────────────────────────────────────
 

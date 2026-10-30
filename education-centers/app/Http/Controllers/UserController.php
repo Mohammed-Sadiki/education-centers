@@ -112,7 +112,13 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request): RedirectResponse
     {
+        Gate::authorize('create', User::class);
+
         $authUser = $request->user();
+        if (! $authUser->isSuperAdmin()) {
+            abort(403, __('Seul le Super Admin est autorisé à créer des comptes utilisateurs ou professeurs.'));
+        }
+
         $data = $request->validated();
         $domainSlugs = $data['domains'] ?? [];
         unset($data['domains']);

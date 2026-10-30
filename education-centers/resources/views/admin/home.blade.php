@@ -143,7 +143,8 @@
         </div>
     </a>
 
-    {{-- CARTE 3 : FINANCES --}}
+    {{-- CARTE 3 : FINANCES (Super Admin uniquement — l'Admin Centre gère les finances depuis les pages dédiées) --}}
+    @if($isSuperAdmin)
     <a href="{{ $financeRoute }}"
        id="card-home-finance"
        role="listitem"
@@ -172,6 +173,7 @@
             </span>
         </div>
     </a>
+    @endif
 
     {{-- CARTE 4 : COMMUNICATION --}}
     <a href="{{ $communicationRoute }}"

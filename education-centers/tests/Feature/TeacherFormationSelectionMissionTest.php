@@ -154,10 +154,10 @@ class TeacherFormationSelectionMissionTest extends TestCase
             'formation_id' => $formationMunich->id, // Formation d'un autre centre !
         ];
 
-        // L'admin de Berlin tente de rattacher la formation de Munich
+        // L'admin de Berlin tente de rattacher la formation de Munich -> Refus 403 (création interdite aux admin centres)
         $response = $this->actingAs($this->adminBerlin)->post(route('users.store'), $payload);
 
-        $response->assertSessionHasErrors('formation_id');
+        $response->assertStatus(403);
         $this->assertDatabaseMissing('users', ['email' => 'hacker@ec.test']);
     }
 

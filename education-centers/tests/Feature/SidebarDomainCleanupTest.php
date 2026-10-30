@@ -92,8 +92,8 @@ class SidebarDomainCleanupTest extends TestCase
         $this->assertStringContainsString(__('Certificats'), $sidebar);
         $this->assertStringContainsString(__('Notifications'), $sidebar);
         $this->assertStringContainsString(__('Annonces'), $sidebar);
-        $this->assertStringContainsString(__('Étudiants'), $sidebar);
-        $this->assertStringContainsString(__('Professeurs'), $sidebar);
+        $this->assertStringNotContainsString(route('students.index'), $sidebar);
+        $this->assertStringNotContainsString(route('teachers.index'), $sidebar);
         $this->assertStringContainsString(__('Formations'), $sidebar);
         $this->assertStringContainsString(__('Classes'), $sidebar);
     }

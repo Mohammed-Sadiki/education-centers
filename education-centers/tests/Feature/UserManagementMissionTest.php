@@ -72,23 +72,40 @@ class UserManagementMissionTest extends TestCase
     }
 
     /**
-     * 4 & 5. Le formulaire permet de créer UNIQUEMENT un compte Professeur.
+     * 4 & 5. Seul le Super Admin peut créer un compte Professeur.
+     * Un Admin Centre ne peut pas accéder au formulaire ni créer de compte (403).
      * Aucun compte élève ne peut être créé.
      */
     public function test_form_and_backend_only_allow_creating_teacher_accounts()
     {
         $center = Center::factory()->create();
         $admin = User::factory()->centerAdmin($center->id)->create();
+        $superAdmin = User::factory()->superAdmin()->create();
 
-        // Formulaire de création
-        $responseCreate = $this->actingAs($admin)->get(route('users.create'));
+        // Admin Centre se voit refuser l'accès au formulaire de création (403)
+        $responseCreateAdmin = $this->actingAs($admin)->get(route('users.create'));
+        $responseCreateAdmin->assertStatus(403);
+
+        // Super Admin accède au formulaire de création
+        $responseCreate = $this->actingAs($superAdmin)->get(route('users.create'));
         $responseCreate->assertStatus(200);
         $responseCreate->assertSee('Professeur');
         $responseCreate->assertDontSee('value="student"', false);
         $responseCreate->assertDontSee('value="center_admin"', false);
 
-        // Tentative de soumission d'un rôle "student" -> Doit être rejeté par la validation
-        $responseStudent = $this->actingAs($admin)->post(route('users.store'), [
+        // Tentative d'un admin centre de soumettre -> 403 Forbidden
+        $responseAdminStore = $this->actingAs($admin)->post(route('users.store'), [
+            'name' => 'Tentative Admin Centre',
+            'email' => 'admin_attempt@ec.test',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'status' => 'active',
+            'role' => User::ROLE_TEACHER,
+        ]);
+        $responseAdminStore->assertStatus(403);
+
+        // Tentative de soumission d'un rôle "student" par Super Admin -> Doit être rejeté par la validation
+        $responseStudent = $this->actingAs($superAdmin)->post(route('users.store'), [
             'name' => 'Tentative Eleve',
             'email' => 'fake_student@ec.test',
             'password' => 'Password123!',
@@ -109,13 +126,14 @@ class UserManagementMissionTest extends TestCase
             'status' => 'active',
         ]);
 
-        // Création valide d'un professeur
-        $responseTeacher = $this->actingAs($admin)->post(route('users.store'), [
+        // Création valide d'un professeur par Super Admin
+        $responseTeacher = $this->actingAs($superAdmin)->post(route('users.store'), [
             'name' => 'Nouveau Professeur',
             'email' => 'nouveau_prof@ec.test',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
             'status' => 'active',
+            'center_id' => $center->id,
             'role' => User::ROLE_TEACHER,
             'domain' => 'informatique',
             'formation_id' => $formation->id,

@@ -133,7 +133,7 @@ class UserManagementTest extends TestCase
         ]);
     }
 
-    public function test_center_admin_creates_teacher_scoped_strictly_to_their_center(): void
+    public function test_center_admin_cannot_create_teacher(): void
     {
         \App\Models\Domain::firstOrCreate(['slug' => 'sante'], ['name' => 'Santé', 'icon' => 'heart', 'color' => 'emerald', 'sort_order' => 2, 'is_active' => true]);
         $formation = \App\Models\Formation::create([
@@ -152,22 +152,16 @@ class UserManagementTest extends TestCase
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
             'role' => User::ROLE_TEACHER,
-            'center_id' => $this->centerB->id, // attempt spoofing
+            'center_id' => $this->centerA->id,
             'status' => 'active',
             'domain' => 'sante',
             'formation_id' => $formation->id,
         ];
 
+        // L'Admin Centre doit recevoir une erreur 403 Forbidden
         $response = $this->actingAs($this->centerAdminA)->post(route('users.store'), $userData);
-
-        $response->assertRedirect();
-        $this->assertDatabaseHas('users', [
-            'email' => 'prof.scoped@test.de',
-            'role' => User::ROLE_TEACHER,
-            'center_id' => $this->centerA->id, // MUST be centerA, not centerB!
-            'domain' => 'sante',
-            'formation_id' => $formation->id,
-        ]);
+        $response->assertStatus(403);
+        $this->assertDatabaseMissing('users', ['email' => 'prof.scoped@test.de']);
     }
 
     public function test_center_admin_cannot_create_super_admin_or_center_admin(): void
@@ -182,7 +176,7 @@ class UserManagementTest extends TestCase
         ];
 
         $response = $this->actingAs($this->centerAdminA)->post(route('users.store'), $userData);
-        $response->assertSessionHasErrors('role');
+        $response->assertStatus(403);
         $this->assertDatabaseMissing('users', ['email' => 'pirate@test.de']);
     }
 

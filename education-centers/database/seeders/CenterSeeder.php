@@ -8,31 +8,53 @@ use Illuminate\Database\Seeder;
 class CenterSeeder extends Seeder
 {
     /**
-     * Insère les centres de démonstration.
+     * Insère ou met à jour les 4 centres marocains.
      */
     public function run(): void
     {
         $centers = [
             [
-                'name'        => 'Centre de Formation Berlin',
-                'code'        => 'BERLIN',
-                'address'     => 'Unter den Linden 10',
-                'city'        => 'Berlin',
-                'postal_code' => '10117',
-                'country'     => 'Germany',
-                'phone'       => '+49 30 1234567',
-                'email'       => 'berlin@education-centers.de',
+                'name'        => 'Centre Tanger',
+                'code'        => 'TANGER',
+                'address'     => 'Boulevard Mohammed V',
+                'city'        => 'Tanger',
+                'postal_code' => '90000',
+                'country'     => 'Morocco',
+                'phone'       => '+212 5 39 00 00 01',
+                'email'       => 'tanger@education-centers.ma',
                 'status'      => 'active',
             ],
             [
-                'name'        => 'Centre de Formation Munich',
-                'code'        => 'MUNICH',
-                'address'     => 'Marienplatz 5',
-                'city'        => 'Munich',
-                'postal_code' => '80331',
-                'country'     => 'Germany',
-                'phone'       => '+49 89 9876543',
-                'email'       => 'munich@education-centers.de',
+                'name'        => 'Centre Essaouira',
+                'code'        => 'ESSAOUIRA',
+                'address'     => 'Avenue de la Médina',
+                'city'        => 'Essaouira',
+                'postal_code' => '44000',
+                'country'     => 'Morocco',
+                'phone'       => '+212 5 24 00 00 02',
+                'email'       => 'essaouira@education-centers.ma',
+                'status'      => 'active',
+            ],
+            [
+                'name'        => 'Centre Agadir',
+                'code'        => 'AGADIR',
+                'address'     => 'Boulevard Hassan II',
+                'city'        => 'Agadir',
+                'postal_code' => '80000',
+                'country'     => 'Morocco',
+                'phone'       => '+212 5 28 00 00 03',
+                'email'       => 'agadir@education-centers.ma',
+                'status'      => 'active',
+            ],
+            [
+                'name'        => 'Centre Tétouane',
+                'code'        => 'TETOUANE',
+                'address'     => 'Avenue Mohammed V',
+                'city'        => 'Tétouane',
+                'postal_code' => '93000',
+                'country'     => 'Morocco',
+                'phone'       => '+212 5 39 00 00 04',
+                'email'       => 'tetouane@education-centers.ma',
                 'status'      => 'active',
             ],
         ];
@@ -44,6 +66,6 @@ class CenterSeeder extends Seeder
             );
         }
 
-        $this->command->info('✅ Centres de démonstration créés : Berlin, Munich.');
+        $this->command->info('✅ Les 4 centres marocains sont configurés : Tanger, Essaouira, Agadir, Tétouane.');
     }
 }
