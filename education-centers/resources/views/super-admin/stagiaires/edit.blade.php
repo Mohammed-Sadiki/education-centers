@@ -129,7 +129,7 @@
                 <div>
                     <label for="phone" class="ec-label text-[1.0625rem] font-semibold">{{ __('Numéro de téléphone') }} <span class="text-rose-500">*</span></label>
                     <input type="tel" id="phone" name="phone" value="{{ old('phone', $stagiaire->phone) }}" required data-required data-label="{{ __('Numéro de téléphone') }}" inputmode="tel"
-                           class="ec-input text-[1.0625rem] @error('phone') is-invalid @enderror">
+                           class="ec-input text-[1.0625rem] @error('phone') is-invalid @enderror" placeholder="+212 XXXXXXXXX">
                     @error('phone') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
 
@@ -229,14 +229,14 @@
                 <div>
                     <label for="whatsapp" class="ec-label text-[1.0625rem] font-semibold">{{ __('Numéro WhatsApp') }} <span class="text-rose-500">*</span></label>
                     <input type="tel" id="whatsapp" name="whatsapp" value="{{ old('whatsapp', $stagiaire->whatsapp) }}" required data-required data-label="{{ __('Numéro WhatsApp') }}" inputmode="tel"
-                           class="ec-input text-[1.0625rem] @error('whatsapp') is-invalid @enderror">
+                           class="ec-input text-[1.0625rem] @error('whatsapp') is-invalid @enderror" placeholder="+212 XXXXXXXXX">
                     @error('whatsapp') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
                     <label for="emergency_contact_phone" class="ec-label text-[1.0625rem] font-semibold">{{ __('Numéro de téléphone d\'urgence') }} <span class="text-rose-500">*</span></label>
                     <input type="tel" id="emergency_contact_phone" name="emergency_contact_phone" value="{{ old('emergency_contact_phone', $stagiaire->emergency_contact_phone) }}" required data-required data-label="{{ __('Numéro de téléphone d\'urgence') }}" inputmode="tel"
-                           class="ec-input text-[1.0625rem] @error('emergency_contact_phone') is-invalid @enderror">
+                           class="ec-input text-[1.0625rem] @error('emergency_contact_phone') is-invalid @enderror" placeholder="+212 XXXXXXXXX">
                     @error('emergency_contact_phone') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
 
@@ -322,7 +322,7 @@
                 <div>
                     <label for="company_phone" class="ec-label text-[1.0625rem] font-semibold">{{ __('Numéro de téléphone de l\'entreprise') }} <span class="text-rose-500">*</span></label>
                     <input type="tel" id="company_phone" name="company_phone" value="{{ old('company_phone', $stagiaire->company_phone) }}" required data-required data-label="{{ __('Numéro de téléphone de l\'entreprise') }}" inputmode="tel"
-                           class="ec-input text-[1.0625rem] @error('company_phone') is-invalid @enderror">
+                           class="ec-input text-[1.0625rem] @error('company_phone') is-invalid @enderror" placeholder="+212 XXXXXXXXX">
                     @error('company_phone') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
 

@@ -83,19 +83,19 @@
                 <div>
                     <label for="phone" class="ec-label text-[1.0625rem] font-semibold">{{ __('Numéro de téléphone') }}</label>
                     <input type="tel" id="phone" name="phone" class="ec-input text-[1.0625rem] @error('phone') is-invalid @enderror"
-                           value="{{ old('phone') }}" placeholder="+49 30 1234567">
+                           value="{{ old('phone') }}" placeholder="+212 XXXXXXXXX">
                     @error('phone') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label for="whatsapp" class="ec-label text-[1.0625rem] font-semibold">{{ __('Numéro de téléphone WhatsApp') }}</label>
                     <input type="tel" id="whatsapp" name="whatsapp" class="ec-input text-[1.0625rem] @error('whatsapp') is-invalid @enderror"
-                           value="{{ old('whatsapp') }}" placeholder="+49 170 0000000">
+                           value="{{ old('whatsapp') }}" placeholder="+212 XXXXXXXXX">
                     @error('whatsapp') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
                 <div class="sm:col-span-2">
                     <label for="emergency_contact_phone" class="ec-label text-[1.0625rem] font-semibold">{{ __('Numéro de téléphone d\'urgence') }}</label>
                     <input type="tel" id="emergency_contact_phone" name="emergency_contact_phone" class="ec-input text-[1.0625rem] @error('emergency_contact_phone') is-invalid @enderror"
-                           value="{{ old('emergency_contact_phone') }}" placeholder="+49 170 9876543">
+                           value="{{ old('emergency_contact_phone') }}" placeholder="+212 XXXXXXXXX">
                     @error('emergency_contact_phone') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
             </div>

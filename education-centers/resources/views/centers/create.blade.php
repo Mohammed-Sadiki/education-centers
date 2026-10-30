@@ -118,7 +118,7 @@
                                            name="phone"
                                            value="{{ old('phone') }}"
                                            class="form-control @error('phone') is-invalid @enderror"
-                                           placeholder="+49 30 ...">
+                                           placeholder="+212 XXXXXXXXX">
                                     @error('phone')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

@@ -118,7 +118,7 @@
                                 <label for="phone" class="form-label fw-semibold">{{ __('Numéro de téléphone') }}</label>
                                 <input type="text" id="phone" name="phone"
                                        class="form-control @error('phone') is-invalid @enderror"
-                                       value="{{ old('phone', $student->phone) }}" placeholder="+49 30 1234567">
+                                       value="{{ old('phone', $student->phone) }}" placeholder="+212 XXXXXXXXX">
                                 @error('phone')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -202,7 +202,7 @@
                                 <label for="emergency_contact_phone" class="form-label fw-semibold">{{ __('Téléphone d\'urgence') }}</label>
                                 <input type="text" id="emergency_contact_phone" name="emergency_contact_phone"
                                        class="form-control @error('emergency_contact_phone') is-invalid @enderror"
-                                       value="{{ old('emergency_contact_phone', $student->emergency_contact_phone) }}">
+                                       value="{{ old('emergency_contact_phone', $student->emergency_contact_phone) }}" placeholder="+212 XXXXXXXXX">
                                 @error('emergency_contact_phone')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

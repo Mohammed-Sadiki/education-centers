@@ -79,7 +79,7 @@
                 <div class="sm:col-span-1">
                     <label for="phone" class="ec-label text-[1.0625rem] font-semibold">{{ __('Numéro de téléphone') }}</label>
                     <input type="tel" id="phone" name="phone" class="ec-input text-[1.0625rem] @error('phone') is-invalid @enderror"
-                           value="{{ old('phone') }}" placeholder="+49 30 1234567" autocomplete="tel">
+                           value="{{ old('phone') }}" placeholder="+212 XXXXXXXXX" autocomplete="tel">
                     @error('phone') <p class="ec-error text-[0.95rem]">{{ $message }}</p> @enderror
                 </div>
 
